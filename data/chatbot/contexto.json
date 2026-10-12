@@ -1,0 +1,335 @@
+{
+  "generado": "2026-10-12T16:05:16",
+  "descripcion": "Resumen autorizado de CENTRAL para responder preguntas. Contiene solo indicadores agregados por cuenta; no incluye datos personales.",
+  "ultimo_periodo": "2026-10",
+  "indicadores": [
+    {
+      "id": "nps",
+      "nombre": "NPS",
+      "descripcion": "Net Promoter Score",
+      "unidad": "puntos",
+      "rango": [
+        -100,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 40,
+      "umbral_critico": 20
+    },
+    {
+      "id": "csat",
+      "nombre": "CSAT",
+      "descripcion": "Satisfacción del cliente (% top-2-box)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 85,
+      "umbral_critico": 75
+    },
+    {
+      "id": "epa",
+      "nombre": "EPA",
+      "descripcion": "Encuesta post atención (EPA recodificada por encuesta y promediada)",
+      "unidad": "%",
+      "rango": [
+        -100,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 80,
+      "umbral_critico": 70
+    },
+    {
+      "id": "fcr",
+      "nombre": "Resolutividad (FCR)",
+      "descripcion": "Resolución en primer contacto",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 75,
+      "umbral_critico": 65
+    },
+    {
+      "id": "calidad",
+      "nombre": "Nota de calidad",
+      "descripcion": "Resultado de monitoreo de calidad",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 90,
+      "umbral_critico": 80
+    },
+    {
+      "id": "adherencia",
+      "nombre": "Adherencia",
+      "descripcion": "Adherencia a la pauta",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 92,
+      "umbral_critico": 85
+    },
+    {
+      "id": "tmo",
+      "nombre": "TMO",
+      "descripcion": "Tiempo medio de operación (segundos)",
+      "unidad": "seg",
+      "rango": [
+        0,
+        7200
+      ],
+      "sentido": "menor_mejor",
+      "meta": 420,
+      "umbral_critico": 540
+    },
+    {
+      "id": "penc",
+      "nombre": "PENC",
+      "descripcion": "Puntaje de errores no críticos (pauta de monitoreo, 0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null
+    },
+    {
+      "id": "pec",
+      "nombre": "PEC",
+      "descripcion": "Puntaje de errores críticos (pauta de monitoreo, 0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null
+    },
+    {
+      "id": "efectividad",
+      "nombre": "Efectividad de venta",
+      "descripcion": "% de llamadas monitoreadas con venta concretada (excluye 'no aplica')",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null
+    },
+    {
+      "id": "global",
+      "nombre": "Satisfacción global",
+      "descripcion": "Promedio de la pregunta Global de la encuesta (escala 1 a 5)",
+      "unidad": "pts",
+      "rango": [
+        1,
+        5
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null
+    },
+    {
+      "id": "evaluaciones",
+      "nombre": "Evaluaciones",
+      "descripcion": "Cantidad de monitoreos de calidad realizados",
+      "unidad": "n",
+      "rango": [
+        0,
+        1000000
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "conteo": true
+    },
+    {
+      "id": "encuestas",
+      "nombre": "Encuestas",
+      "descripcion": "Cantidad de encuestas de satisfacción recibidas",
+      "unidad": "n",
+      "rango": [
+        0,
+        1000000
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "conteo": true
+    }
+  ],
+  "resumen_por_indicador": [
+    {
+      "empresa": "claro",
+      "pais": "ec",
+      "indicador": "Efectividad de venta",
+      "periodo": "2026-10",
+      "promedio": 8.82,
+      "cuentas": 2,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "claro",
+      "pais": "ec",
+      "indicador": "Evaluaciones",
+      "periodo": "2026-10",
+      "promedio": 21.5,
+      "cuentas": 4,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "claro",
+      "pais": "ec",
+      "indicador": "Resolutividad (FCR)",
+      "periodo": "2026-10",
+      "promedio": 36.97,
+      "cuentas": 2,
+      "criticas": [
+        "POSTPAGO",
+        "PREPAGO"
+      ],
+      "alertas": []
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Adherencia",
+      "periodo": "2026-10",
+      "promedio": 93.93,
+      "cuentas": 9,
+      "criticas": [
+        "RETENCIONES C2C - HOGAR",
+        "S2S MÓVIL 2.0"
+      ],
+      "alertas": [
+        "RECLAMOS 105 (FIBRA COMERCIAL)"
+      ]
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Nota de calidad",
+      "periodo": "2026-10",
+      "promedio": 83.46,
+      "cuentas": 21,
+      "criticas": [
+        "C2C HOGAR PRIVADO",
+        "CARRITO PUBLICO HOGAR",
+        "FONOCOMPRAS HOGAR",
+        "FONOCOMPRAS MOVIL",
+        "S2S MÓVIL 2.0",
+        "WEB MOVIL PUBLICO"
+      ],
+      "alertas": [
+        "C2C MOVIL PUBLICO",
+        "FACEBOOK LEADS MOVIL",
+        "FRONT HOGAR FIBRA TECNICO",
+        "HOGAR COMERCIAL",
+        "RECLAMOS 105 (FIBRA COMERCIAL)",
+        "RETENCIONES C2C - HOGAR",
+        "RETENCIONES C2C - MOVIL",
+        "WEB HOGAR PUBLICO",
+        "WEB MOVIL PRIVADO"
+      ]
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Encuestas",
+      "periodo": "2026-10",
+      "promedio": 102.92,
+      "cuentas": 12,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "EPA",
+      "periodo": "2026-10",
+      "promedio": 70.39,
+      "cuentas": 7,
+      "criticas": [
+        "FIBRA TECNICO"
+      ],
+      "alertas": [
+        "FIBRA"
+      ]
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Evaluaciones",
+      "periodo": "2026-10",
+      "promedio": 34.07,
+      "cuentas": 28,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Resolutividad (FCR)",
+      "periodo": "2026-10",
+      "promedio": 75.07,
+      "cuentas": 7,
+      "criticas": [],
+      "alertas": [
+        "FIBRA TECNICO",
+        "RECLAMOS FIBRA",
+        "S2S HOGAR",
+        "TÉCNICO"
+      ]
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "Satisfacción global",
+      "periodo": "2026-10",
+      "promedio": 4.49,
+      "cuentas": 9,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "PEC",
+      "periodo": "2026-10",
+      "promedio": 65.41,
+      "cuentas": 19,
+      "criticas": [],
+      "alertas": []
+    },
+    {
+      "empresa": "entel",
+      "pais": "cl",
+      "indicador": "PENC",
+      "periodo": "2026-10",
+      "promedio": 80.33,
+      "cuentas": 20,
+      "criticas": [],
+      "alertas": []
+    }
+  ],
+  "fuente_detalle": "data/consolidado.json"
+}

@@ -1,0 +1,130 @@
+{
+  "_comentario": "Configuración central del portal. Cada dashboard es un 'servicio' (Inbound, Outbound...) y su id se usa como linea_id en config/fuentes.json. URLs según la tabla entregada el 12/10/2026; los campos \"\" están pendientes.",
+  "version": 1,
+  "plataforma": {
+    "nombre": "CENTRAL",
+    "subtitulo": "BI y seguimiento de calidad de posventa",
+    "organizacion": "A365 Calidad"
+  },
+  "empresas": [
+    {
+      "id": "entel",
+      "nombre": "Entel",
+      "color": "#2a6df4",
+      "estado": "activo",
+      "paises": [
+        {
+          "id": "cl",
+          "nombre": "Chile",
+          "estado": "activo",
+          "dashboards": [
+            {
+              "id": "entel-in",
+              "servicio": "Inbound",
+              "nombre": "Inbound",
+              "descripcion": "",
+              "url": "",
+              "repo": "https://github.com/bcatano-spec/Reporte-Entel-IN",
+              "estado": "pendiente_url",
+              "_nota": "Visualización pendiente"
+            },
+            {
+              "id": "entel-mt",
+              "servicio": "Mesa Técnica",
+              "nombre": "Mesa Técnica",
+              "descripcion": "",
+              "url": "",
+              "repo": "https://github.com/bcatano-spec/Reporte-Entel-Mesa-Tecnica",
+              "estado": "pendiente_url",
+              "_nota": "Visualización pendiente"
+            },
+            {
+              "id": "entel-c2c",
+              "servicio": "C2C",
+              "nombre": "C2C",
+              "descripcion": "",
+              "url": "https://a365-calidad-entel.github.io/Reporte-C2C/",
+              "repo": "https://github.com/A365-CALIDAD-ENTEL/Reporte-C2C",
+              "estado": "activo"
+            },
+            {
+              "id": "entel-out",
+              "servicio": "Outbound",
+              "nombre": "Outbound",
+              "descripcion": "",
+              "url": "https://a365-calidad-entel.github.io/Reporte-OUT/",
+              "repo": "https://github.com/A365-CALIDAD-ENTEL/Reporte-OUT",
+              "estado": "activo"
+            },
+            {
+              "id": "entel-ec",
+              "servicio": "E-commerce",
+              "nombre": "E-commerce",
+              "descripcion": "",
+              "url": "https://a365-calidad-entel.github.io/Reporte-EC/",
+              "repo": "https://github.com/A365-CALIDAD-ENTEL/Reporte-EC",
+              "estado": "activo"
+            },
+            {
+              "id": "entel-emp",
+              "servicio": "Empresas",
+              "nombre": "Empresas",
+              "descripcion": "",
+              "url": "https://a365-calidad-entel.github.io/Reporte-Empresa/",
+              "repo": "https://github.com/A365-CALIDAD-ENTEL/Reporte-Empresa",
+              "estado": "activo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claro",
+      "nombre": "Claro",
+      "color": "#e3262f",
+      "estado": "activo",
+      "paises": [
+        {
+          "id": "ec",
+          "nombre": "Ecuador",
+          "estado": "activo",
+          "dashboards": [
+            {
+              "id": "claro-ec-in",
+              "servicio": "Inbound",
+              "nombre": "Inbound",
+              "descripcion": "",
+              "url": "https://a365-calidad-claro-ec.github.io/Reporte-IN/",
+              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-IN",
+              "estado": "activo"
+            },
+            {
+              "id": "claro-ec-out",
+              "servicio": "Outbound",
+              "nombre": "Outbound",
+              "descripcion": "",
+              "url": "https://a365-calidad-claro-ec.github.io/Reporte-OUT/",
+              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-OUT",
+              "estado": "activo"
+            },
+            {
+              "id": "claro-ec-nps",
+              "servicio": "NPS",
+              "nombre": "NPS",
+              "descripcion": "",
+              "url": "https://a365-calidad-claro-ec.github.io/Reporte-NPS/NPS%20CLARO%20ECUADOR.html",
+              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-NPS",
+              "estado": "activo"
+            }
+          ]
+        },
+        {
+          "id": "mx",
+          "nombre": "México",
+          "estado": "proximamente",
+          "dashboards": []
+        }
+      ]
+    }
+  ]
+}

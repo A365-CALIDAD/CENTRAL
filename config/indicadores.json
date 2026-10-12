@@ -1,0 +1,258 @@
+{
+  "_comentario": "Catálogo maestro de indicadores. 'alias' sirve para homologar los nombres que llegan en los Excel. Las metas y umbrales son VALORES DE EJEMPLO: deben validarse con cada cliente. Se pueden sobrescribir por empresa en 'metas_por_empresa'.",
+  "version": 1,
+  "metas_son_ejemplo": true,
+  "indicadores": [
+    {
+      "id": "nps",
+      "nombre": "NPS",
+      "descripcion": "Net Promoter Score",
+      "unidad": "puntos",
+      "rango": [
+        -100,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 40,
+      "umbral_critico": 20,
+      "alias": [
+        "nps",
+        "net promoter score",
+        "indice nps"
+      ]
+    },
+    {
+      "id": "csat",
+      "nombre": "CSAT",
+      "descripcion": "Satisfacción del cliente (% top-2-box)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 85,
+      "umbral_critico": 75,
+      "alias": [
+        "csat",
+        "satisfaccion",
+        "satisfaccion cliente",
+        "atencion ejecutivo"
+      ]
+    },
+    {
+      "id": "epa",
+      "nombre": "EPA",
+      "descripcion": "Encuesta post atención (EPA recodificada por encuesta y promediada)",
+      "unidad": "%",
+      "rango": [
+        -100,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 80,
+      "umbral_critico": 70,
+      "alias": [
+        "epa",
+        "encuesta post atencion",
+        "nota epa"
+      ]
+    },
+    {
+      "id": "fcr",
+      "nombre": "Resolutividad (FCR)",
+      "descripcion": "Resolución en primer contacto",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 75,
+      "umbral_critico": 65,
+      "alias": [
+        "fcr",
+        "resolutividad",
+        "resolucion primer contacto",
+        "first contact resolution"
+      ]
+    },
+    {
+      "id": "calidad",
+      "nombre": "Nota de calidad",
+      "descripcion": "Resultado de monitoreo de calidad",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 90,
+      "umbral_critico": 80,
+      "alias": [
+        "calidad",
+        "nota calidad",
+        "nota de calidad",
+        "monitoreo",
+        "resultado final",
+        "nota"
+      ]
+    },
+    {
+      "id": "adherencia",
+      "nombre": "Adherencia",
+      "descripcion": "Adherencia a la pauta",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": 92,
+      "umbral_critico": 85,
+      "alias": [
+        "adherencia",
+        "adh",
+        "adherencia pauta"
+      ]
+    },
+    {
+      "id": "tmo",
+      "nombre": "TMO",
+      "descripcion": "Tiempo medio de operación (segundos)",
+      "unidad": "seg",
+      "rango": [
+        0,
+        7200
+      ],
+      "sentido": "menor_mejor",
+      "meta": 420,
+      "umbral_critico": 540,
+      "alias": [
+        "tmo",
+        "aht",
+        "tiempo medio operacion",
+        "tmo llamada"
+      ]
+    },
+    {
+      "id": "penc",
+      "nombre": "PENC",
+      "descripcion": "Puntaje de errores no críticos (pauta de monitoreo, 0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "penc",
+        "penc (100%)"
+      ]
+    },
+    {
+      "id": "pec",
+      "nombre": "PEC",
+      "descripcion": "Puntaje de errores críticos (pauta de monitoreo, 0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "pec",
+        "pec (100%)"
+      ]
+    },
+    {
+      "id": "efectividad",
+      "nombre": "Efectividad de venta",
+      "descripcion": "% de llamadas monitoreadas con venta concretada (excluye 'no aplica')",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "efectividad",
+        "efectivizacion"
+      ]
+    },
+    {
+      "id": "global",
+      "nombre": "Satisfacción global",
+      "descripcion": "Promedio de la pregunta Global de la encuesta (escala 1 a 5)",
+      "unidad": "pts",
+      "rango": [
+        1,
+        5
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "global",
+        "satisfaccion global"
+      ]
+    },
+    {
+      "id": "evaluaciones",
+      "nombre": "Evaluaciones",
+      "descripcion": "Cantidad de monitoreos de calidad realizados",
+      "unidad": "n",
+      "rango": [
+        0,
+        1000000
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "conteo": true,
+      "alias": [
+        "evaluaciones",
+        "monitoreos"
+      ]
+    },
+    {
+      "id": "encuestas",
+      "nombre": "Encuestas",
+      "descripcion": "Cantidad de encuestas de satisfacción recibidas",
+      "unidad": "n",
+      "rango": [
+        0,
+        1000000
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "conteo": true,
+      "alias": [
+        "encuestas"
+      ]
+    }
+  ],
+  "metas_por_empresa": {
+    "_ejemplo": {
+      "entel|cl": {
+        "nps": {
+          "meta": 45,
+          "umbral_critico": 25
+        }
+      }
+    }
+  },
+  "estados": {
+    "OK": "Cumple la meta",
+    "ALERTA": "No cumple la meta pero no alcanza el umbral crítico",
+    "CRITICO": "Igual o peor que el umbral crítico",
+    "SIN_META": "Indicador sin meta configurada"
+  }
+}

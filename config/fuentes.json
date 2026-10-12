@@ -1,0 +1,661 @@
+{
+  "_comentario": "Una 'fuente' describe cómo leer los Excel de una empresa/país. Formato 'ancho' = un indicador por columna; 'largo' = una fila por indicador; 'detalle' = una fila por evaluación o encuesta (bases originales de los dashboards), que el ETL agrega por cuenta y mes. 'carpeta' puede estar fuera del repositorio (ruta relativa a CENTRAL, ej. ../ENTEL/...). 'seleccion': 'mas_reciente' toma solo el último archivo (bases acumuladas). 'politica_cambios': 'versionar' permite que una nueva descarga ajuste meses anteriores (queda versionado). Las fuentes demo_* usan datos ficticios.",
+  "version": 1,
+  "campos_canonicos": {
+    "fecha": "Fecha de la medición (o primer día del periodo). Obligatorio si no hay 'periodo'.",
+    "periodo": "Periodo YYYY-MM. Si falta se deriva de 'fecha'.",
+    "cuenta": "Cuenta / servicio / campaña evaluada. Obligatorio salvo 'cuenta_fija'.",
+    "indicador": "Solo formato largo: nombre del indicador.",
+    "valor": "Solo formato largo: resultado numérico.",
+    "meta": "Opcional: meta informada en el propio archivo (tiene prioridad sobre el catálogo).",
+    "muestras": "Opcional: cantidad de encuestas/monitoreos."
+  },
+  "fuentes": [
+    {
+      "id": "entel_in_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "descripcion": "Monitoreos de calidad Entel Inbound (misma base que usa ENTEL_BI_IN/BI/actualizar_dashboard.py)",
+      "carpeta": "../ENTEL/ENTEL_BI_IN/Adherencias",
+      "patron": "Adherencias*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Base",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "columnas": {
+        "fecha": [
+          "Fecha Envío"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Resultado Final",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "adherencia",
+          "columna": "Adherencia (100%)",
+          "agregacion": "promedio"
+        }
+      ],
+      "linea_id": "entel-in",
+      "conteo": "evaluaciones",
+      "id_unico": "ID Pauta",
+      "id_mantener": "last"
+    },
+    {
+      "id": "entel_in_epa",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "descripcion": "Encuesta post atención Entel Inbound (hoja BASE del Excel EPA). Metas por plataforma copiadas de META_PLATAFORMA del script del dashboard.",
+      "carpeta": "../ENTEL/ENTEL_BI_IN/Reporte EPA",
+      "patron": "EPA*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "BASE",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 20,
+      "columnas": {
+        "fecha": [
+          "Fecha atención"
+        ],
+        "cuenta": [
+          "Plataforma ok"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "epa",
+          "columna": "EPA",
+          "agregacion": "promedio",
+          "metas_por_cuenta": {
+            "S2S Móvil 2.0": 67,
+            "Fibra": 66,
+            "S2S Hogar": 64,
+            "Técnico": 62,
+            "Adulto Mayor": 75,
+            "Reclamos Fibra": 60,
+            "Reclamos Inalámbrico": 60,
+            "Inalámbrico": 50
+          }
+        },
+        {
+          "indicador": "fcr",
+          "columna": "Resolutividad",
+          "agregacion": "porcentaje",
+          "positivos": [
+            1
+          ],
+          "negativos": [
+            2
+          ]
+        },
+        {
+          "indicador": "global",
+          "columna": "Global",
+          "agregacion": "promedio"
+        }
+      ],
+      "linea_id": "entel-in",
+      "conteo": "encuestas"
+    },
+    {
+      "id": "entel_mt_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-mt",
+      "descripcion": "Monitoreos Mesa Técnica (hoja Monitoreos del Informe Adh., misma base del dashboard MT)",
+      "carpeta": "../ENTEL/ENTEL_BI_MT/Adherencias",
+      "patron": "Informe Adh*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Monitoreos",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha Envío"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Resultado Final",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "adherencia",
+          "columna": "Adherencia (100%)",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "penc",
+          "columna": "PENC (100%)",
+          "agregacion": "promedio"
+        }
+      ],
+      "id_unico": "ID Pauta",
+      "id_mantener": "first"
+    },
+    {
+      "id": "entel_mt_epa",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-mt",
+      "descripcion": "EPA Técnico Fibra (hoja BASE del Evolutivo EPA)",
+      "carpeta": "../ENTEL/ENTEL_BI_MT/Reporte EPA",
+      "patron": "Evolutivo EPA*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "BASE",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 20,
+      "conteo": "encuestas",
+      "columnas": {
+        "fecha": [
+          "Fecha atención"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "epa",
+          "columna": "EPA",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "fcr",
+          "columna": "Resolutividad",
+          "agregacion": "porcentaje",
+          "positivos": [
+            1
+          ],
+          "negativos": [
+            2
+          ]
+        },
+        {
+          "indicador": "global",
+          "columna": "Global",
+          "agregacion": "promedio"
+        }
+      ]
+    },
+    {
+      "id": "entel_c2c_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-c2c",
+      "descripcion": "Monitoreos Retenciones C2C (hoja Matriz del Informe Adh. Retenciones)",
+      "carpeta": "../ENTEL/ENTEL_BI_CZC/Adherencias",
+      "patron": "Informe Adh*Retenciones*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Matriz",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha Envío"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Resultado Final",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "adherencia",
+          "columna": "Adherencia (100%)",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "penc",
+          "columna": "PENC (100%)",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "pec",
+          "columna": "PEC (100%)",
+          "agregacion": "promedio"
+        }
+      ],
+      "id_unico": "ID Pauta",
+      "id_mantener": "first"
+    },
+    {
+      "id": "entel_out_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-out",
+      "descripcion": "Monitoreos Outbound (hoja Matriz). La base no trae 'Resultado Final': se muestran PENC y PEC como en el dashboard.",
+      "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias",
+      "patron": "Reporte monitoreos interno outbound*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Matriz",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha de grabación",
+          "Fecha Envío"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "penc",
+          "columna": "PENC (100%)",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "pec",
+          "columna": "PEC (100%)",
+          "agregacion": "promedio"
+        }
+      ],
+      "id_unico": "ID Pauta",
+      "id_solo_numerico": true,
+      "complementos": [
+        {
+          "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias",
+          "patron": "Reporte Pauta Outbound*.xls*",
+          "hoja": "Matriz",
+          "encabezado_contiene": "ID Pauta"
+        },
+        {
+          "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias/Descargas",
+          "patron": "Reporte Pauta Outbound*.xls*",
+          "hoja": "Matriz",
+          "encabezado_contiene": "ID Pauta"
+        }
+      ]
+    },
+    {
+      "id": "entel_out_epa",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-out",
+      "descripcion": "Encuesta post venta Móvil Outbound (copia de Drive que descarga el dashboard OUT). La EPA del dashboard aún no está replicada: se muestra la satisfacción global 1-5.",
+      "carpeta": "../ENTEL/ENTEL_BI_OUT/BI/Descargas",
+      "patron": "EPA_drive.xlsx",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Base Epa Movil",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 20,
+      "conteo": "encuestas",
+      "columnas": {
+        "fecha": [
+          "Fecha Atención"
+        ],
+        "cuenta": [
+          "Campaña"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "global",
+          "columna": "Global",
+          "agregacion": "promedio"
+        }
+      ]
+    },
+    {
+      "id": "entel_ec_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-ec",
+      "descripcion": "Monitoreos E-commerce (hoja Matriz)",
+      "carpeta": "../ENTEL/ENTEL_BI_EC/Adherencias",
+      "patron": "Reporte monitoreos Ecommerce*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "Matriz",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha de grabación",
+          "Fecha Envío"
+        ],
+        "cuenta": [
+          "Plataforma"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Resultado Final",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "penc",
+          "columna": "PENC (100%)",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "pec",
+          "columna": "PEC (100%)",
+          "agregacion": "promedio"
+        }
+      ],
+      "id_unico": "ID Pauta",
+      "id_solo_numerico": true,
+      "complementos": [
+        {
+          "carpeta": "../ENTEL/ENTEL_BI_EC/Adherencias",
+          "patron": "Reporte Pauta Ecommerce*.xls*",
+          "hoja": "Matriz",
+          "encabezado_contiene": "ID Pauta"
+        },
+        {
+          "carpeta": "../ENTEL/ENTEL_BI_EC/Adherencias/Descargas",
+          "patron": "Reporte Pauta Ecommerce*.xls*",
+          "hoja": "Matriz",
+          "encabezado_contiene": "ID Pauta"
+        }
+      ]
+    },
+    {
+      "id": "entel_emp_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "linea_id": "entel-emp",
+      "descripcion": "Evaluaciones Empresas · No ventas (una hoja por mes, misma base que descarga el dashboard EMP)",
+      "carpeta": "../ENTEL/ENTEL_BI_EMP/Descargas",
+      "patron": "CAMPAÑA EMPRESA*.xls*",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": "*",
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "periodo": [
+          "_hoja"
+        ],
+        "fecha": [
+          "Fecha Evaluacion",
+          "Fecha Grabacion"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Nota",
+          "agregacion": "promedio"
+        }
+      ],
+      "cuenta_fija": "EMPRESAS",
+      "encabezado_contiene": "Ejecutivo evaluado (representante)",
+      "anio": 2026,
+      "filtros": [
+        {
+          "columna": "Ejecutivo evaluado (representante)",
+          "no_vacio": true
+        },
+        {
+          "columna": "Nota",
+          "no_vacio": true
+        }
+      ],
+      "solo_hojas_mes": true
+    },
+    {
+      "id": "claro_ec_in_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "claro",
+      "pais_id": "ec",
+      "descripcion": "Monitoreos Qualtrics Claro Ecuador Inbound (carpeta filtrado). Solo FCR: la nota de calidad la calcula el dashboard con pesos por bloque y aún no está replicada.",
+      "carpeta": "../CLARO/ECUADOR/CLARO_IN/filtrado",
+      "patron": "*.xlsx",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "columnas": {
+        "fecha": [
+          "Fecha de interacción"
+        ],
+        "cuenta": [
+          "COLA"
+        ]
+      },
+      "filtros": [
+        {
+          "columna": "Finished",
+          "incluir": [
+            "True"
+          ]
+        }
+      ],
+      "indicadores_detalle": [
+        {
+          "indicador": "fcr",
+          "columna": "FCR",
+          "agregacion": "porcentaje",
+          "positivos": [
+            "SI",
+            "SÍ"
+          ],
+          "negativos": [
+            "NO"
+          ]
+        }
+      ],
+      "linea_id": "claro-ec-in",
+      "conteo": "evaluaciones"
+    },
+    {
+      "id": "claro_ec_out_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "claro",
+      "pais_id": "ec",
+      "linea_id": "claro-ec-out",
+      "descripcion": "Monitoreos Qualtrics Claro Ecuador Outbound (carpeta filtrado). La nota de calidad la calcula el dashboard y aún no está replicada.",
+      "carpeta": "../CLARO/ECUADOR/CLARO_OUT/filtrado",
+      "patron": "*.xlsx",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha de interacción"
+        ],
+        "cuenta": [
+          "SEGMENTO"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "efectividad",
+          "columna": "Efectivización",
+          "agregacion": "porcentaje",
+          "positivos": [
+            "SI",
+            "SÍ"
+          ],
+          "negativos": [
+            "NO"
+          ]
+        }
+      ],
+      "filtros": [
+        {
+          "columna": "Finished",
+          "incluir": [
+            "True"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo_entel_cl",
+      "activo": false,
+      "demo": true,
+      "empresa_id": "entel",
+      "pais_id": "cl",
+      "carpeta": "etl/entrada/demo_entel_cl",
+      "patron": "*.xlsx",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "ancho",
+      "escala_porcentaje": "auto",
+      "columnas": {
+        "fecha": [
+          "fecha",
+          "fecha medicion"
+        ],
+        "cuenta": [
+          "cuenta",
+          "servicio",
+          "campana"
+        ],
+        "muestras": [
+          "muestras",
+          "encuestas",
+          "n"
+        ]
+      },
+      "columnas_indicador": {
+        "NPS": "nps",
+        "CSAT": "csat",
+        "Resolutividad": "fcr",
+        "TMO": "tmo"
+      }
+    },
+    {
+      "id": "demo_claro_ec",
+      "activo": false,
+      "demo": true,
+      "empresa_id": "claro",
+      "pais_id": "ec",
+      "carpeta": "etl/entrada/demo_claro_ec",
+      "patron": "*.xlsx",
+      "hoja": "Resultados",
+      "fila_encabezado": 0,
+      "formato": "largo",
+      "escala_porcentaje": "auto",
+      "columnas": {
+        "periodo": [
+          "periodo",
+          "mes"
+        ],
+        "cuenta": [
+          "servicio",
+          "cuenta"
+        ],
+        "indicador": [
+          "indicador",
+          "kpi"
+        ],
+        "valor": [
+          "resultado",
+          "valor"
+        ],
+        "muestras": [
+          "encuestas",
+          "muestras"
+        ]
+      }
+    },
+    {
+      "id": "plantilla_nueva_fuente",
+      "activo": false,
+      "demo": false,
+      "empresa_id": "",
+      "pais_id": "",
+      "carpeta": "etl/entrada/plantilla_nueva_fuente",
+      "patron": "*.xlsx",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "ancho",
+      "escala_porcentaje": "auto",
+      "cuenta_fija": "",
+      "columnas": {
+        "fecha": [
+          ""
+        ],
+        "cuenta": [
+          ""
+        ],
+        "muestras": [
+          ""
+        ]
+      },
+      "columnas_indicador": {
+        "": ""
+      }
+    }
+  ],
+  "opciones_detalle": {
+    "indicadores_detalle": "Lista de {indicador, columna, agregacion: promedio|porcentaje, positivos, negativos, metas_por_cuenta}",
+    "filtros": "Lista de {columna, incluir: [...]} o {columna, excluir: [...]}",
+    "min_muestras": "Cuentas-mes con menos casos se descartan y se informan como MUESTRA_INSUFICIENTE",
+    "linea_id": "Servicio al que pertenece (id del dashboard en portal.json): entel-in, entel-out, claro-ec-in...",
+    "conteo": "'evaluaciones' o 'encuestas': agrega la cantidad de filas por cuenta y mes",
+    "hoja": "Nombre/índice de la hoja, o '*' para unir todas las hojas que tengan el encabezado 'encabezado_contiene' (usar 'anio' y la columna '_hoja' como periodo)",
+    "filtros_no_vacio": "{columna, no_vacio: true} descarta filas con esa celda vacía",
+    "solo_hojas_mes": "Con hoja '*': considerar solo hojas cuyo nombre es un mes (omite Dotacion, PLANTILLA...)",
+    "id_unico": "Columna que identifica cada evaluación (ej. 'ID Pauta'): las repetidas se cuentan una vez ('id_mantener': first|last)",
+    "id_solo_numerico": "Descarta filas cuyo id no es numérico (totales, filas en blanco), como hace el dashboard",
+    "complementos": "Descargas diarias que se suman a la base principal sin repetir id_unico (ej. Reporte Pauta Outbound)"
+  }
+}

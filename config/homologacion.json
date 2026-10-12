@@ -1,0 +1,13 @@
+{
+  "_comentario": "Equivalencias para homologar nombres de cuentas que llegan escritos de distintas formas. Clave: nombre normalizado (sin tildes, en mayúsculas). Valor: nombre oficial. Se aplica por empresa|pais o en '*' para todas.",
+  "cuentas": {
+    "*": {},
+    "entel|cl": {
+      "S2S MOVIL 2.0": "S2S MÓVIL 2.0",
+      "TECNICO": "TÉCNICO",
+      "INALAMBRICO": "INALÁMBRICO",
+      "RECLAMOS INALAMBRICO": "RECLAMOS INALÁMBRICO"
+    },
+    "claro|ec": {}
+  }
+}

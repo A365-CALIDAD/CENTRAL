@@ -1,0 +1,14 @@
+# Excel de entrada: pueden contener datos de clientes. No se versionan.
+etl/entrada/*
+!etl/entrada/.gitkeep
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+~$*
+*.log
+.DS_Store
+Thumbs.db
+.claude/
