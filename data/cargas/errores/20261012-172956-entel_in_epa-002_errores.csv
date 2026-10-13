@@ -1,0 +1,7 @@
+carga_id,fuente_id,archivo,fila_excel,campo,tipo_error,valor,detalle
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,11,INALÁMBRICO · epa · 2026-10: 11 casos (mínimo 20)
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,10,INALÁMBRICO · fcr · 2026-10: 10 casos (mínimo 20)
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,11,INALÁMBRICO · global · 2026-10: 11 casos (mínimo 20)
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,9,RECLAMOS INALÁMBRICO · epa · 2026-10: 9 casos (mínimo 20)
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,9,RECLAMOS INALÁMBRICO · fcr · 2026-10: 9 casos (mínimo 20)
+20261012-172956-entel_in_epa-002,entel_in_epa,../ENTEL/ENTEL_BI_IN/Reporte EPA/EPA Octubre 10.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,9,RECLAMOS INALÁMBRICO · global · 2026-10: 9 casos (mínimo 20)

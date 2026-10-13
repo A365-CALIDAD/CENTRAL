@@ -17,7 +17,8 @@ export function h(html) {
 
 // ---------- tabla con orden y paginación
 
-export function tabla(cont, { columnas, filas, porPagina = 50, orden = null, vacio = 'Sin datos para los filtros seleccionados.' }) {
+// En pantallas angostas cada fila se muestra además como tarjeta (las primeras 'tituloCols' columnas forman el título).
+export function tabla(cont, { columnas, filas, porPagina = 50, orden = null, vacio = 'Sin datos para los filtros seleccionados.', tituloCols = 1, tarjeta = null }) {
   let pagina = 0;
   let ord = orden ? { ...orden } : null;
 
@@ -48,6 +49,7 @@ export function tabla(cont, { columnas, filas, porPagina = 50, orden = null, vac
         <thead><tr>${columnas.map(c => `<th class="${c.num ? 'num' : ''} ${c.sinOrden ? '' : 'ordenable'}" data-col="${c.id}" scope="col">${c.titulo}${flecha(c)}</th>`).join('')}</tr></thead>
         <tbody>${vista.map(f => `<tr>${columnas.map(c => `<td class="${c.num ? 'num' : ''} ${c.clase ?? ''}">${c.render ? c.render(f) : esc(f[c.id])}</td>`).join('')}</tr>`).join('')}</tbody>
       </table></div>
+      <div class="tabla-cards">${vista.map(f => tarjetaFila(f, columnas, tituloCols, tarjeta)).join('')}</div>
       ${paginas > 1 || total > 10 ? `<div class="paginacion"><span>${total.toLocaleString('es')} filas · página ${pagina + 1} de ${paginas}</span>
         <span><button class="btn chico" data-pag="-1" ${pagina === 0 ? 'disabled' : ''}>‹ Anterior</button>
         <button class="btn chico" data-pag="1" ${pagina >= paginas - 1 ? 'disabled' : ''}>Siguiente ›</button></span></div>` : ''}`;
@@ -60,6 +62,23 @@ export function tabla(cont, { columnas, filas, porPagina = 50, orden = null, vac
   }
   pintar();
   return { actualizar(nuevas) { filas = nuevas; pagina = 0; pintar(); } };
+}
+
+const VACIO = /^(—|–|-|)$|>—</;
+// tarjeta = { titulo: f => html, sub: f => html, omitir: [ids de columnas ya usadas en el título] }
+function tarjetaFila(f, columnas, tituloCols, tarjeta) {
+  const celda = c => (c.render ? c.render(f) : esc(f[c.id])) ?? '';
+  if (tarjeta) {
+    columnas = [{ id: '_t', render: () => tarjeta.sub ? tarjeta.sub(f) : '' }, { id: '_t2', render: () => tarjeta.titulo(f) },
+      ...columnas.filter(c => !(tarjeta.omitir || []).includes(c.id))];
+    tituloCols = 2;
+  }
+  const titulo = columnas.slice(0, tituloCols).map(celda).filter(v => !VACIO.test(String(v).trim()));
+  const resto = columnas.slice(tituloCols).map(c => [c, celda(c)])
+    .filter(([c, v]) => !VACIO.test(String(v).trim()) && c.titulo);
+  const acciones = columnas.slice(tituloCols).filter(c => !c.titulo).map(celda).join('');
+  return `<div class="tc"><div class="tc-t">${titulo.map((v, i) => i || titulo.length === 1 ? `<b>${v}</b>` : `<small>${v}</small>`).join('')}</div>
+    <dl>${resto.map(([c, v]) => `<div><dt>${c.titulo.replace(/<br>.*$/, '')}</dt><dd>${v}</dd></div>`).join('')}</dl>${acciones ? `<div class="tc-acc">${acciones}</div>` : ''}</div>`;
 }
 
 // ---------- barra de filtros (estado compartido entre vistas)

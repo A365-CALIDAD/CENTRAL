@@ -1,5 +1,5 @@
 @echo off
-REM CENTRAL - procesa los Excel de etl\entrada y publica los JSON del portal.
+REM CENTRAL - procesa las bases de los dashboards, valida contra ellos y publica los JSON del portal.
 REM Uso: doble clic, o "actualizar_central.bat --simular" para solo validar.
 chcp 65001 >nul
 cd /d "%~dp0"
@@ -11,6 +11,10 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+echo.
+echo Validando contra los dashboards...
+python etl\validar_dashboards.py
 
 echo.
 echo Revise data\cargas\errores\ si hubo registros rechazados.

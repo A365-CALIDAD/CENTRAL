@@ -53,6 +53,7 @@ REGISTRO = DATA / "cargas" / "registro_cargas.csv"
 DIR_ERRORES = DATA / "cargas" / "errores"
 
 CLAVE = ["empresa_id", "pais_id", "linea_id", "cuenta", "indicador_id", "periodo"]
+TOTAL = "(TOTAL)"   # cuenta que resume todo el servicio, calculada como el dashboard (sin mínimo de muestras)
 COLS_HISTORICO = CLAVE + [
     "fecha_medicion", "valor", "meta_archivo", "muestras",
     "fuente_id", "archivo", "archivo_hash", "carga_id", "fecha_carga",
@@ -263,11 +264,11 @@ def validar_config(catalogo: Catalogo, fuentes) -> list[str]:
             for d in f.get("indicadores_detalle", []):
                 if d.get("indicador") not in catalogo.indicadores:
                     problemas.append(f"{fid}: indicador inexistente '{d.get('indicador')}'")
-                if d.get("agregacion", "promedio") not in ("promedio", "porcentaje"):
+                if d.get("agregacion", "promedio") not in ("promedio", "porcentaje", "nota_ponderada"):
                     problemas.append(f"{fid}: agregación inválida en {d.get('indicador')}")
         cols = f.get("columnas", {})
-        if "fecha" not in cols and "periodo" not in cols:
-            problemas.append(f"{fid}: falta mapear 'fecha' o 'periodo'")
+        if "fecha" not in cols and "periodo" not in cols and not {"anio", "mes"} <= set(cols):
+            problemas.append(f"{fid}: falta mapear 'fecha', 'periodo' o 'anio' + 'mes'")
         if "cuenta" not in cols and not f.get("cuenta_fija"):
             problemas.append(f"{fid}: falta mapear 'cuenta' o definir 'cuenta_fija'")
         if f.get("formato") == "largo" and not {"indicador", "valor"} <= set(cols):
@@ -319,6 +320,67 @@ def coincide(v, lista) -> bool:
     return False
 
 
+def norm_id(v) -> str:
+    if vacio(v):
+        return ""
+    n = a_numero(v)
+    if n is not None and float(n).is_integer():
+        return str(int(n))
+    return normalizar(v)
+
+
+def palabras_reales(texto, quitar=None) -> int:
+    """Cantidad de palabras de 2+ letras que no son una letra repetida ('xxxxx'), como es_prueba() de Claro."""
+    t = re.sub(quitar, "", str(texto).upper()).strip() if quitar else str(texto)
+    return len([p for p in t.split() if len(p) > 1 and not re.fullmatch(r"(.)\1+", p)])
+
+
+def valor_item(v, si, no):
+    """1 = cumple, 0 = no cumple, None = no aplica / vacío (como item() de los scripts de Claro)."""
+    if vacio(v):
+        return None
+    t = normalizar(v)
+    if any(t.startswith(normalizar(x)) for x in si):
+        return 1
+    if any(t.startswith(normalizar(x)) for x in no):
+        return 0
+    return None
+
+
+def nota_ponderada(r, d, cols_items, col_base):
+    """Nota por bloques ponderados con anulación por error crítico (réplica de los dashboards de Claro).
+    Sin 'columna_base': cada bloque = promedio ponderado de sus ítems; nota = suma(peso_bloque * bloque) / suma(pesos).
+    Con 'columna_base': la nota viene en esa columna (ej. 'EC'). En ambos casos, un ítem crítico en 0 deja la nota en 0."""
+    si, no = d.get("si", ["SI CUMPLE"]), d.get("no", ["NO CUMPLE"])
+    vals = {it["columna"]: valor_item(r[cols_items[it["columna"]]], si, no)
+            for it in d.get("items", []) if it["columna"] in cols_items}
+    if col_base:
+        fin = a_numero(r[col_base])
+    else:
+        got = cap = 0.0
+        for bloque, peso in d.get("bloques", {}).items():
+            its = [it for it in d["items"] if it["bloque"] == bloque and vals.get(it["columna"]) is not None]
+            if not its:
+                continue
+            w = sum(it["peso"] for it in its)
+            got += peso * sum(it["peso"] * vals[it["columna"]] for it in its) / w
+            cap += peso
+        fin = got / cap * 100 if cap else None
+    if fin is None:
+        return None
+    if any(it.get("critico") and vals.get(it["columna"]) == 0 for it in d.get("items", [])):
+        return 0.0
+    return fin
+
+
+def recodificar(v, mapa):
+    for k, x in mapa.items():
+        clave = a_numero(k) if re.fullmatch(r"-?\d+(\.\d+)?", str(k)) else k
+        if coincide(v, [clave]):
+            return float(x)
+    return None
+
+
 def ruta_fuente(fuente) -> Path:
     c = Path(fuente["carpeta"])
     return c if c.is_absolute() else (RAIZ / c).resolve()
@@ -335,8 +397,11 @@ def columnas_necesarias(fuente) -> set:
     nombres = []
     for v in fuente.get("columnas", {}).values():
         nombres += v if isinstance(v, list) else [v]
-    nombres += [d["columna"] for d in fuente.get("indicadores_detalle", [])]
-    nombres += [f["columna"] for f in fuente.get("filtros", [])]
+    for d in fuente.get("indicadores_detalle", []):
+        nombres += [d.get("columna", ""), d.get("columna_base", "")]
+        nombres += [it["columna"] for it in d.get("items", [])]
+    for f in fuente.get("filtros", []):
+        nombres += [f.get("columna", "")] + f.get("columnas", []) + f.get("alguno_no_vacio", [])
     nombres += [fuente.get("id_unico", "")]
     return {normalizar(n) for n in nombres if n}
 
@@ -358,7 +423,7 @@ def unir_complementos(df: pd.DataFrame, fuente: dict, err: Errores) -> pd.DataFr
     df = df.loc[:, ~pd.Index(df.columns).duplicated()]
     if clave not in df.columns:
         return df
-    ids = set(df[clave].map(lambda v: normalizar(v)))
+    ids = set(df[clave].map(norm_id))
     necesarias = columnas_necesarias(fuente)
     agregadas = 0
     for ruta, c in archivos_complemento(fuente):
@@ -376,10 +441,10 @@ def unir_complementos(df: pd.DataFrame, fuente: dict, err: Errores) -> pd.DataFr
         parte.columns = [f"_{j}" if vacio(x) else normalizar(x) for j, x in enumerate(crudo.iloc[fila])]
         parte = parte.loc[:, ~pd.Index(parte.columns).duplicated()]
         parte = parte[[x for x in parte.columns if x in necesarias and x in df.columns]]
-        nuevas = parte[~parte[clave].map(lambda v: normalizar(v)).isin(ids) & ~parte[clave].map(vacio)]
+        nuevas = parte[~parte[clave].map(norm_id).isin(ids) & ~parte[clave].map(vacio)]
         if len(nuevas):
             df = pd.concat([df, nuevas], ignore_index=True)
-            ids |= set(nuevas[clave].map(lambda v: normalizar(v)))
+            ids |= set(nuevas[clave].map(norm_id))
             agregadas += len(nuevas)
     if agregadas:
         print(f"    + {agregadas} filas desde complementos ({len(archivos_complemento(fuente))} archivos)")
@@ -450,12 +515,10 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
     if fuente.get("id_unico"):
         col_id = resolver_columnas(df, {"x": [fuente["id_unico"]]}).get("x")
         if col_id is not None:
-            ids = df[col_id].map(lambda v: "" if vacio(v) else normalizar(v))
-            if fuente.get("id_solo_numerico"):
-                validos = ids.str.fullmatch(r"\d+( 0)?")
-            else:
-                validos = ids != ""
-            repetidos = validos & ids.duplicated(keep=fuente.get("id_mantener", "first"))
+            ids = df[col_id].map(norm_id)
+            validos = ids.str.fullmatch(r"\d+") if fuente.get("id_solo_numerico") else ids != ""
+            # Outbound y E-commerce no quitan repetidos de la base (solo de los complementos): id_deduplicar = false
+            repetidos = validos & ids.duplicated(keep=fuente.get("id_mantener", "first")) & fuente.get("id_deduplicar", True)
             if repetidos.any():
                 err.add("", col_id, "DUPLICADO_EN_ARCHIVO", int(repetidos.sum()),
                         f"{int(repetidos.sum())} filas con {fuente['id_unico']} repetido se cuentan una vez")
@@ -467,7 +530,7 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
     cols = resolver_columnas(df, mapeo)
     obligatorias = ["cuenta"] if not fuente.get("cuenta_fija") else []
     obligatorias += ["indicador", "valor"] if fuente["formato"] == "largo" else []
-    if "fecha" not in cols and "periodo" not in cols:
+    if "fecha" not in cols and "periodo" not in cols and not {"anio", "mes"} <= set(cols):
         obligatorias.append("fecha|periodo")
     faltan = [c for c in obligatorias if c not in cols]
 
@@ -484,6 +547,16 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
     det_cols = {}
     if fuente["formato"] == "detalle":
         for d in fuente.get("indicadores_detalle", []):
+            if d.get("agregacion") == "nota_ponderada":
+                items = {it["columna"]: resolver_columnas(df, {"x": [it["columna"]]}).get("x") for it in d.get("items", [])}
+                for c in [c for c, real in items.items() if real is None]:
+                    err.add(1, c, "COLUMNA_FALTANTE", detalle=f"Ítem de {d['indicador']} ausente")
+                base = resolver_columnas(df, {"x": [d["columna_base"]]}).get("x") if d.get("columna_base") else None
+                if d.get("columna_base") and base is None:
+                    err.add(1, d["columna_base"], "COLUMNA_FALTANTE", detalle=f"Columna base de {d['indicador']} ausente")
+                    continue
+                det_cols[d["indicador"]] = ({c: real for c, real in items.items() if real}, base)
+                continue
             real = resolver_columnas(df, {"x": [d["columna"]]}).get("x")
             if real:
                 det_cols[d["indicador"]] = real
@@ -492,6 +565,25 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
         if not det_cols:
             faltan.append("indicadores_detalle")
         for flt in fuente.get("filtros", []):
+            if "alguno_no_vacio" in flt:     # al menos una de estas columnas con valor (ej. criterios evaluados)
+                reales = [x for x in (resolver_columnas(df, {"x": [c]}).get("x") for c in flt["alguno_no_vacio"]) if x]
+                if not reales:
+                    faltan.append("filtro:alguno_no_vacio")
+                else:
+                    df = df[df[reales].apply(lambda fila: any(a_numero(v) is not None for v in fila), axis=1)]
+                continue
+            if "min_palabras" in flt:       # primer nombre no vacío entre varias columnas con N palabras reales
+                reales = [x for x in (resolver_columnas(df, {"x": [c]}).get("x") for c in flt["columnas"]) if x]
+                quitar = flt.get("quitar")
+
+                def nombre(fila):
+                    for c in reales:
+                        t = re.sub(quitar, "", str(fila[c]).upper()).strip() if quitar and not vacio(fila[c]) else ("" if vacio(fila[c]) else str(fila[c]))
+                        if t and t not in ("NA", "N/A", "NAN"):
+                            return t
+                    return ""
+                df = df[df.apply(lambda fila: palabras_reales(nombre(fila)) >= flt["min_palabras"], axis=1)]
+                continue
             real = resolver_columnas(df, {"x": [flt["columna"]]}).get("x")
             if real is None:
                 faltan.append(f"filtro:{flt['columna']}")
@@ -501,11 +593,27 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
                 df = df[~df[real].map(lambda v, lista=flt["excluir"]: coincide(v, lista))]
             elif flt.get("no_vacio"):
                 df = df[~df[real].map(vacio)]
+            elif flt.get("numerico"):
+                df = df[df[real].map(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and not vacio(v))]
     for c in faltan:
         err.add(1, c, "COLUMNA_FALTANTE", detalle=f"Columnas del archivo: {', '.join(map(str, df.columns))[:300]}")
     if faltan:
         return [], filas_leidas
-    grupos = {}     # solo formato detalle: (cuenta, periodo, indicador) -> [valores, fecha máxima]
+    alias_fecha = mapeo.get("fecha", [])
+    cols_fecha = [x for x in (resolver_columnas(df, {"x": [a]}).get("x") for a in
+                              (alias_fecha if isinstance(alias_fecha, list) else [alias_fecha])) if x]
+    grupos = {}     # solo formato detalle: (cuenta, periodo, indicador) -> [valores, fecha máxima, metas por fila]
+    metas = {d["indicador"]: {normalizar_cuenta(normalizar(k)): v for k, v in d.get("metas_por_cuenta", {}).items()}
+             for d in fuente.get("indicadores_detalle", [])}
+    con_total = fuente["formato"] == "detalle" and fuente.get("total_servicio", True)
+
+    def sumar(cuenta, periodo, ind, x, fecha):
+        meta = metas.get(ind, {}).get(normalizar_cuenta(normalizar(cuenta)))
+        for c in ([cuenta, TOTAL] if con_total else [cuenta]):
+            g = grupos.setdefault((c, periodo, ind), [[], fecha, []])
+            g[0].append(x)
+            g[1] = max(g[1], fecha)
+            g[2].append(meta)
 
     empresa, pais = fuente["empresa_id"], fuente["pais_id"]
     crudas = []
@@ -515,8 +623,14 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
         if vacio(cuenta_raw):
             err.add(fila, "cuenta", "VALOR_FALTANTE")
             continue
-        fecha = a_fecha(r[cols["fecha"]]) if "fecha" in cols else None
+        fecha = next((f for f in (a_fecha(r[c]) for c in cols_fecha) if f is not None), None) if cols_fecha else None
         periodo = a_periodo(r[cols["periodo"]]) if "periodo" in cols else None
+        if "anio" in cols and "mes" in cols:     # mes de medición informado en columnas propias
+            a, mm = a_numero(r[cols["anio"]]), a_numero(r[cols["mes"]])
+            periodo = f"{int(a):04d}-{int(mm):02d}" if a and mm and 2000 <= a <= 2100 and 1 <= mm <= 12 else None
+            if periodo is None:
+                err.add(fila, "mes", "FECHA_INVALIDA", f"{r[cols['anio']]}-{r[cols['mes']]}")
+                continue
         if "fecha" in cols and fecha is None and not periodo:
             err.add(fila, "fecha", "FECHA_INVALIDA" if not vacio(r[cols["fecha"]]) else "VALOR_FALTANTE", r[cols["fecha"]])
             continue
@@ -532,15 +646,22 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
 
         if fuente["formato"] == "detalle":
             if fuente.get("conteo"):
-                g = grupos.setdefault((cuenta, periodo, fuente["conteo"]), [[], fecha])
-                g[0].append(1.0)
-                g[1] = max(g[1], fecha)
+                sumar(cuenta, periodo, fuente["conteo"], 1.0, fecha)
             for d in fuente.get("indicadores_detalle", []):
                 col = det_cols.get(d["indicador"])
+                if isinstance(col, tuple):
+                    x = nota_ponderada(r, d, *col)
+                    if x is not None:
+                        sumar(cuenta, periodo, d["indicador"], x, fecha)
+                    continue
                 if col is None or vacio(r[col]):
                     continue
                 v = r[col]
-                if d.get("agregacion", "promedio") == "porcentaje":
+                if "recodificar" in d:
+                    x = recodificar(v, d["recodificar"])
+                    if x is None:
+                        continue
+                elif d.get("agregacion", "promedio") == "porcentaje":
                     if coincide(v, d.get("positivos", [])):
                         x = 100.0
                     elif "negativos" not in d or coincide(v, d["negativos"]):
@@ -552,9 +673,9 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
                     if x is None:
                         err.add(fila, col, "TIPO_INVALIDO", v, "Se esperaba un número")
                         continue
-                g = grupos.setdefault((cuenta, periodo, d["indicador"]), [[], fecha])
-                g[0].append(x)
-                g[1] = max(g[1], fecha)
+                if d.get("multiplicar"):
+                    x *= d["multiplicar"]
+                sumar(cuenta, periodo, d["indicador"], x, fecha)
             continue
 
         if fuente["formato"] == "largo":
@@ -584,13 +705,19 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
 
     if fuente["formato"] == "detalle":
         minimo = fuente.get("min_muestras", 1)
-        metas = {d["indicador"]: {normalizar_cuenta(normalizar(k)): v for k, v in d.get("metas_por_cuenta", {}).items()}
-                 for d in fuente.get("indicadores_detalle", [])}
-        for (cuenta, periodo, ind), (valores, fecha) in grupos.items():
+        for (cuenta, periodo, ind), (valores, fecha, metas_filas) in grupos.items():
             if ind == fuente.get("conteo"):
                 crudas.append({"fila": "", "empresa_id": empresa, "pais_id": pais, "cuenta": cuenta,
                                "indicador_id": ind, "periodo": periodo, "fecha_medicion": fecha.strftime("%Y-%m-%d"),
                                "valor": float(len(valores)), "meta_archivo": None,
+                               "muestras": len(valores), "_texto_porcentaje": True})
+                continue
+            if cuenta == TOTAL:    # total del servicio: meta = promedio de las metas de cada fila (como el dashboard)
+                con_meta = [x for x in metas_filas if x is not None]
+                crudas.append({"fila": "", "empresa_id": empresa, "pais_id": pais, "cuenta": cuenta,
+                               "indicador_id": ind, "periodo": periodo, "fecha_medicion": fecha.strftime("%Y-%m-%d"),
+                               "valor": sum(valores) / len(valores),
+                               "meta_archivo": sum(con_meta) / len(con_meta) if con_meta else None,
                                "muestras": len(valores), "_texto_porcentaje": True})
                 continue
             if len(valores) < minimo:
@@ -711,7 +838,7 @@ def publicar(catalogo: Catalogo, fuentes):
             "per": r["periodo"], "f": r["fecha_medicion"], "v": valor,
             "m": meta, "u": umbral, "n": int(r["muestras"]) if r["muestras"] else None,
             "s": catalogo.estado(valor, meta, umbral, r["indicador_id"]),
-            "src": r["fuente_id"], "ver": int(r["version"] or 1),
+            "src": r["fuente_id"], "ver": int(r["version"] or 1), "t": r["cuenta"] == TOTAL,
             "demo": r["fuente_id"] in fuentes_demo,
         })
     registros.sort(key=lambda x: (x["e"], x["p"], x["l"], x["c"], x["i"], x["per"]))
@@ -720,7 +847,7 @@ def publicar(catalogo: Catalogo, fuentes):
         "generado": ahora,
         "esquema": {"e": "empresa_id", "p": "pais_id", "l": "linea_id (servicio/dashboard)", "c": "cuenta", "i": "indicador_id", "per": "periodo YYYY-MM",
                     "f": "fecha_medicion", "v": "valor", "m": "meta", "u": "umbral_critico", "n": "muestras",
-                    "s": "estado", "src": "fuente_id", "ver": "version", "demo": "dato ficticio"},
+                    "s": "estado", "src": "fuente_id", "ver": "version", "t": "total del servicio", "demo": "dato ficticio"},
         "metas_son_ejemplo": catalogo.metas_son_ejemplo,
         "hay_datos_demo": any(r["demo"] for r in registros),
         "registros": registros,

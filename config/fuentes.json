@@ -41,6 +41,16 @@
           "agregacion": "promedio"
         },
         {
+          "indicador": "pec",
+          "columna": "PEC",
+          "agregacion": "promedio"
+        },
+        {
+          "indicador": "penc",
+          "columna": "PENC (100%)",
+          "agregacion": "promedio"
+        },
+        {
           "indicador": "adherencia",
           "columna": "Adherencia (100%)",
           "agregacion": "promedio"
@@ -117,7 +127,7 @@
       "empresa_id": "entel",
       "pais_id": "cl",
       "linea_id": "entel-mt",
-      "descripcion": "Monitoreos Mesa Técnica (hoja Monitoreos del Informe Adh., misma base del dashboard MT)",
+      "descripcion": "Monitoreos Mesa Técnica (hoja Monitoreos del Informe Adh., misma base del dashboard MT). 'Resultado Final' = GP_Adherencia Global, que el dashboard llama 'Adherencia'.",
       "carpeta": "../ENTEL/ENTEL_BI_MT/Adherencias",
       "patron": "Informe Adh*.xls*",
       "seleccion": "mas_reciente",
@@ -142,11 +152,6 @@
           "agregacion": "promedio"
         },
         {
-          "indicador": "adherencia",
-          "columna": "Adherencia (100%)",
-          "agregacion": "promedio"
-        },
-        {
           "indicador": "penc",
           "columna": "PENC (100%)",
           "agregacion": "promedio"
@@ -162,7 +167,7 @@
       "empresa_id": "entel",
       "pais_id": "cl",
       "linea_id": "entel-mt",
-      "descripcion": "EPA Técnico Fibra (hoja BASE del Evolutivo EPA)",
+      "descripcion": "EPA Técnico Fibra (hoja BASE del Evolutivo EPA). Mes = 'Mes de medición' y meta 65 como en el dashboard MT.",
       "carpeta": "../ENTEL/ENTEL_BI_MT/Reporte EPA",
       "patron": "Evolutivo EPA*.xls*",
       "seleccion": "mas_reciente",
@@ -176,6 +181,12 @@
         "fecha": [
           "Fecha atención"
         ],
+        "anio": [
+          "Año de medición"
+        ],
+        "mes": [
+          "Mes de medición"
+        ],
         "cuenta": [
           "Plataforma"
         ]
@@ -184,7 +195,10 @@
         {
           "indicador": "epa",
           "columna": "EPA",
-          "agregacion": "promedio"
+          "agregacion": "promedio",
+          "metas_por_cuenta": {
+            "Fibra Tecnico": 65
+          }
         },
         {
           "indicador": "fcr",
@@ -211,7 +225,7 @@
       "empresa_id": "entel",
       "pais_id": "cl",
       "linea_id": "entel-c2c",
-      "descripcion": "Monitoreos Retenciones C2C (hoja Matriz del Informe Adh. Retenciones)",
+      "descripcion": "Monitoreos Retenciones C2C (hoja Matriz). Mes por fecha de atención (GP_Mes), como el dashboard. 'Resultado Final' = GP_Adherencia Global ('Adherencia' en el dashboard).",
       "carpeta": "../ENTEL/ENTEL_BI_CZC/Adherencias",
       "patron": "Informe Adh*Retenciones*.xls*",
       "seleccion": "mas_reciente",
@@ -223,7 +237,7 @@
       "conteo": "evaluaciones",
       "columnas": {
         "fecha": [
-          "Fecha Envío"
+          "GP_Fecha Atención"
         ],
         "cuenta": [
           "Plataforma"
@@ -233,11 +247,6 @@
         {
           "indicador": "calidad",
           "columna": "Resultado Final",
-          "agregacion": "promedio"
-        },
-        {
-          "indicador": "adherencia",
-          "columna": "Adherencia (100%)",
           "agregacion": "promedio"
         },
         {
@@ -307,7 +316,8 @@
           "hoja": "Matriz",
           "encabezado_contiene": "ID Pauta"
         }
-      ]
+      ],
+      "id_deduplicar": false
     },
     {
       "id": "entel_out_epa",
@@ -316,7 +326,7 @@
       "empresa_id": "entel",
       "pais_id": "cl",
       "linea_id": "entel-out",
-      "descripcion": "Encuesta post venta Móvil Outbound (copia de Drive que descarga el dashboard OUT). La EPA del dashboard aún no está replicada: se muestra la satisfacción global 1-5.",
+      "descripcion": "Encuesta post venta Móvil Outbound (EPA_drive.xlsx). EPA = Global recodificada (4-5 = 100, 3 = 0, 1-2 = -100) como el dashboard OUT.",
       "carpeta": "../ENTEL/ENTEL_BI_OUT/BI/Descargas",
       "patron": "EPA_drive.xlsx",
       "seleccion": "mas_reciente",
@@ -335,6 +345,18 @@
         ]
       },
       "indicadores_detalle": [
+        {
+          "indicador": "epa",
+          "columna": "Global",
+          "agregacion": "promedio",
+          "recodificar": {
+            "5": 100,
+            "4": 100,
+            "3": 0,
+            "2": -100,
+            "1": -100
+          }
+        },
         {
           "indicador": "global",
           "columna": "Global",
@@ -400,7 +422,8 @@
           "hoja": "Matriz",
           "encabezado_contiene": "ID Pauta"
         }
-      ]
+      ],
+      "id_deduplicar": false
     },
     {
       "id": "entel_emp_monitoreo",
@@ -445,7 +468,23 @@
         },
         {
           "columna": "Nota",
-          "no_vacio": true
+          "numerico": true
+        },
+        {
+          "alguno_no_vacio": [
+            "Presentación del ejecutivo",
+            "Frases de conexión",
+            "Frases de enganche",
+            "Personalización",
+            "Detección de necesidades",
+            "Argumentación",
+            "Rebate de objeciones",
+            "Condiciones específicas del plan contratado",
+            "Promociones asociadas al negocio",
+            "Despedida",
+            "Fluidez y lenguaje",
+            "Claridad y orden"
+          ]
         }
       ],
       "solo_hojas_mes": true
@@ -456,7 +495,7 @@
       "demo": false,
       "empresa_id": "claro",
       "pais_id": "ec",
-      "descripcion": "Monitoreos Qualtrics Claro Ecuador Inbound (carpeta filtrado). Solo FCR: la nota de calidad la calcula el dashboard con pesos por bloque y aún no está replicada.",
+      "descripcion": "Monitoreos Qualtrics Claro Ecuador Inbound. Nota COPC = bloques ponderados (ASE 10, UF 25, NEG 30, CUM 15, COM 20), 0 si hay error crítico; ítems y pesos copiados del dashboard.",
       "carpeta": "../CLARO/ECUADOR/CLARO_IN/filtrado",
       "patron": "*.xlsx",
       "seleccion": "mas_reciente",
@@ -479,9 +518,155 @@
           "incluir": [
             "True"
           ]
+        },
+        {
+          "min_palabras": 2,
+          "columnas": [
+            "Q46",
+            "Q47"
+          ],
+          "quitar": "^I?N?B-MAG-"
         }
       ],
       "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "agregacion": "nota_ponderada",
+          "bloques": {
+            "ASE": 10,
+            "UF": 25,
+            "NEG": 30,
+            "CUM": 15,
+            "COM": 20
+          },
+          "items": [
+            {
+              "columna": "Comunicación inicial_1",
+              "bloque": "ASE",
+              "peso": 2,
+              "critico": false,
+              "nombre": "Scripts de saludo y despedida"
+            },
+            {
+              "columna": "Escucha activa_1",
+              "bloque": "ASE",
+              "peso": 4,
+              "critico": false,
+              "nombre": "Interrupción y escucha efectiva"
+            },
+            {
+              "columna": "Comunicación efectiv_1",
+              "bloque": "ASE",
+              "peso": 4,
+              "critico": false,
+              "nombre": "Amabilidad y empatía"
+            },
+            {
+              "columna": "Entrega de informaci_1",
+              "bloque": "UF",
+              "peso": 8.75,
+              "critico": true,
+              "nombre": "Información, solución y procedimiento correcto"
+            },
+            {
+              "columna": "Entrega de informaci_2",
+              "bloque": "UF",
+              "peso": 3.75,
+              "critico": false,
+              "nombre": "Sondea para comprender la necesidad"
+            },
+            {
+              "columna": "Calidad de atención_1",
+              "bloque": "UF",
+              "peso": 1.25,
+              "critico": false,
+              "nombre": "Manejo de tiempos de espera / hold"
+            },
+            {
+              "columna": "Calidad de atención_2",
+              "bloque": "UF",
+              "peso": 2.5,
+              "critico": false,
+              "nombre": "Paciencia y manejo de la situación"
+            },
+            {
+              "columna": "Calidad de atención_3",
+              "bloque": "UF",
+              "peso": 1.25,
+              "critico": false,
+              "nombre": "Mantiene el canal abierto"
+            },
+            {
+              "columna": "Calidad de atención_4",
+              "bloque": "UF",
+              "peso": 1.25,
+              "critico": false,
+              "nombre": "Solicita, da motivo y agradece la espera"
+            },
+            {
+              "columna": "Manejo de situación_1",
+              "bloque": "UF",
+              "peso": 6.25,
+              "critico": true,
+              "nombre": "Cierre correcto de llamada"
+            },
+            {
+              "columna": "GESTIÓN COMERCIAL_1",
+              "bloque": "NEG",
+              "peso": 4.5,
+              "critico": false,
+              "nombre": "Cumple el proceso sin pedir datos innecesarios"
+            },
+            {
+              "columna": "GESTIÓN COMERCIAL_2",
+              "bloque": "NEG",
+              "peso": 12,
+              "critico": false,
+              "nombre": "Gestiona correctamente en aplicativos"
+            },
+            {
+              "columna": "GESTIÓN COMERCIAL_3",
+              "bloque": "NEG",
+              "peso": 4.5,
+              "critico": false,
+              "nombre": "Resumen completo y confirmación"
+            },
+            {
+              "columna": "DERIVACIONES_1",
+              "bloque": "NEG",
+              "peso": 6,
+              "critico": true,
+              "nombre": "Deriva / escala correctamente"
+            },
+            {
+              "columna": "DERIVACIONES_2",
+              "bloque": "NEG",
+              "peso": 3,
+              "critico": false,
+              "nombre": "Invita a calificar la atención"
+            },
+            {
+              "columna": "Info Confidencial_1",
+              "bloque": "CUM",
+              "peso": 15,
+              "critico": true,
+              "nombre": "Valida identidad"
+            },
+            {
+              "columna": "Q73_1",
+              "bloque": "COM",
+              "peso": 20,
+              "critico": false,
+              "nombre": "Ofrecimiento comercial"
+            }
+          ],
+          "si": [
+            "SI CUMPLE"
+          ],
+          "no": [
+            "NO CUMPLE"
+          ]
+        },
         {
           "indicador": "fcr",
           "columna": "FCR",
@@ -505,7 +690,7 @@
       "empresa_id": "claro",
       "pais_id": "ec",
       "linea_id": "claro-ec-out",
-      "descripcion": "Monitoreos Qualtrics Claro Ecuador Outbound (carpeta filtrado). La nota de calidad la calcula el dashboard y aún no está replicada.",
+      "descripcion": "Monitoreos Qualtrics Claro Ecuador Outbound. Nota COPC = columna EC, 0 si hay error crítico (ítems críticos del dashboard). Efectividad = SI / (SI + NO).",
       "carpeta": "../CLARO/ECUADOR/CLARO_OUT/filtrado",
       "patron": "*.xlsx",
       "seleccion": "mas_reciente",
@@ -524,6 +709,159 @@
         ]
       },
       "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "agregacion": "nota_ponderada",
+          "columna_base": "EC",
+          "items": [
+            {
+              "columna": "Comunicación inicial_1",
+              "bloque": "0",
+              "peso": 20,
+              "critico": false,
+              "nombre": "Scripts saludo y despedida"
+            },
+            {
+              "columna": "Escucha activa_1",
+              "bloque": "0",
+              "peso": 40,
+              "critico": false,
+              "nombre": "Interrupción y escucha efectiva"
+            },
+            {
+              "columna": "Comunicación efectiv_1",
+              "bloque": "0",
+              "peso": 40,
+              "critico": false,
+              "nombre": "Amabilidad y empatía"
+            },
+            {
+              "columna": "Entrega de informaci_1",
+              "bloque": "1",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Información correcta y completa del producto"
+            },
+            {
+              "columna": "Entrega de informaci_2",
+              "bloque": "1",
+              "peso": 20,
+              "critico": false,
+              "nombre": "Solicita datos actualizados"
+            },
+            {
+              "columna": "Calidad de atención_1",
+              "bloque": "1",
+              "peso": 10,
+              "critico": false,
+              "nombre": "Tiempos de espera / hold / canal abierto"
+            },
+            {
+              "columna": "Calidad de atención_2",
+              "bloque": "1",
+              "peso": 15,
+              "critico": false,
+              "nombre": "Paciencia y evita comentarios inapropiados"
+            },
+            {
+              "columna": "Calidad de atención_3",
+              "bloque": "1",
+              "peso": 10,
+              "critico": false,
+              "nombre": "Solicita, da motivo y agradece la espera"
+            },
+            {
+              "columna": "Manejo de situación_1",
+              "bloque": "1",
+              "peso": 25,
+              "critico": true,
+              "nombre": "Cierre correcto de llamada"
+            },
+            {
+              "columna": "Cumplimiento de proc_1",
+              "bloque": "2",
+              "peso": 15,
+              "critico": false,
+              "nombre": "Sondeo / filtro de preguntas"
+            },
+            {
+              "columna": "Cumplimiento de proc_2",
+              "bloque": "2",
+              "peso": 25,
+              "critico": false,
+              "nombre": "Manejo de objeciones"
+            },
+            {
+              "columna": "Cumplimiento de proc_3",
+              "bloque": "2",
+              "peso": 15,
+              "critico": false,
+              "nombre": "Valida cobertura / coordinación de entrega"
+            },
+            {
+              "columna": "Cumplimiento de proc_4",
+              "bloque": "2",
+              "peso": 5,
+              "critico": false,
+              "nombre": "Ofrece promoción vigente"
+            },
+            {
+              "columna": "Cumplimiento de proc_5",
+              "bloque": "2",
+              "peso": 20,
+              "critico": false,
+              "nombre": "Gestiona correctamente en aplicativos"
+            },
+            {
+              "columna": "Cumplimiento de proc_6",
+              "bloque": "2",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Resumen completo de venta"
+            },
+            {
+              "columna": "PEC CUMPLIMIENTO_1",
+              "bloque": "3",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Solicita permiso para info comercial"
+            },
+            {
+              "columna": "PEC CUMPLIMIENTO_2",
+              "bloque": "3",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Indica que la llamada es grabada"
+            },
+            {
+              "columna": "PEC CUMPLIMIENTO_3",
+              "bloque": "3",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Script de protección de datos"
+            },
+            {
+              "columna": "PEC CUMPLIMIENTO_4",
+              "bloque": "3",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Valida identidad"
+            },
+            {
+              "columna": "PEC CUMPLIMIENTO_5",
+              "bloque": "3",
+              "peso": 20,
+              "critico": true,
+              "nombre": "Confirma aceptación del cliente"
+            }
+          ],
+          "si": [
+            "SI CUMPLE"
+          ],
+          "no": [
+            "NO CUMPLE"
+          ]
+        },
         {
           "indicador": "efectividad",
           "columna": "Efectivización",
@@ -656,6 +994,12 @@
     "solo_hojas_mes": "Con hoja '*': considerar solo hojas cuyo nombre es un mes (omite Dotacion, PLANTILLA...)",
     "id_unico": "Columna que identifica cada evaluación (ej. 'ID Pauta'): las repetidas se cuentan una vez ('id_mantener': first|last)",
     "id_solo_numerico": "Descarta filas cuyo id no es numérico (totales, filas en blanco), como hace el dashboard",
-    "complementos": "Descargas diarias que se suman a la base principal sin repetir id_unico (ej. Reporte Pauta Outbound)"
+    "complementos": "Descargas diarias que se suman a la base principal sin repetir id_unico (ej. Reporte Pauta Outbound)",
+    "recodificar": "Mapa valor -> puntaje antes de promediar (ej. Global 4-5 = 100, 3 = 0, 1-2 = -100)",
+    "nota_ponderada": "Nota por bloques: {bloques: {bloque: peso}, items: [{columna, bloque, peso, critico}], si, no} o {columna_base, items críticos}; un crítico en NO deja la nota en 0",
+    "anio_mes": "columnas 'anio' y 'mes' definen el periodo (ej. 'Año de medición', 'Mes de medición')",
+    "total_servicio": "true por defecto: publica la cuenta '(TOTAL)' con el resultado de todo el servicio, sin mínimo de muestras",
+    "id_deduplicar": "false = no quitar repetidos dentro de la base (Outbound y E-commerce no lo hacen); los complementos siempre se unen sin repetir",
+    "filtros_extra": "{columna, numerico: true} · {alguno_no_vacio: [columnas]} · {min_palabras: 2, columnas: [...], quitar: regex} (asesores de prueba)"
   }
 }

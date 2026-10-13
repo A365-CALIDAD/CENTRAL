@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-12T16:05:16",
+  "generado": "2026-10-13T16:46:50",
   "descripcion": "Resumen autorizado de CENTRAL para responder preguntas. Contiene solo indicadores agregados por cuenta; no incluye datos personales.",
   "ultimo_periodo": "2026-10",
   "indicadores": [
@@ -32,15 +32,15 @@
     {
       "id": "epa",
       "nombre": "EPA",
-      "descripcion": "Encuesta post atención (EPA recodificada por encuesta y promediada)",
-      "unidad": "%",
+      "descripcion": "Encuesta post atención: promedio de la recodificación por encuesta (promotor 100, neutro 0, detractor -100); índice entre -100 y 100",
+      "unidad": "indice",
       "rango": [
         -100,
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 80,
-      "umbral_critico": 70
+      "meta": null,
+      "umbral_critico": null
     },
     {
       "id": "fcr",
@@ -52,21 +52,21 @@
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 75,
-      "umbral_critico": 65
+      "meta": null,
+      "umbral_critico": null
     },
     {
       "id": "calidad",
       "nombre": "Nota de calidad",
-      "descripcion": "Resultado de monitoreo de calidad",
+      "descripcion": "Nota final del monitoreo: Resultado Final (Entel; 'Adherencia Global' en C2C y Mesa Técnica), Nota COPC (Claro), Nota (Empresas)",
       "unidad": "%",
       "rango": [
         0,
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 90,
-      "umbral_critico": 80
+      "meta": null,
+      "umbral_critico": null
     },
     {
       "id": "adherencia",
@@ -78,8 +78,8 @@
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 92,
-      "umbral_critico": 85
+      "meta": null,
+      "umbral_critico": null
     },
     {
       "id": "tmo",
@@ -179,10 +179,26 @@
     {
       "empresa": "claro",
       "pais": "ec",
+      "indicador": "Nota de calidad",
+      "periodo": "2026-10",
+      "promedio": 28.36,
+      "cuentas": 5,
+      "criticas": [
+        "(TOTAL)",
+        "FIJO",
+        "MOVIL",
+        "POSTPAGO",
+        "PREPAGO"
+      ],
+      "alertas": []
+    },
+    {
+      "empresa": "claro",
+      "pais": "ec",
       "indicador": "Efectividad de venta",
       "periodo": "2026-10",
-      "promedio": 8.82,
-      "cuentas": 2,
+      "promedio": 4.88,
+      "cuentas": 3,
       "criticas": [],
       "alertas": []
     },
@@ -191,8 +207,8 @@
       "pais": "ec",
       "indicador": "Evaluaciones",
       "periodo": "2026-10",
-      "promedio": 21.5,
-      "cuentas": 4,
+      "promedio": 37.33,
+      "cuentas": 5,
       "criticas": [],
       "alertas": []
     },
@@ -201,12 +217,9 @@
       "pais": "ec",
       "indicador": "Resolutividad (FCR)",
       "periodo": "2026-10",
-      "promedio": 36.97,
-      "cuentas": 2,
-      "criticas": [
-        "POSTPAGO",
-        "PREPAGO"
-      ],
+      "promedio": 36.72,
+      "cuentas": 3,
+      "criticas": [],
       "alertas": []
     },
     {
@@ -214,50 +227,28 @@
       "pais": "cl",
       "indicador": "Adherencia",
       "periodo": "2026-10",
-      "promedio": 93.93,
-      "cuentas": 9,
-      "criticas": [
-        "RETENCIONES C2C - HOGAR",
-        "S2S MÓVIL 2.0"
-      ],
-      "alertas": [
-        "RECLAMOS 105 (FIBRA COMERCIAL)"
-      ]
+      "promedio": 94.38,
+      "cuentas": 7,
+      "criticas": [],
+      "alertas": []
     },
     {
       "empresa": "entel",
       "pais": "cl",
       "indicador": "Nota de calidad",
       "periodo": "2026-10",
-      "promedio": 83.46,
+      "promedio": 84.04,
       "cuentas": 21,
-      "criticas": [
-        "C2C HOGAR PRIVADO",
-        "CARRITO PUBLICO HOGAR",
-        "FONOCOMPRAS HOGAR",
-        "FONOCOMPRAS MOVIL",
-        "S2S MÓVIL 2.0",
-        "WEB MOVIL PUBLICO"
-      ],
-      "alertas": [
-        "C2C MOVIL PUBLICO",
-        "FACEBOOK LEADS MOVIL",
-        "FRONT HOGAR FIBRA TECNICO",
-        "HOGAR COMERCIAL",
-        "RECLAMOS 105 (FIBRA COMERCIAL)",
-        "RETENCIONES C2C - HOGAR",
-        "RETENCIONES C2C - MOVIL",
-        "WEB HOGAR PUBLICO",
-        "WEB MOVIL PRIVADO"
-      ]
+      "criticas": [],
+      "alertas": []
     },
     {
       "empresa": "entel",
       "pais": "cl",
       "indicador": "Encuestas",
       "periodo": "2026-10",
-      "promedio": 102.92,
-      "cuentas": 12,
+      "promedio": 174.27,
+      "cuentas": 13,
       "criticas": [],
       "alertas": []
     },
@@ -266,11 +257,9 @@
       "pais": "cl",
       "indicador": "EPA",
       "periodo": "2026-10",
-      "promedio": 70.39,
-      "cuentas": 7,
-      "criticas": [
-        "FIBRA TECNICO"
-      ],
+      "promedio": 76.51,
+      "cuentas": 10,
+      "criticas": [],
       "alertas": [
         "FIBRA"
       ]
@@ -280,8 +269,8 @@
       "pais": "cl",
       "indicador": "Evaluaciones",
       "periodo": "2026-10",
-      "promedio": 34.07,
-      "cuentas": 28,
+      "promedio": 54.12,
+      "cuentas": 29,
       "criticas": [],
       "alertas": []
     },
@@ -290,15 +279,10 @@
       "pais": "cl",
       "indicador": "Resolutividad (FCR)",
       "periodo": "2026-10",
-      "promedio": 75.07,
-      "cuentas": 7,
+      "promedio": 74.64,
+      "cuentas": 8,
       "criticas": [],
-      "alertas": [
-        "FIBRA TECNICO",
-        "RECLAMOS FIBRA",
-        "S2S HOGAR",
-        "TÉCNICO"
-      ]
+      "alertas": []
     },
     {
       "empresa": "entel",
@@ -306,7 +290,7 @@
       "indicador": "Satisfacción global",
       "periodo": "2026-10",
       "promedio": 4.49,
-      "cuentas": 9,
+      "cuentas": 10,
       "criticas": [],
       "alertas": []
     },
@@ -315,8 +299,8 @@
       "pais": "cl",
       "indicador": "PEC",
       "periodo": "2026-10",
-      "promedio": 65.41,
-      "cuentas": 19,
+      "promedio": 74.02,
+      "cuentas": 25,
       "criticas": [],
       "alertas": []
     },
@@ -325,8 +309,8 @@
       "pais": "cl",
       "indicador": "PENC",
       "periodo": "2026-10",
-      "promedio": 80.33,
-      "cuentas": 20,
+      "promedio": 78.43,
+      "cuentas": 26,
       "criticas": [],
       "alertas": []
     }

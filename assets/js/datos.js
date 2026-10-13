@@ -23,16 +23,20 @@ async function json(url, defecto) {
 }
 
 export async function cargar() {
-  const [portal, ind, cons, resumen, seg] = await Promise.all([
+  const [portal, ind, cons, resumen, seg, validacion] = await Promise.all([
     json('config/portal.json'),
     json('config/indicadores.json'),
     json('data/consolidado.json', { registros: [] }),
     json('data/cargas/resumen.json', { cargas: [], errores: [] }),
     json('data/seguimiento.json', { acciones: [] }),
+    json('data/cargas/validacion.json', null),
   ]);
   S.portal = portal;
   S.indicadores = Object.fromEntries(ind.indicadores.map(i => [i.id, i]));
-  S.registros = cons.registros || [];
+  // Las filas "(TOTAL)" resumen cada servicio como lo calcula su dashboard; se separan de las cuentas.
+  S.totales = (cons.registros || []).filter(r => r.t);
+  S.registros = (cons.registros || []).filter(r => !r.t);
+  S.validacion = validacion;
   S.generado = cons.generado || null;
   S.hayDemo = !!cons.hay_datos_demo;
   S.metasEjemplo = !!cons.metas_son_ejemplo;
@@ -85,6 +89,7 @@ export function fmt(v, i) {
   if (u === '%') return `${nf1.format(v)}%`;
   if (u === 'seg') return `${nf0.format(v)} s`;
   if (u === 'n') return nf0.format(v);
+  if (u === 'indice') return nf1.format(v);
   if (u === 'pts') return new Intl.NumberFormat('es', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(v);
   return nf1.format(v);
 }

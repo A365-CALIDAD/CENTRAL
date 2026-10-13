@@ -53,6 +53,7 @@ python etl/central_etl.py procesar --fuente demo_claro_ec   # solo una fuente
 python etl/central_etl.py procesar --permitir-correcciones  # versiona correcciones de periodos cerrados
 python etl/central_etl.py publicar                          # regenera los JSON desde el histórico
 python etl/central_etl.py validar-config
+python etl/validar_dashboards.py                         # compara cada indicador con su dashboard
 python -m unittest discover -s etl/tests -v
 ```
 
@@ -64,11 +65,10 @@ python -m unittest discover -s etl/tests -v
 
 Pendientes:
 
-1. **Visualización de Entel Inbound y Mesa Técnica:** falta su URL de GitHub Pages en `config/portal.json`.
-2. **Indicadores calculados en los dashboards:** la nota de Claro EC (Inbound/Outbound) y la EPA de Entel Outbound se calculan en el HTML de cada dashboard; hay que replicar esas reglas para traerlas.
-3. **Homologar cuentas** entre monitoreo y EPA de Entel Inbound en `config/homologacion.json`.
-4. **Metas:** validar metas y umbrales de `config/indicadores.json` (PENC, PEC, efectividad y global aún no tienen meta) y luego poner `metas_son_ejemplo: false`.
-5. **GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / raíz. Ver privacidad.
+1. **Histórico EPA de Mesa Técnica:** el dashboard lo toma del Evolutivo `.xlsb` (desde abril 2024); CENTRAL hoy solo lee el Excel mensual.
+2. **Homologar cuentas** entre monitoreo y EPA de Entel Inbound en `config/homologacion.json`.
+3. **Metas:** solo hay metas donde el dashboard las define (EPA Entel Inbound y Mesa Técnica, Nota COPC de Claro). Acordar las del resto en `config/indicadores.json`.
+4. **GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / raíz. Ver privacidad.
 
 ## Privacidad
 

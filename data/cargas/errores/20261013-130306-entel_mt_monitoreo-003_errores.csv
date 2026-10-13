@@ -1,0 +1,8 @@
+carga_id,fuente_id,archivo,fila_excel,campo,tipo_error,valor,detalle
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,ID Pauta,DUPLICADO_EN_ARCHIVO,10,10 filas con ID Pauta repetido se cuentan una vez
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,2,BACK HOGAR FIBRA TECNICO · calidad · 2026-04: 2 casos (mínimo 5)
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,2,BACK HOGAR FIBRA TECNICO · penc · 2026-04: 2 casos (mínimo 5)
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,1,BACK HOGAR FIBRA TECNICO · calidad · 2026-06: 1 casos (mínimo 5)
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,1,BACK HOGAR FIBRA TECNICO · penc · 2026-06: 1 casos (mínimo 5)
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,2,BACK HOGAR FIBRA TECNICO · calidad · 2026-09: 2 casos (mínimo 5)
+20261013-130306-entel_mt_monitoreo-003,entel_mt_monitoreo,../ENTEL/ENTEL_BI_MT/Adherencias/Informe Adh. Mesas Técnicas N1 VOZ - 12.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,2,BACK HOGAR FIBRA TECNICO · penc · 2026-09: 2 casos (mínimo 5)

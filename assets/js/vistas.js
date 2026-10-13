@@ -11,6 +11,8 @@ import {
 const nombreUnidad = (e, p) => unidad(e, p)?.nombre ?? `${nombreEmpresa(e)} ${nombrePais(e, p)}`;
 const enRiesgo = r => r.s === 'CRITICO' || r.s === 'ALERTA';
 const servicio = r => `${nombreUnidad(r.e, r.p)} · ${nombreLinea(r.l)}`;
+const servicioDe = l => { const x = S.portal.empresas.flatMap(e => e.paises.flatMap(p => p.dashboards.map(d => ({ d, e, p })))).find(z => z.d.id === l);
+  return x ? `${nombreUnidad(x.e.id, x.p.id)} · ${x.d.servicio || x.d.nombre}` : l; };
 const brechaRel = r => { const b = brecha(r); return b === null || !r.m ? null : (b / Math.abs(r.m)) * 100; };
 const accionesAbiertas = (r) => S.seguimiento.filter(a => a.estado !== 'cerrada' && a.empresa_id === r.e && a.pais_id === r.p && (!a.linea_id || a.linea_id === r.l) && a.cuenta === r.c && (!a.indicador_id || a.indicador_id === r.i)).length;
 
@@ -38,7 +40,7 @@ export function bloqueKPIs(regs) {
   const cuentas = new Set(ult.map(r => `${r.e}|${r.p}|${r.l}|${r.c}`)).size;
   const per = periodos(regs).at(-1);
   return `<div class="grid g-kpi">
-    ${kpi({ etiqueta: 'Cuentas evaluadas', valor: fmtN(cuentas), detalle: per ? `Último periodo: ${fmtPeriodo(per)}` : '' })}
+    ${kpi({ etiqueta: 'Plataformas / campañas', valor: fmtN(cuentas), detalle: per ? `Último periodo: ${fmtPeriodo(per)}` : '' })}
     ${kpi({ etiqueta: 'Indicadores vigentes', valor: fmtN(ult.length), detalle: 'Última medición por cuenta e indicador' })}
     ${kpi({ etiqueta: 'Cumplimiento de meta', valor: fmtPct(conMeta.length ? (ok / conMeta.length) * 100 : null), detalle: `${ok} de ${conMeta.length} con meta` })}
     ${kpi({ etiqueta: `${badge('CRITICO')}`, valor: fmtN(crit), detalle: 'Igual o peor que el umbral crítico', clase: crit ? 'critico' : '' })}
@@ -87,7 +89,7 @@ export function empresa(cont, [e, p]) {
     ${bloqueKPIs(regs)}
     <div class="tarjeta">
       <div class="cabecera">
-        <div><h2>Resultados por cuenta</h2><p class="sub" style="margin:0">Valor y estado de cada indicador en el periodo seleccionado</p></div>
+        <div><h2>Resultados por plataforma / campaña</h2><p class="sub" style="margin:0">Valor y estado de cada indicador en el periodo seleccionado</p></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div class="campo" style="min-width:150px"><label for="sel-per">Periodo</label>
             <select id="sel-per">${pers.map(x => `<option value="${x}" ${x === per ? 'selected' : ''}>${fmtPeriodo(x)}</option>`).join('')}</select></div>
@@ -107,10 +109,10 @@ export function empresa(cont, [e, p]) {
       return { l, c, srv: nombreLinea(l), ...Object.fromEntries(delPer.filter(r => r.l === l && r.c === c).map(r => [r.i, r])) };
     });
     tabla(cont.querySelector('#matriz'), {
-      filas: cuentas, porPagina: 100, orden: { id: 'srv', dir: 'asc' },
+      filas: cuentas, porPagina: 100, orden: { id: 'srv', dir: 'asc' }, tituloCols: 2,
       columnas: [
         { id: 'srv', titulo: 'Servicio', render: f => esc(f.srv) },
-        { id: 'c', titulo: 'Cuenta', render: f => `<b>${esc(f.c)}</b>` },
+        { id: 'c', titulo: 'Plataforma / campaña', render: f => `<b>${esc(f.c)}</b>` },
         ...inds.map(i => ({
           id: i, titulo: `${esc(nombreIndicador(i))}<br><small style="font-weight:400;text-transform:none">${esConteo(i) ? 'cantidad' : metaColumna(delPer, i)}</small>`, num: true,
           valor: f => f[i]?.v ?? null,
@@ -147,6 +149,7 @@ export function indicadores(cont) {
   let filas = [];
   const t = tabla(cont.querySelector('#tabla'), {
     filas, porPagina: 50, orden: { id: 'per', dir: 'desc' },
+    tarjeta: { titulo: r => `${esc(nombreIndicador(r.i))} · ${esc(r.c)}`, sub: r => `${esc(servicio(r))} · ${fmtPeriodo(r.per)}`, omitir: ['e', 'p', 'l', 'c', 'i', 'per'] },
     columnas: [...COLS_CONSOLIDADO, { id: 'acc', titulo: '', sinOrden: true, render: r => enRiesgo(r) ? `<button class="btn chico" data-seg='${esc(JSON.stringify({ e: r.e, p: r.p, l: r.l, c: r.c, i: r.i, per: r.per }))}'>+ Seguimiento</button>` : '' }],
   });
   const aplicar = () => {
@@ -266,6 +269,7 @@ export function seguimiento(cont) {
       panel.innerHTML = `<p class="sub">Última medición en estado Alerta o Crítico. "Periodos seguidos" indica cuántos meses consecutivos lleva sin cumplir la meta.</p><div id="t"></div>`;
       tabla(panel.querySelector('#t'), {
         filas, porPagina: 50, orden: { id: 'rel', dir: 'asc' }, vacio: 'No hay cuentas que requieran seguimiento con estos filtros.',
+        tarjeta: { titulo: r => `${esc(r.c)} · ${esc(nombreIndicador(r.i))}`, sub: r => esc(servicio(r)), omitir: ['u', 'c', 'i'] },
         columnas: [
           { id: 'u', titulo: 'Servicio', valor: r => servicio(r), render: r => esc(servicio(r)) },
           { id: 'c', titulo: 'Cuenta', render: r => `<b>${esc(r.c)}</b>` },
@@ -364,6 +368,9 @@ export function calidad(cont) {
       ${kpi({ etiqueta: 'Conflictos con histórico', valor: fmtN(suma('conflictos')), detalle: 'Periodos cerrados no sobrescritos' })}
     </div>
     <div class="tarjeta" style="margin-bottom:16px"><h2>Registro de cargas</h2><p class="sub">Resultado de cada archivo procesado por el ETL (data/cargas/registro_cargas.csv)</p><div id="t-cargas"></div></div>
+    <div class="tarjeta" style="margin-bottom:16px"><div class="cabecera"><div><h2>Validación contra los dashboards</h2>
+      <p class="sub" style="margin:0">${S.validacion ? `Cada indicador mensual recalculado con la fórmula de su dashboard (index.html local) y comparado con Calidad A365 · ${esc(S.validacion.generado.replace('T', ' ').slice(0, 16))}` : 'Ejecute <code>python etl/validar_dashboards.py</code> para generar la validación.'}</p></div></div>
+      <div id="t-val-res"></div><div id="t-val" style="margin-top:12px"></div></div>
     <div class="tarjeta"><div class="cabecera"><div><h2>Errores detectados</h2><p class="sub" style="margin:0">Detalle por fila de Excel (data/cargas/errores/)</p></div>
       <button class="btn" id="btn-err">Exportar CSV</button></div><div id="t-err"></div></div>`;
   const ESTADO_CARGA = { OK: 'OK', OK_CON_ERRORES: 'ALERTA', ERROR: 'CRITICO', OMITIDO_YA_PROCESADO: 'SIN_META' };
@@ -377,6 +384,28 @@ export function calidad(cont) {
       ...['filas_leidas', 'mediciones_validas', 'nuevas', 'versionadas', 'duplicadas', 'conflictos', 'errores'].map(k => ({ id: k, titulo: k.replace('_', ' '), num: true, valor: c => +c[k] || 0 })),
     ],
   });
+  if (S.validacion) {
+    tabla(cont.querySelector('#t-val-res'), {
+      filas: S.validacion.resumen.filter(r => !r.error), porPagina: 20,
+      columnas: [
+        { id: 'linea', titulo: 'Servicio', render: r => esc(servicioDe(r.linea)) },
+        { id: 'index_html', titulo: 'index.html del dashboard', render: r => esc((r.index_html || '').replace('T', ' ')) },
+        { id: 'coinciden', titulo: 'Coinciden', num: true },
+        { id: 'difieren', titulo: 'Difieren', num: true, render: r => r.difieren ? `<span class="delta-mal">${r.difieren}</span>` : '0' },
+      ],
+    });
+    tabla(cont.querySelector('#t-val'), {
+      filas: S.validacion.comparaciones.filter(c => c.estado !== 'OK'), porPagina: 15, vacio: 'Todos los indicadores coinciden.',
+      columnas: [
+        { id: 'linea', titulo: 'Servicio', render: c => esc(servicioDe(c.linea)) },
+        { id: 'periodo', titulo: 'Periodo', render: c => fmtPeriodo(c.periodo) },
+        { id: 'indicador', titulo: 'Indicador', render: c => esc(nombreIndicador(c.indicador)) },
+        { id: 'dashboard', titulo: 'Dashboard', num: true, render: c => fmt(c.dashboard, c.indicador) },
+        { id: 'central', titulo: 'Calidad A365', num: true, render: c => fmt(c.central, c.indicador) },
+        { id: 'estado', titulo: 'Estado', render: c => c.estado === 'SOLO_DASHBOARD' ? '<span class="pendiente">solo en el dashboard</span>' : '<span class="estado ALERTA">diferente</span>' },
+      ],
+    });
+  }
   const colsErr = ['fuente_id', 'archivo', 'fila_excel', 'campo', 'tipo_error', 'valor', 'detalle'].map(k => ({ id: k, titulo: k.replace('_', ' '), clase: k === 'detalle' ? 'texto' : '', render: k === 'archivo' ? e => esc(e.archivo.split('/').pop()) : undefined }));
   tabla(cont.querySelector('#t-err'), { filas: errores, porPagina: 25, columnas: colsErr, vacio: 'Sin errores en las últimas cargas.' });
   cont.querySelector('#btn-err').addEventListener('click', () => descargar('central_errores.csv', aCSV(errores, colsErr.map(c => ({ ...c, render: undefined }))), 'text/csv;charset=utf-8'));

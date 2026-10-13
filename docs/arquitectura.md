@@ -114,7 +114,28 @@ Estado de conexión (12/10/2026). Cada servicio es un dashboard de `config/porta
 | Claro EC · Outbound | `CLARO_OUT/filtrado/*.xlsx` | Evaluaciones, efectividad de venta (nota pendiente) |
 | Claro EC · NPS | Sin base local (solo el HTML publicado) | Solo enlace al dashboard |
 
-Validación: los conteos mensuales de Outbound coinciden exactamente con los datos del `index.html` local del dashboard generado con los mismos archivos.
+### Validación cruzada (`etl/validar_dashboards.py`)
+
+Recalcula cada indicador mensual con la fórmula del dashboard (datos embebidos en su `index.html` local) y lo compara con la fila `(TOTAL)` del servicio en CENTRAL. El resultado se publica en `data/cargas/validacion.json` y se ve en **Calidad de datos**. Se ejecuta solo con `actualizar_central.bat`.
+
+Reglas replicadas de cada dashboard (revisión del 12/10/2026):
+
+| Servicio | Indicador en CENTRAL | Fórmula del dashboard replicada |
+|---|---|---|
+| Entel Inbound | Nota de calidad, PEC, PENC, Adherencia | Promedio de Resultado Final / PEC / PENC (100%) / Adherencia (100%); mes por Fecha Envío; ID Pauta repetido → se conserva el último |
+| Entel Inbound | EPA, Resolutividad, Global | Promedio de EPA (+100/0/−100 por encuesta); Resolución = Resolutividad 1 → 100, 2 → 0; mes por fecha de atención; meta por plataforma (META_PLATAFORMA) |
+| Entel Mesa Técnica | Nota de calidad ("Adherencia" en el dashboard), PENC | Resultado Final = GP_Adherencia Global × 100; mes por Fecha Envío; ID Pauta repetido → el primero |
+| Entel Mesa Técnica | EPA | Promedio de EPA; mes = "Mes de medición"; meta 65 |
+| Entel C2C | Nota de calidad ("Adherencia"), PENC, PEC | Resultado Final = GP_Adherencia Global; mes por fecha de atención (GP_Mes) |
+| Entel Outbound | PENC, PEC · EPA, Global | Promedio PENC/PEC (100%) con complementos "Reporte Pauta" sin repetir ID; EPA = Global recodificada 4-5 → 100, 3 → 0, 1-2 → −100 |
+| Entel E-commerce | Nota, PENC, PEC | Igual que Outbound (sin EPA) |
+| Entel Empresas | Nota | Promedio de Nota con al menos un criterio evaluado; mes = hoja |
+| Claro EC Inbound | Nota COPC, FCR | Bloques ASE 10 / UF 25 / NEG 30 / CUM 15 / COM 20, ítems SI/NO CUMPLE ponderados, 0 si hay crítico; FCR = SI / (SI + NO); excluye asesores de prueba; meta 85 |
+| Claro EC Outbound | Nota COPC, Efectividad | Columna EC, 0 si un ítem crítico es NO CUMPLE; Efectividad = SI / (SI + NO); meta 85 |
+
+Diferencias conocidas: el EPA histórico de Mesa Técnica (2024-04 a 2026-08) solo existe en el dashboard (viene del Evolutivo `.xlsb`); el último mes difiere si el `index.html` del dashboard es más antiguo que la base; una evaluación de Claro Inbound tiene el nombre del asesor corregido a mano en el dashboard.
+
+Metas: solo se usan metas definidas en los dashboards (EPA por plataforma en Entel Inbound, EPA 65 en Mesa Técnica, Nota COPC 85 en Claro). Los demás indicadores quedan "sin meta" hasta acordarlas.
 
 ## 5. Seguimiento (observaciones, acciones, responsables)
 

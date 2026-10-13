@@ -1,8 +1,8 @@
 {
-  "_comentario": "Configuración central del portal. Cada dashboard es un 'servicio' (Inbound, Outbound...) y su id se usa como linea_id en config/fuentes.json. URLs según la tabla entregada el 12/10/2026; los campos \"\" están pendientes.",
+  "_comentario": "Configuración central del portal. Cada dashboard es un 'servicio' (Inbound, Outbound...) y su id se usa como linea_id en config/fuentes.json. URLs según la tabla entregada el 13/10/2026; los campos \"\" están pendientes.",
   "version": 1,
   "plataforma": {
-    "nombre": "CENTRAL",
+    "nombre": "Calidad A365",
     "subtitulo": "BI y seguimiento de calidad de posventa",
     "organizacion": "A365 Calidad"
   },
@@ -23,20 +23,18 @@
               "servicio": "Inbound",
               "nombre": "Inbound",
               "descripcion": "",
-              "url": "",
+              "url": "https://bcatano-spec.github.io/Reporte-Entel-IN/",
               "repo": "https://github.com/bcatano-spec/Reporte-Entel-IN",
-              "estado": "pendiente_url",
-              "_nota": "Visualización pendiente"
+              "estado": "activo"
             },
             {
               "id": "entel-mt",
               "servicio": "Mesa Técnica",
               "nombre": "Mesa Técnica",
               "descripcion": "",
-              "url": "",
+              "url": "https://bcatano-spec.github.io/Reporte-Entel-Mesa-Tecnica/",
               "repo": "https://github.com/bcatano-spec/Reporte-Entel-Mesa-Tecnica",
-              "estado": "pendiente_url",
-              "_nota": "Visualización pendiente"
+              "estado": "activo"
             },
             {
               "id": "entel-c2c",

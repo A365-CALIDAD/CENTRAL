@@ -1,7 +1,7 @@
 {
-  "_comentario": "Catálogo maestro de indicadores. 'alias' sirve para homologar los nombres que llegan en los Excel. Las metas y umbrales son VALORES DE EJEMPLO: deben validarse con cada cliente. Se pueden sobrescribir por empresa en 'metas_por_empresa'.",
+  "_comentario": "Catálogo maestro de indicadores. 'alias' sirve para homologar nombres. Solo hay metas donde un dashboard las define (EPA por plataforma en Entel Inbound, EPA 65 en Mesa Técnica, Nota COPC 85 en Claro EC); el resto queda 'sin meta' hasta que se acuerden.",
   "version": 1,
-  "metas_son_ejemplo": true,
+  "metas_son_ejemplo": false,
   "indicadores": [
     {
       "id": "nps",
@@ -43,15 +43,15 @@
     {
       "id": "epa",
       "nombre": "EPA",
-      "descripcion": "Encuesta post atención (EPA recodificada por encuesta y promediada)",
-      "unidad": "%",
+      "descripcion": "Encuesta post atención: promedio de la recodificación por encuesta (promotor 100, neutro 0, detractor -100); índice entre -100 y 100",
+      "unidad": "indice",
       "rango": [
         -100,
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 80,
-      "umbral_critico": 70,
+      "meta": null,
+      "umbral_critico": null,
       "alias": [
         "epa",
         "encuesta post atencion",
@@ -68,8 +68,8 @@
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 75,
-      "umbral_critico": 65,
+      "meta": null,
+      "umbral_critico": null,
       "alias": [
         "fcr",
         "resolutividad",
@@ -80,15 +80,15 @@
     {
       "id": "calidad",
       "nombre": "Nota de calidad",
-      "descripcion": "Resultado de monitoreo de calidad",
+      "descripcion": "Nota final del monitoreo: Resultado Final (Entel; 'Adherencia Global' en C2C y Mesa Técnica), Nota COPC (Claro), Nota (Empresas)",
       "unidad": "%",
       "rango": [
         0,
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 90,
-      "umbral_critico": 80,
+      "meta": null,
+      "umbral_critico": null,
       "alias": [
         "calidad",
         "nota calidad",
@@ -108,8 +108,8 @@
         100
       ],
       "sentido": "mayor_mejor",
-      "meta": 92,
-      "umbral_critico": 85,
+      "meta": null,
+      "umbral_critico": null,
       "alias": [
         "adherencia",
         "adh",
@@ -240,12 +240,11 @@
     }
   ],
   "metas_por_empresa": {
-    "_ejemplo": {
-      "entel|cl": {
-        "nps": {
-          "meta": 45,
-          "umbral_critico": 25
-        }
+    "_comentario": "Metas por empresa|pais que reemplazan las del catálogo. Las de Claro EC salen de META = 85 de sus dashboards.",
+    "claro|ec": {
+      "calidad": {
+        "meta": 85,
+        "umbral_critico": 75
       }
     }
   },
