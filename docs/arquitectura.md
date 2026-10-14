@@ -114,6 +114,20 @@ Estado de conexión (12/10/2026). Cada servicio es un dashboard de `config/porta
 | Claro EC · Outbound | `CLARO_OUT/filtrado/*.xlsx` | Evaluaciones, efectividad de venta (nota pendiente) |
 | Claro EC · NPS | Sin base local (solo el HTML publicado) | Solo enlace al dashboard |
 
+### Descarga desde Google Drive
+
+Antes de procesar, el ETL descarga desde Drive (carpetas públicas, sin iniciar sesión) la base más reciente de estas fuentes; el resto se sigue leyendo de las carpetas locales:
+
+| Fuente | Origen en Drive | Qué toma |
+|---|---|---|
+| Entel Outbound (monitoreos) | Carpeta ENTEL/OUT | El archivo con la fecha más reciente en el nombre (`... - dd.mm.xlsx`) |
+| Entel E-commerce (monitoreos) | Carpeta ENTEL/E-COMMERCE | Ídem |
+| Claro EC Inbound / Outbound | Carpeta ECUADOR/INBOUND y ECUADOR/OUTBOUND | Ídem |
+| Entel Outbound (EPA) | Hoja "Resultados encuesta post atención Móvil A365" | Se exporta completa en cada ejecución |
+| Entel Empresas | Hoja "CAMPAÑA EMPRESA - NO VENTAS" | Se exporta completa en cada ejecución |
+
+Las copias quedan en `etl/entrada/drive/<fuente>/` (no se versionan). Si Drive falla se usa la última copia o la carpeta local. Las descargas diarias "Reporte Pauta" de Outbound y E-commerce se siguen sumando desde las carpetas locales sin repetir ID Pauta. Se configura con la clave `drive` de cada fuente en `config/fuentes.json`.
+
 ### Validación cruzada (`etl/validar_dashboards.py`)
 
 Recalcula cada indicador mensual con la fórmula del dashboard (datos embebidos en su `index.html` local) y lo compara con la fila `(TOTAL)` del servicio en CENTRAL. El resultado se publica en `data/cargas/validacion.json` y se ve en **Calidad de datos**. Se ejecuta solo con `actualizar_central.bat`.

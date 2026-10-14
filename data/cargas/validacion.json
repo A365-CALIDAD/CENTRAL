@@ -1,18 +1,18 @@
 {
- "generado": "2026-10-12T17:33:07",
+ "generado": "2026-10-14T09:49:00",
  "tolerancia": 0.15,
  "resumen": [
   {
    "linea": "entel-in",
-   "index_html": "2026-10-12T14:19",
-   "coinciden": 30,
-   "difieren": 0
+   "index_html": "2026-10-13T09:07",
+   "coinciden": 28,
+   "difieren": 2
   },
   {
    "linea": "entel-mt",
-   "index_html": "2026-10-02T13:11",
-   "coinciden": 23,
-   "difieren": 61
+   "index_html": "2026-10-13T13:55",
+   "coinciden": 25,
+   "difieren": 64
   },
   {
    "linea": "entel-c2c",
@@ -23,30 +23,30 @@
   {
    "linea": "entel-out",
    "index_html": "2026-10-09T16:56",
-   "coinciden": 66,
-   "difieren": 0
+   "coinciden": 61,
+   "difieren": 5
   },
   {
    "linea": "entel-ec",
    "index_html": "2026-10-10T10:31",
-   "coinciden": 30,
-   "difieren": 0
+   "coinciden": 27,
+   "difieren": 3
   },
   {
    "linea": "entel-emp",
-   "index_html": "2026-10-09T13:24",
-   "coinciden": 18,
-   "difieren": 0
+   "index_html": "2026-10-13T09:08",
+   "coinciden": 16,
+   "difieren": 2
   },
   {
    "linea": "claro-ec-in",
-   "index_html": "2026-10-12T12:02",
+   "index_html": "2026-10-13T15:55",
    "coinciden": 4,
    "difieren": 2
   },
   {
    "linea": "claro-ec-out",
-   "index_html": "2026-10-12T12:01",
+   "index_html": "2026-10-13T16:20",
    "coinciden": 6,
    "difieren": 0
   }
@@ -192,72 +192,72 @@
    "linea": "entel-in",
    "periodo": "2026-09",
    "indicador": "encuestas",
-   "dashboard": 2742,
-   "central": 2742.0,
+   "dashboard": 2724,
+   "central": 2724.0,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-09",
    "indicador": "epa",
-   "dashboard": 64.77,
-   "central": 64.77,
+   "dashboard": 65.35,
+   "central": 65.35,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-09",
    "indicador": "fcr",
-   "dashboard": 70.21,
-   "central": 70.21,
+   "dashboard": 70.37,
+   "central": 70.37,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-09",
    "indicador": "global",
-   "dashboard": 4.25,
-   "central": 4.25,
+   "dashboard": 4.26,
+   "central": 4.26,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "evaluaciones",
-   "dashboard": 205,
-   "central": 205.0,
+   "dashboard": 249,
+   "central": 249.0,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "calidad",
-   "dashboard": 81.05,
-   "central": 81.05,
+   "dashboard": 80.21,
+   "central": 80.21,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "pec",
-   "dashboard": 86.5,
-   "central": 86.5,
+   "dashboard": 85.27,
+   "central": 85.27,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "penc",
-   "dashboard": 75.86,
-   "central": 75.86,
+   "dashboard": 76.3,
+   "central": 76.3,
    "estado": "OK"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "adherencia",
-   "dashboard": 93.54,
-   "central": 93.54,
+   "dashboard": 93.7,
+   "central": 93.7,
    "estado": "OK"
   },
   {
@@ -265,15 +265,15 @@
    "periodo": "2026-10",
    "indicador": "encuestas",
    "dashboard": 930,
-   "central": 930.0,
-   "estado": "OK"
+   "central": 1054.0,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-in",
    "periodo": "2026-10",
    "indicador": "epa",
    "dashboard": 68.49,
-   "central": 68.49,
+   "central": 68.5,
    "estado": "OK"
   },
   {
@@ -281,8 +281,8 @@
    "periodo": "2026-10",
    "indicador": "fcr",
    "dashboard": 75.48,
-   "central": 75.48,
-   "estado": "OK"
+   "central": 75.05,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-in",
@@ -647,6 +647,30 @@
   {
    "linea": "entel-mt",
    "periodo": "2026-02",
+   "indicador": "evaluaciones",
+   "dashboard": 6,
+   "central": null,
+   "estado": "SOLO_DASHBOARD"
+  },
+  {
+   "linea": "entel-mt",
+   "periodo": "2026-02",
+   "indicador": "calidad",
+   "dashboard": 92.15,
+   "central": null,
+   "estado": "SOLO_DASHBOARD"
+  },
+  {
+   "linea": "entel-mt",
+   "periodo": "2026-02",
+   "indicador": "penc",
+   "dashboard": 80.37,
+   "central": null,
+   "estado": "SOLO_DASHBOARD"
+  },
+  {
+   "linea": "entel-mt",
+   "periodo": "2026-02",
    "indicador": "encuestas",
    "dashboard": 613,
    "central": null,
@@ -664,25 +688,25 @@
    "linea": "entel-mt",
    "periodo": "2026-03",
    "indicador": "evaluaciones",
-   "dashboard": 209,
+   "dashboard": 216,
    "central": 209.0,
-   "estado": "OK"
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-mt",
    "periodo": "2026-03",
    "indicador": "calidad",
-   "dashboard": 84.29,
+   "dashboard": 84.11,
    "central": 84.29,
-   "estado": "OK"
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-mt",
    "periodo": "2026-03",
    "indicador": "penc",
-   "dashboard": 84.05,
+   "dashboard": 83.36,
    "central": 84.05,
-   "estado": "OK"
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-mt",
@@ -944,25 +968,41 @@
    "linea": "entel-mt",
    "periodo": "2026-10",
    "indicador": "evaluaciones",
-   "dashboard": 2,
-   "central": 22.0,
-   "estado": "DIFERENTE"
+   "dashboard": 65,
+   "central": 65.0,
+   "estado": "OK"
   },
   {
    "linea": "entel-mt",
    "periodo": "2026-10",
    "indicador": "calidad",
-   "dashboard": 95.3,
-   "central": 86.41,
-   "estado": "DIFERENTE"
+   "dashboard": 80.92,
+   "central": 80.92,
+   "estado": "OK"
   },
   {
    "linea": "entel-mt",
    "periodo": "2026-10",
    "indicador": "penc",
-   "dashboard": 88.2,
-   "central": 72.84,
-   "estado": "DIFERENTE"
+   "dashboard": 67.3,
+   "central": 67.3,
+   "estado": "OK"
+  },
+  {
+   "linea": "entel-mt",
+   "periodo": "2026-10",
+   "indicador": "encuestas",
+   "dashboard": 255,
+   "central": 255.0,
+   "estado": "OK"
+  },
+  {
+   "linea": "entel-mt",
+   "periodo": "2026-10",
+   "indicador": "epa",
+   "dashboard": 65.88,
+   "central": 65.88,
+   "estado": "OK"
   },
   {
    "linea": "entel-c2c",
@@ -1769,47 +1809,47 @@
    "periodo": "2026-10",
    "indicador": "evaluaciones",
    "dashboard": 343,
-   "central": 343.0,
-   "estado": "OK"
+   "central": 468.0,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-out",
    "periodo": "2026-10",
    "indicador": "penc",
    "dashboard": 85.91,
-   "central": 85.91,
-   "estado": "OK"
+   "central": 85.33,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-out",
    "periodo": "2026-10",
    "indicador": "pec",
    "dashboard": 81.05,
-   "central": 81.05,
-   "estado": "OK"
+   "central": 79.91,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-out",
    "periodo": "2026-10",
    "indicador": "encuestas",
    "dashboard": 122,
-   "central": 122.0,
-   "estado": "OK"
+   "central": 152.0,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-out",
    "periodo": "2026-10",
    "indicador": "epa",
    "dashboard": 95.08,
-   "central": 95.08,
-   "estado": "OK"
+   "central": 93.42,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-out",
    "periodo": "2026-10",
    "indicador": "global",
    "dashboard": 4.82,
-   "central": 4.82,
+   "central": 4.79,
    "estado": "OK"
   },
   {
@@ -2033,24 +2073,24 @@
    "periodo": "2026-10",
    "indicador": "evaluaciones",
    "dashboard": 175,
-   "central": 175.0,
-   "estado": "OK"
+   "central": 222.0,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-ec",
    "periodo": "2026-10",
    "indicador": "penc",
    "dashboard": 78.76,
-   "central": 78.76,
-   "estado": "OK"
+   "central": 79.07,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-ec",
    "periodo": "2026-10",
    "indicador": "pec",
    "dashboard": 61.71,
-   "central": 61.71,
-   "estado": "OK"
+   "central": 63.06,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-emp",
@@ -2185,16 +2225,16 @@
    "periodo": "2026-10",
    "indicador": "evaluaciones",
    "dashboard": 74,
-   "central": 74.0,
-   "estado": "OK"
+   "central": 90.0,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "entel-emp",
    "periodo": "2026-10",
    "indicador": "calidad",
    "dashboard": 98.05,
-   "central": 98.05,
-   "estado": "OK"
+   "central": 97.88,
+   "estado": "DIFERENTE"
   },
   {
    "linea": "claro-ec-in",
@@ -2224,24 +2264,24 @@
    "linea": "claro-ec-in",
    "periodo": "2026-10",
    "indicador": "evaluaciones",
-   "dashboard": 52,
-   "central": 52.0,
+   "dashboard": 53,
+   "central": 53.0,
    "estado": "OK"
   },
   {
    "linea": "claro-ec-in",
    "periodo": "2026-10",
    "indicador": "calidad",
-   "dashboard": 31.75,
-   "central": 31.75,
+   "dashboard": 31.15,
+   "central": 31.15,
    "estado": "OK"
   },
   {
    "linea": "claro-ec-in",
    "periodo": "2026-10",
    "indicador": "fcr",
-   "dashboard": 38.46,
-   "central": 38.46,
+   "dashboard": 37.74,
+   "central": 37.74,
    "estado": "OK"
   },
   {
@@ -2272,24 +2312,24 @@
    "linea": "claro-ec-out",
    "periodo": "2026-10",
    "indicador": "evaluaciones",
-   "dashboard": 34,
-   "central": 34.0,
+   "dashboard": 59,
+   "central": 59.0,
    "estado": "OK"
   },
   {
    "linea": "claro-ec-out",
    "periodo": "2026-10",
    "indicador": "calidad",
-   "dashboard": 25.2,
-   "central": 25.2,
+   "dashboard": 27.29,
+   "central": 27.29,
    "estado": "OK"
   },
   {
    "linea": "claro-ec-out",
    "periodo": "2026-10",
    "indicador": "efectividad",
-   "dashboard": 9.38,
-   "central": 9.38,
+   "dashboard": 5.56,
+   "central": 5.56,
    "estado": "OK"
   }
  ]

@@ -317,7 +317,12 @@
           "encabezado_contiene": "ID Pauta"
         }
       ],
-      "id_deduplicar": false
+      "id_deduplicar": false,
+      "drive": {
+        "carpeta_id": "1ZsvJWiIBxUYgxjdTvkPY6TMQCn4llrrt",
+        "patron": "Reporte monitoreos interno outbound*.xls*",
+        "_carpeta": "Drive ENTEL/OUT"
+      }
     },
     {
       "id": "entel_out_epa",
@@ -362,7 +367,12 @@
           "columna": "Global",
           "agregacion": "promedio"
         }
-      ]
+      ],
+      "drive": {
+        "hoja_id": "1Y4ZMWFgBo5aPLNSHGRdLrlMV9KXmyiR5xSV18H2A650",
+        "nombre": "EPA_drive.xlsx",
+        "_carpeta": "Hoja 'Resultados encuesta post atención Móvil A365' (misma que usa el dashboard OUT)"
+      }
     },
     {
       "id": "entel_ec_monitoreo",
@@ -423,7 +433,12 @@
           "encabezado_contiene": "ID Pauta"
         }
       ],
-      "id_deduplicar": false
+      "id_deduplicar": false,
+      "drive": {
+        "carpeta_id": "1Zq32EDMQt8P9q8twkPVVTQXu6_08H3BX",
+        "patron": "Reporte monitoreos Ecommerce*.xls*",
+        "_carpeta": "Drive ENTEL/E-COMMERCE"
+      }
     },
     {
       "id": "entel_emp_monitoreo",
@@ -487,7 +502,12 @@
           ]
         }
       ],
-      "solo_hojas_mes": true
+      "solo_hojas_mes": true,
+      "drive": {
+        "hoja_id": "1GUe1AYIcTIfORRslcfeZlSC4HM3Hg4P5",
+        "nombre": "CAMPAÑA EMPRESA - NO VENTAS.xlsx",
+        "_carpeta": "Hoja 'CAMPAÑA EMPRESA - NO VENTAS' (misma que usa el dashboard EMP)"
+      }
     },
     {
       "id": "claro_ec_in_monitoreo",
@@ -681,7 +701,12 @@
         }
       ],
       "linea_id": "claro-ec-in",
-      "conteo": "evaluaciones"
+      "conteo": "evaluaciones",
+      "drive": {
+        "carpeta_id": "12Lv03h9USoBt0R4k_am5MUWDIdDUwGPj",
+        "patron": "Monitoreo Inbound*.xls*",
+        "_carpeta": "Drive ECUADOR/INBOUND"
+      }
     },
     {
       "id": "claro_ec_out_monitoreo",
@@ -882,7 +907,12 @@
             "True"
           ]
         }
-      ]
+      ],
+      "drive": {
+        "carpeta_id": "1gJGcmqvIag1Oxzyh5EN1CMQbTdBnm0Qr",
+        "patron": "Monitoreo Outbound*.xls*",
+        "_carpeta": "Drive ECUADOR/OUTBOUND"
+      }
     },
     {
       "id": "demo_entel_cl",
@@ -1000,6 +1030,7 @@
     "anio_mes": "columnas 'anio' y 'mes' definen el periodo (ej. 'Año de medición', 'Mes de medición')",
     "total_servicio": "true por defecto: publica la cuenta '(TOTAL)' con el resultado de todo el servicio, sin mínimo de muestras",
     "id_deduplicar": "false = no quitar repetidos dentro de la base (Outbound y E-commerce no lo hacen); los complementos siempre se unen sin repetir",
-    "filtros_extra": "{columna, numerico: true} · {alguno_no_vacio: [columnas]} · {min_palabras: 2, columnas: [...], quitar: regex} (asesores de prueba)"
+    "filtros_extra": "{columna, numerico: true} · {alguno_no_vacio: [columnas]} · {min_palabras: 2, columnas: [...], quitar: regex} (asesores de prueba)",
+    "drive": "Descarga desde Google Drive público antes de procesar: {carpeta_id, patron} toma el archivo con la fecha más reciente en el nombre; {hoja_id, nombre} exporta una hoja de Google. Si Drive falla se usa la última copia (etl/entrada/drive/) o la carpeta local."
   }
 }

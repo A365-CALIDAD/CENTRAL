@@ -34,9 +34,13 @@ Reglas del histórico:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
+import html as html_lib
 import json
 import os
+import shutil
+import urllib.request
 import re
 import sys
 import unicodedata
@@ -51,6 +55,7 @@ DATA = RAIZ / "data"
 HISTORICO = DATA / "historico" / "mediciones.csv"
 REGISTRO = DATA / "cargas" / "registro_cargas.csv"
 DIR_ERRORES = DATA / "cargas" / "errores"
+DIR_DRIVE = RAIZ / "etl" / "entrada" / "drive"    # copias locales de lo descargado de Google Drive (no se versionan)
 
 CLAVE = ["empresa_id", "pais_id", "linea_id", "cuenta", "indicador_id", "periodo"]
 TOTAL = "(TOTAL)"   # cuenta que resume todo el servicio, calculada como el dashboard (sin mínimo de muestras)
@@ -379,6 +384,85 @@ def recodificar(v, mapa):
         if coincide(v, [clave]):
             return float(x)
     return None
+
+
+# ---------------------------------------------------------------- Google Drive (carpetas y hojas públicas)
+
+def _descargar(url: str, destino: Path):
+    """Descarga a un temporal y solo reemplaza el destino si llegó un Excel válido (zip 'PK')."""
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    tmp = destino.with_name(destino.name + ".tmp")
+    pedido = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(pedido, timeout=300) as r, open(tmp, "wb") as f:
+        shutil.copyfileobj(r, f)
+    with open(tmp, "rb") as f:
+        valido = f.read(2) == b"PK"
+    if not valido:
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError("Drive no devolvió un Excel (¿el archivo dejó de ser público?)")
+    tmp.replace(destino)
+
+
+def listar_drive(carpeta_id: str) -> list[tuple[str, str]]:
+    """[(nombre, id_archivo)] de una carpeta pública de Drive (vista embebida, sin iniciar sesión)."""
+    url = f"https://drive.google.com/embeddedfolderview?id={carpeta_id}"
+    pedido = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    pagina = urllib.request.urlopen(pedido, timeout=60).read().decode("utf-8", "ignore")
+    out = []
+    for m in re.finditer(r'<a href="([^"]+)"[^>]*>.*?<div class="flip-entry-title">(.*?)</div>', pagina, re.S):
+        f = re.search(r"/file/d/([\w-]+)", m.group(1))
+        if f:
+            out.append((html_lib.unescape(m.group(2)).strip(), f.group(1)))
+    return out
+
+
+def fecha_en_nombre(nombre: str):
+    """'Reporte ... - 12.10.xlsx' -> 2026-10-12 (año actual, o el anterior si la fecha quedaría en el futuro)."""
+    m = re.search(r"(\d{1,2})[.\-_](\d{1,2})(?:[.\-_](\d{2,4}))?(?=\D*\.xls)", nombre)
+    if not m:
+        return datetime.min
+    d, mes = int(m[1]), int(m[2])
+    hoy = datetime.now()
+    anio = int(m[3]) + (2000 if m[3] and len(m[3]) == 2 else 0) if m[3] else hoy.year
+    try:
+        f = datetime(anio, mes, d)
+    except ValueError:
+        return datetime.min
+    return f.replace(year=anio - 1) if not m[3] and f > hoy.replace(hour=23, minute=59) else f
+
+
+def sincronizar_drive(fuente) -> Path | None:
+    """Trae de Drive el archivo más reciente de la fuente y devuelve su ruta local (None si no usa Drive).
+    'drive': {"carpeta_id", "patron"} -> el archivo con la fecha más reciente en el nombre;
+    'drive': {"hoja_id", "nombre"}    -> una hoja de Google exportada a Excel (se descarga siempre).
+    Si Drive falla, se usa la última copia descargada; si no hay, la carpeta local de la fuente."""
+    d = fuente.get("drive")
+    if not d:
+        return None
+    destino_dir = DIR_DRIVE / fuente["id"]
+    try:
+        if d.get("carpeta_id"):
+            candidatos = [(n, i) for n, i in listar_drive(d["carpeta_id"])
+                          if fnmatch.fnmatch(normalizar(n), normalizar(d.get("patron", "*.xlsx")).replace(" xls", "*.xls"))
+                          or fnmatch.fnmatch(n, d.get("patron", "*.xlsx"))]
+            if not candidatos:
+                raise RuntimeError(f"la carpeta no tiene archivos '{d.get('patron')}'")
+            nombre, id_archivo = max(candidatos, key=lambda x: (fecha_en_nombre(x[0]), x[0]))
+            destino = destino_dir / nombre
+            if not destino.exists() or d.get("siempre"):
+                _descargar(f"https://drive.usercontent.google.com/download?id={id_archivo}&export=download&confirm=t", destino)
+                print(f"[{fuente['id']}] Drive: descargado {nombre}")
+            else:
+                print(f"[{fuente['id']}] Drive: {nombre} ya estaba descargado")
+        else:
+            destino = destino_dir / d.get("nombre", f"{d['hoja_id']}.xlsx")
+            _descargar(f"https://docs.google.com/spreadsheets/d/{d['hoja_id']}/export?format=xlsx", destino)
+            print(f"[{fuente['id']}] Drive: hoja actualizada ({destino.name})")
+        return destino
+    except Exception as e:
+        previos = sorted((p for p in destino_dir.glob("*.xls*")), key=lambda p: (fecha_en_nombre(p.name), p.stat().st_mtime))
+        print(f"[{fuente['id']}] Drive no disponible ({e}); se usa {'la copia ' + previos[-1].name if previos else 'la carpeta local'}")
+        return previos[-1] if previos else None
 
 
 def ruta_fuente(fuente) -> Path:
@@ -916,10 +1000,14 @@ def procesar(args):
 
     for fuente in seleccion:
         carpeta = ruta_fuente(fuente)
-        archivos = sorted((p for p in carpeta.glob(fuente.get("patron", "*.xlsx")) if not p.name.startswith("~$")),
-                          key=lambda p: (p.stat().st_mtime, p.name))
-        if fuente.get("seleccion") == "mas_reciente":
-            archivos = archivos[-1:]
+        desde_drive = sincronizar_drive(fuente)
+        if desde_drive:
+            archivos = [desde_drive]
+        else:
+            archivos = sorted((p for p in carpeta.glob(fuente.get("patron", "*.xlsx")) if not p.name.startswith("~$")),
+                              key=lambda p: (p.stat().st_mtime, p.name))
+            if fuente.get("seleccion") == "mas_reciente":
+                archivos = archivos[-1:]
         if not archivos:
             print(f"[{fuente['id']}] sin archivos en {relativa(carpeta)}")
         for ruta in archivos:

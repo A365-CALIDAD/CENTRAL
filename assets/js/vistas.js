@@ -2,7 +2,7 @@
 import {
   S, esc, fmt, fmtN, fmtPct, fmtPeriodo, brecha, filtrar, ultimas, racha, comparar, periodos, opciones,
   unidades, unidad, nombreEmpresa, nombrePais, nombreIndicador, guardarAccion, exportarSeguimiento,
-  descartarBorradores, borradoresLocales, descargar, aCSV, nombreLinea, esConteo,
+  descartarBorradores, borradoresLocales, descargar, aCSV, nombreLinea, esConteo, mesPorDefecto,
 } from './datos.js';
 import {
   badge, kpi, tabla, barraFiltros, filtrosGlobales, graficoLineas, graficoBarrasApiladas, leyenda, css, serie, ETIQUETA_ESTADO, destruirGraficos,
@@ -80,7 +80,7 @@ export function empresa(cont, [e, p]) {
   }
   const regs = S.registros.filter(r => r.e === e && r.p === p);
   const pers = periodos(regs);
-  let per = pers.at(-1);
+  let per = mesPorDefecto(pers);
   cont.innerHTML = `${avisos()}
     <div class="tarjeta" style="margin-bottom:16px">
       <div class="cabecera"><div><h2>Dashboards de ${esc(u.nombre)}</h2><p class="sub" style="margin:0">Enlaces definidos en config/portal.json</p></div></div>
@@ -171,7 +171,8 @@ export function indicadores(cont) {
 export function historico(cont) {
   const pers = periodos();
   if (!filtrosGlobales.i) filtrosGlobales.i = Object.keys(S.indicadores).find(i => S.registros.some(r => r.i === i)) || '';
-  const cmp = { a: pers.at(-2) || pers.at(-1) || '', b: pers.at(-1) || '' };
+  const actual = mesPorDefecto(pers);
+  const cmp = { a: pers[pers.indexOf(actual) - 1] || actual, b: actual };   // mes en curso contra el anterior
   cont.innerHTML = `${avisos()}<div id="filtros"></div>
     <div class="tarjeta" style="margin-bottom:16px">
       <h2 id="h-titulo">Evolución</h2><p class="sub" id="h-sub"></p>

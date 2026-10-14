@@ -1,7 +1,7 @@
 // CENTRAL · Vista general (todos los servicios en una pantalla) y visor de dashboards embebidos.
 import {
   S, esc, fmt, fmtN, fmtPeriodo, periodos, unidades, lineas, linea, esConteo, ponderado,
-  nombreIndicador, descargar, aCSV, mayorMejor,
+  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto,
 } from './datos.js';
 import { kpi, tabla, graficoLineas, leyenda, serie, css, destruirGraficos, ETIQUETA_ESTADO } from './componentes.js';
 
@@ -52,9 +52,8 @@ function avisos() {
 export function general(cont) {
   const pers = periodos();
   const hoy = new Date().toISOString().slice(0, 7);
-  // Por defecto el último mes completo: el mes en curso tiene cifras parciales.
-  const ultimoCompleto = pers.filter(x => x < hoy).at(-1);
-  const estado = { per: ultimoCompleto || pers.at(-1) || '', e: '' };
+  // Por defecto el mes en curso (sus cifras son parciales y se marcan como tales).
+  const estado = { per: mesPorDefecto(pers), e: '' };
 
   const pintar = () => {
     const { per, e } = estado;
@@ -188,7 +187,7 @@ function pintarResumen(cont, srv, per, perAnt) {
 export function kpis(cont) {
   const pers = periodos(S.totales);
   const hoy = hoyMes();
-  const estado = { per: pers.filter(p => p < hoy).at(-1) || pers.at(-1) || '', e: '' };
+  const estado = { per: mesPorDefecto(pers), e: '' };
   const pintar = () => {
     mesEnCurso = estado.per === hoy;
     const perAnt = pers[pers.indexOf(estado.per) - 1] || null;
@@ -237,7 +236,7 @@ export function servicio(cont, [id]) {
   const tots = S.totales.filter(z => z.l === x.l);
   const pers = periodos(tots);
   const hoy = hoyMes();
-  let per = pers.filter(p => p < hoy).at(-1) || pers.at(-1);
+  let per = mesPorDefecto(pers);
 
   const pintar = () => {
     destruirGraficos();

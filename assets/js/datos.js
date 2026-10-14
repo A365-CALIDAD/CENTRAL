@@ -115,6 +115,13 @@ export function esc(s) {
 
 // ---------- consultas
 
+// Mes que muestran por defecto los filtros: el mes en curso; si aún no tiene datos, el último mes disponible.
+export function mesPorDefecto(pers) {
+  const hoy = new Date().toISOString().slice(0, 7);
+  if (pers.includes(hoy)) return hoy;
+  return pers.filter(p => p < hoy).at(-1) || pers.at(-1) || '';
+}
+
 export function periodos(regs = S.registros) {
   return [...new Set(regs.map(r => r.per))].sort();
 }

@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-13T16:46:50",
+  "generado": "2026-10-14T09:48:59",
   "descripcion": "Resumen autorizado de CENTRAL para responder preguntas. Contiene solo indicadores agregados por cuenta; no incluye datos personales.",
   "ultimo_periodo": "2026-10",
   "indicadores": [
@@ -237,7 +237,7 @@
       "pais": "cl",
       "indicador": "Nota de calidad",
       "periodo": "2026-10",
-      "promedio": 84.04,
+      "promedio": 83.88,
       "cuentas": 21,
       "criticas": [],
       "alertas": []
@@ -247,8 +247,8 @@
       "pais": "cl",
       "indicador": "Encuestas",
       "periodo": "2026-10",
-      "promedio": 174.27,
-      "cuentas": 13,
+      "promedio": 182.62,
+      "cuentas": 14,
       "criticas": [],
       "alertas": []
     },
@@ -257,7 +257,7 @@
       "pais": "cl",
       "indicador": "EPA",
       "periodo": "2026-10",
-      "promedio": 76.51,
+      "promedio": 76.2,
       "cuentas": 10,
       "criticas": [],
       "alertas": [
@@ -269,7 +269,7 @@
       "pais": "cl",
       "indicador": "Evaluaciones",
       "periodo": "2026-10",
-      "promedio": 54.12,
+      "promedio": 65.18,
       "cuentas": 29,
       "criticas": [],
       "alertas": []
@@ -279,7 +279,7 @@
       "pais": "cl",
       "indicador": "Resolutividad (FCR)",
       "periodo": "2026-10",
-      "promedio": 74.64,
+      "promedio": 74.57,
       "cuentas": 8,
       "criticas": [],
       "alertas": []
@@ -289,7 +289,7 @@
       "pais": "cl",
       "indicador": "Satisfacción global",
       "periodo": "2026-10",
-      "promedio": 4.49,
+      "promedio": 4.48,
       "cuentas": 10,
       "criticas": [],
       "alertas": []
@@ -299,7 +299,7 @@
       "pais": "cl",
       "indicador": "PEC",
       "periodo": "2026-10",
-      "promedio": 74.02,
+      "promedio": 73.24,
       "cuentas": 25,
       "criticas": [],
       "alertas": []
@@ -309,7 +309,7 @@
       "pais": "cl",
       "indicador": "PENC",
       "periodo": "2026-10",
-      "promedio": 78.43,
+      "promedio": 78.32,
       "cuentas": 26,
       "criticas": [],
       "alertas": []
