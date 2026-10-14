@@ -78,24 +78,49 @@ def actualizar():
     print("\nListo. Usa la opción 2 para publicar los cambios en la página.")
 
 
+def asegurar_identidad() -> bool:
+    """Git exige nombre y correo para registrar una publicación. Si este PC no los tiene, los pide
+    una vez y los guarda solo para este repositorio (no cambia la configuración global de Git)."""
+    nombre = git("config", "user.name", mostrar=False).stdout.strip()
+    correo = git("config", "user.email", mostrar=False).stdout.strip()
+    if nombre and correo:
+        return True
+    print("\nEste PC aún no tiene un nombre y correo para registrar las publicaciones (se pide una sola vez).")
+    nombre = nombre or input("Tu nombre: ").strip()
+    correo = correo or input("Tu correo: ").strip()
+    if not nombre or "@" not in correo:
+        print("Se necesitan un nombre y un correo válidos para publicar.")
+        return False
+    git("config", "user.name", nombre, mostrar=False)
+    git("config", "user.email", correo, mostrar=False)
+    print("Guardado para este repositorio.")
+    return True
+
+
 def publicar():
     titulo("Publicar en la página (GitHub Pages)")
     if not shutil.which("git"):
         print("Git no está instalado en este PC.")
         return
+    if not asegurar_identidad():
+        return
     print("Trayendo los cambios publicados desde otros PC...")
-    git("pull", "--rebase", "--autostash")
+    if git("pull", "--rebase", "--autostash").returncode != 0:
+        print("\nNo se pudieron traer los cambios de GitHub. Revisa la conexión y el inicio de sesión de Git, y vuelve a intentar.")
+        return
     git("add", "-A", "data/seguro", "config")
-    if not git("diff", "--cached", "--quiet", mostrar=False).returncode:
+    if git("diff", "--cached", "--quiet", mostrar=False).returncode == 0:
         print("No hay cambios nuevos para publicar.")
         return
     mensaje = f"Actualiza datos Calidad A365 ({datetime.now():%d/%m/%Y %H:%M})"
-    git("commit", "-m", mensaje)
-    r = git("push")
-    if r.returncode == 0:
-        print(f"\nPublicado. La página se actualiza en 1 a 5 minutos: {URL}")
-    else:
-        print("\nNo se pudo publicar. Revisa que este PC tenga acceso a GitHub (inicio de sesión de Git).")
+    if git("commit", "-m", mensaje).returncode != 0:
+        print("\nNo se pudo registrar la publicación (commit). Revisa el mensaje de arriba.")
+        return
+    if git("push").returncode != 0:
+        print("\nLa publicación quedó registrada en este PC pero no se pudo subir a GitHub. "
+              "Revisa el inicio de sesión de Git y usa de nuevo esta opción.")
+        return
+    print(f"\nPublicado. La página se actualiza en 1 a 5 minutos: {URL}")
 
 
 def cambiar_contrasenas():
