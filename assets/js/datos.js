@@ -22,17 +22,63 @@ async function json(url, defecto) {
   }
 }
 
-export async function cargar() {
-  const [portal, ind, cons, resumen, seg, validacion] = await Promise.all([
-    json('config/portal.json'),
-    json('config/indicadores.json'),
-    json('data/consolidado.json', { registros: [] }),
-    json('data/cargas/resumen.json', { cargas: [], errores: [] }),
-    json('data/seguimiento.json', { acciones: [] }),
-    json('data/cargas/validacion.json', null),
+// ---------- sesión por perfil
+// Los datos se publican cifrados por perfil (data/seguro/<perfil>.json, PBKDF2-SHA256 + AES-256-GCM).
+// Se descifran aquí con la contraseña del perfil; sin ella el archivo no se puede leer.
+const CLAVE_SESION = 'central.sesion.v1';
+
+async function descifrar(sobre, clave) {
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(clave), 'PBKDF2', false, ['deriveKey']);
+  const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b(sobre.salt), iterations: sobre.iter },
+    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const plano = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(sobre.iv) }, k, b(sobre.ct));
+  return JSON.parse(new TextDecoder().decode(plano));
+}
+
+// Configuración pública (sin datos): portal, indicadores y lista de perfiles.
+export async function cargarBase() {
+  const [portal, ind, perfiles] = await Promise.all([
+    json('config/portal.json'), json('config/indicadores.json'), json('config/perfiles.json', { perfiles: [] }),
   ]);
+  S.portalCompleto = portal;
   S.portal = portal;
   S.indicadores = Object.fromEntries(ind.indicadores.map(i => [i.id, i]));
+  S.perfiles = perfiles.perfiles || [];
+}
+
+// Devuelve true si la contraseña es correcta y los datos quedaron cargados.
+export async function iniciarSesion(perfilId, clave, recordar = true) {
+  let sobre;
+  try { sobre = await json(`data/seguro/${encodeURIComponent(perfilId)}.json`); } catch { throw new Error('No se encontraron los datos del perfil.'); }
+  let paquete;
+  try { paquete = await descifrar(sobre, clave); } catch { return false; }
+  aplicarPaquete(paquete);
+  if (recordar) { try { sessionStorage.setItem(CLAVE_SESION, JSON.stringify({ perfil: perfilId, clave })); } catch { /* sin almacenamiento */ } }
+  return true;
+}
+
+// Reabre la sesión de esta pestaña (se borra al cerrar el navegador).
+export async function restaurarSesion() {
+  let ses = null;
+  try { ses = JSON.parse(sessionStorage.getItem(CLAVE_SESION) || 'null'); } catch { /* sin almacenamiento */ }
+  if (!ses) return false;
+  try { return await iniciarSesion(ses.perfil, ses.clave); } catch { return false; }
+}
+
+export function cerrarSesion() {
+  try { sessionStorage.removeItem(CLAVE_SESION); } catch { /* sin almacenamiento */ }
+}
+
+export const esAdmin = () => !!S.perfil?.admin;
+const lineaPermitida = l => esAdmin() || (S.perfil?.lineas || []).includes(l);
+
+function aplicarPaquete(paquete) {
+  S.perfil = paquete.perfil;
+  const cons = paquete.consolidado || { registros: [] };
+  const resumen = paquete.resumen || { cargas: [], errores: [] };
+  const seg = paquete.seguimiento || { acciones: [] };
+  const validacion = paquete.validacion || null;
   // Las filas "(TOTAL)" resumen cada servicio como lo calcula su dashboard; se separan de las cuentas.
   S.totales = (cons.registros || []).filter(r => r.t);
   S.registros = (cons.registros || []).filter(r => !r.t);
@@ -52,8 +98,11 @@ export function unidades() {
   const out = [];
   for (const e of S.portal.empresas) {
     for (const p of e.paises) {
+      // Un perfil de cuenta solo ve las empresas y dashboards que le corresponden.
+      const dashboards = (p.dashboards || []).filter(d => lineaPermitida(d.id));
+      if (!esAdmin() && !dashboards.length) continue;
       out.push({
-        e: e.id, p: p.id, empresa: e, pais: p, color: e.color,
+        e: e.id, p: p.id, empresa: e, pais: { ...p, dashboards }, color: e.color,
         nombre: `${e.nombre} ${p.nombre}`,
         proximamente: p.estado === 'proximamente' || e.estado === 'proximamente',
       });
@@ -73,6 +122,7 @@ export const nombreLinea = l => linea(l)?.servicio ?? (l || '—');
 export const esConteo = i => !!S.indicadores[i]?.conteo;
 
 export const unidad = (e, p) => unidades().find(u => u.e === e && u.p === p);
+export const empresasVisibles = () => S.portal.empresas.filter(e => unidades().some(u => u.e === e.id));
 export const nombreEmpresa = e => S.portal.empresas.find(x => x.id === e)?.nombre ?? e;
 export const nombrePais = (e, p) => S.portal.empresas.find(x => x.id === e)?.paises.find(x => x.id === p)?.nombre ?? p;
 export const nombreIndicador = i => S.indicadores[i]?.nombre ?? i;
@@ -185,14 +235,14 @@ export function opciones(regs, campo) {
 // El archivo data/seguimiento.json es la fuente oficial (versionada en Git).
 // Lo que se registra en el navegador queda como borrador local hasta exportarlo y subirlo al repositorio.
 
-const CLAVE_LS = 'central.seguimiento.borradores.v1';
+const claveBorradores = () => `central.seguimiento.borradores.v1.${S.perfil?.id || 'sin-perfil'}`;
 
 export function borradoresLocales() {
-  try { return JSON.parse(localStorage.getItem(CLAVE_LS) || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(claveBorradores()) || '[]'); } catch { return []; }
 }
 
 function guardarBorradores(lista) {
-  try { localStorage.setItem(CLAVE_LS, JSON.stringify(lista)); return true; } catch { return false; }
+  try { localStorage.setItem(claveBorradores(), JSON.stringify(lista)); return true; } catch { return false; }
 }
 
 function combinarSeguimiento(base, locales) {
@@ -219,7 +269,8 @@ export function descartarBorradores() {
 
 export function exportarSeguimiento() {
   const acciones = S.seguimiento.map(({ local, ...a }) => a);
-  descargar('seguimiento.json', JSON.stringify({ version: 1, acciones }, null, 2), 'application/json');
+  descargar(`seguimiento_${S.perfil?.id || 'perfil'}_${new Date().toISOString().slice(0, 10)}.json`,
+    JSON.stringify({ version: 1, perfil: S.perfil?.id, acciones }, null, 2), 'application/json');
 }
 
 export function descargar(nombre, contenido, tipo) {

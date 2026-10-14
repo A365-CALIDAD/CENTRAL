@@ -162,6 +162,17 @@ _Acceso a los dashboards originales y control de la carga de datos._
 
 ---
 
+### Perfiles y acceso
+
+| Perfil | Ve | Calidad de datos |
+|---|---|---|
+| **Administrador** | Todos los clientes y cuentas | Sí |
+| **Una por cuenta** (Entel Chile · Inbound, Mesa Técnica, C2C, Outbound, E-commerce, Empresas; Claro Ecuador · Inbound, Outbound, NPS) | Solo su cuenta: menú, Vista general, detalle, histórico, tabla, seguimiento y su dashboard | No |
+
+- **Ingreso:** se elige el perfil y se escribe la contraseña. La sesión dura hasta cerrar el navegador, y el botón **Salir** la cierra antes.
+- **Protección:** los datos de cada perfil viajan cifrados con su contraseña; sin ella no se pueden leer.
+- **Seguimiento:** las acciones registradas por un perfil se exportan y el administrador las une a la bitácora oficial.
+
 ## 3. Diccionario de indicadores (KPI)
 
 | KPI | Id | Unidad | Definición y fórmula | Sentido |
@@ -258,9 +269,13 @@ _Acceso a los dashboards originales y control de la carga de datos._
 | `config/homologacion.json` | Equivalencias de nombres de plataformas |
 | `etl/central_etl.py` | Proceso de carga: descarga de Drive, lectura, validación, cálculo, histórico y publicación |
 | `etl/validar_dashboards.py` | Compara cada KPI mensual con el valor de su dashboard |
+| `etl/perfiles.py` | Contraseñas, cifrado de los datos por perfil, respaldo cifrado e importación del seguimiento |
+| `config/perfiles.json` | Perfiles y qué cuentas ve cada uno (sin contraseñas) |
+| `config/perfiles.local.json` | Contraseñas de los perfiles; solo en el PC del administrador, no se publica |
+| `data/seguro/` | Paquetes cifrados por perfil y respaldo cifrado: lo único que se publica de los datos |
 | `etl/tests/` | Pruebas automáticas del proceso de carga |
 | `actualizar_central.bat` | Ejecuta la carga y la validación (doble clic) |
-| `data/consolidado.json` | Datos que muestra la página (KPI por cuenta, plataforma y mes) |
+| `data/consolidado.json` | Datos en claro (solo en el PC); la página usa la versión cifrada de `data/seguro/` |
 | `data/historico/mediciones.csv` | Histórico completo con versiones (nunca se borra) |
 | `data/cargas/` | Registro de cargas, errores y validación |
 | `data/seguimiento.json` | Bitácora oficial de acciones |

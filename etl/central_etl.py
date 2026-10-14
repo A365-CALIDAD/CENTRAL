@@ -949,6 +949,8 @@ def publicar(catalogo: Catalogo, fuentes):
         "total_historico": len(hist), "total_vigentes": len(vig),
     })
     publicar_chatbot(registros, catalogo, ahora)
+    from perfiles import cifrar_perfiles      # paquetes cifrados por perfil (lo único que se publica)
+    cifrar_perfiles()
     return len(registros)
 
 

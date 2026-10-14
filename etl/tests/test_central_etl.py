@@ -89,3 +89,31 @@ class Historico(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Perfiles(unittest.TestCase):
+    def test_cifrado_ida_y_vuelta(self):
+        import perfiles as P
+        sobre = P.cifrar(b'{"ok": 1}', "Clave-de-prueba-9")
+        self.assertEqual(P.descifrar(sobre, "Clave-de-prueba-9"), b'{"ok": 1}')
+        with self.assertRaises(Exception):
+            P.descifrar(sobre, "otra-clave")
+
+    def test_paquete_de_cuenta_solo_trae_su_cuenta(self):
+        import perfiles as P
+        cons = {"registros": [{"l": "entel-c2c", "v": 1}, {"l": "entel-in", "v": 2}]}
+        seg = [{"id": "a", "linea_id": "entel-c2c"}, {"id": "b", "linea_id": "entel-in"}]
+        p = P._paquete({"id": "entel-c2c", "nombre": "C2C", "lineas": ["entel-c2c"]}, cons, {"x": 1}, {"y": 1}, seg)
+        self.assertEqual([r["l"] for r in p["consolidado"]["registros"]], ["entel-c2c"])
+        self.assertEqual([a["id"] for a in p["seguimiento"]["acciones"]], ["a"])
+        self.assertIsNone(p["resumen"])
+        self.assertIsNone(p["validacion"])
+        admin = P._paquete({"id": "admin", "nombre": "Admin", "admin": True}, cons, {"x": 1}, {"y": 1}, seg)
+        self.assertEqual(len(admin["consolidado"]["registros"]), 2)
+        self.assertIsNotNone(admin["resumen"])
+
+    def test_claves_generadas_son_fuertes(self):
+        import perfiles as P
+        c = P.generar_clave()
+        self.assertGreaterEqual(len(c), 14)
+        self.assertTrue(any(x.isdigit() for x in c) and any(x.isupper() for x in c) and any(x.islower() for x in c))

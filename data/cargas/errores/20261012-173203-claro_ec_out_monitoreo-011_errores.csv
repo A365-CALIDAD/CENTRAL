@@ -1,2 +1,0 @@
-carga_id,fuente_id,archivo,fila_excel,campo,tipo_error,valor,detalle
-20261012-173203-claro_ec_out_monitoreo-011,claro_ec_out_monitoreo,../CLARO/ECUADOR/CLARO_OUT/filtrado/Monitoreo Outbound A365 - 09.10.xlsx,,muestras,MUESTRA_INSUFICIENTE,4,FIJO · efectividad · 2026-09: 4 casos (mínimo 5)

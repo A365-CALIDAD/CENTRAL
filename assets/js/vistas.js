@@ -288,9 +288,9 @@ export function seguimiento(cont) {
     } else {
       const locales = borradoresLocales().length;
       const filas = S.seguimiento.filter(a => (!f.e || a.empresa_id === f.e) && (!f.p || a.pais_id === f.p) && (!f.c || a.cuenta === f.c) && (!f.i || a.indicador_id === f.i));
-      panel.innerHTML = `<div class="cabecera"><p class="sub" style="margin:0;max-width:720px">La bitácora oficial es <code>data/seguimiento.json</code> del repositorio.
-        Lo que registre aquí se guarda como borrador en este navegador${locales ? ` (<b>${locales} sin publicar</b>)` : ''}. Para compartirlo, exporte el archivo y súbalo al repositorio reemplazando <code>data/seguimiento.json</code>.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primario" id="btn-nueva">+ Nueva</button><button class="btn" id="btn-exp">Exportar seguimiento.json</button>${locales ? '<button class="btn" id="btn-desc">Descartar borradores</button>' : ''}</div></div><div id="t"></div>`;
+      panel.innerHTML = `<div class="cabecera"><p class="sub" style="margin:0;max-width:720px">Lo que registre aquí se guarda como borrador en este navegador${locales ? ` (<b>${locales} sin publicar</b>)` : ''}.
+        Para publicarlo, exporte el archivo y envíelo al administrador, que lo incorpora a la bitácora oficial con <code>python etl/perfiles.py importar-seguimiento</code>.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primario" id="btn-nueva">+ Nueva</button><button class="btn" id="btn-exp">Exportar seguimiento</button>${locales ? '<button class="btn" id="btn-desc">Descartar borradores</button>' : ''}</div></div><div id="t"></div>`;
       tabla(panel.querySelector('#t'), {
         filas, porPagina: 50, orden: { id: 'actualizado', dir: 'desc' }, vacio: 'Sin acciones registradas.',
         columnas: [

@@ -1,5 +1,0 @@
-{
-  "version": 1,
-  "_comentario": "Bitácora oficial de observaciones y acciones. Se reemplaza con el archivo exportado desde la sección Seguimiento del portal. Campos: id, empresa_id, pais_id, cuenta, indicador_id, periodo, observacion, accion, responsable, fecha_compromiso (YYYY-MM-DD), estado (abierta|en_curso|cerrada), creado, actualizado.",
-  "acciones": []
-}

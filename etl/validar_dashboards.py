@@ -233,6 +233,9 @@ def main():
     salida = {"generado": datetime.now().isoformat(timespec="seconds"), "tolerancia": TOLERANCIA,
               "resumen": resumen, "comparaciones": filas}
     (RAIZ / "data" / "cargas" / "validacion.json").write_text(json.dumps(salida, ensure_ascii=False, indent=1), encoding="utf-8")
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from perfiles import cifrar_perfiles     # la validación solo se publica dentro del paquete del administrador
+    cifrar_perfiles(silencioso=True)
 
     for r in resumen:
         if "error" in r:

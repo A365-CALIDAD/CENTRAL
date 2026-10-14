@@ -160,11 +160,16 @@ GitHub Pages es estático y no puede guardar datos. Diseño actual:
 
 Evolución recomendada cuando se necesite edición multiusuario: una API ligera (por ejemplo Azure Functions, Cloudflare Workers o Supabase) con autenticación, que reemplace la carga de `data/seguimiento.json` en `assets/js/datos.js` (función `cargar`) y `guardarAccion`.
 
-## 6. Seguridad y privacidad (importante)
+## 6. Seguridad y privacidad (perfiles con contraseña)
 
-- Un sitio de GitHub Pages es **público en Internet** aunque el repositorio sea privado, salvo en GitHub Enterprise Cloud con visibilidad privada de Pages. Además, publicar Pages desde un repo privado requiere plan GitHub Team/Enterprise.
-- Por eso `data/` solo contiene **indicadores agregados por cuenta**, sin datos personales (RUT, teléfonos, nombres de ejecutivos). Los Excel de entrada están en `.gitignore`.
-- Si los resultados por cuenta son confidenciales, las opciones son: Pages privado (Enterprise Cloud), Cloudflare Pages + Cloudflare Access, o Azure Static Web Apps con autenticación.
+GitHub Pages publica todo lo que está en el repositorio, por eso los datos se publican **cifrados**:
+
+1. `etl/perfiles.py` arma un paquete por perfil (`config/perfiles.json`): el administrador recibe todo; cada perfil de cuenta solo los registros y acciones de su cuenta, sin el registro de cargas ni la validación.
+2. Cada paquete se cifra con la contraseña de su perfil: PBKDF2-SHA256 (600.000 iteraciones, sal aleatoria) y AES-256-GCM, en `data/seguro/<perfil>.json`.
+3. La página pide perfil y contraseña, descarga solo ese paquete y lo descifra con WebCrypto en el navegador. Una contraseña incorrecta no descifra (la etiqueta GCM no coincide).
+4. Las contraseñas viven solo en `config/perfiles.local.json` (en `.gitignore`); los datos en claro también quedan fuera de Git, con un respaldo cifrado en `data/seguro/respaldo.json`.
+
+Límites: la seguridad depende de contraseñas fuertes (las generadas tienen 14 caracteres); el histórico de commits anteriores al 14/10/2026 conserva datos en claro dentro del repositorio privado; los dashboards originales siguen públicos en sus URLs.
 
 ## 7. Preparación para chatbot
 

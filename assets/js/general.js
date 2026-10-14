@@ -1,7 +1,7 @@
 // CENTRAL · Vista general (todos los servicios en una pantalla) y visor de dashboards embebidos.
 import {
   S, esc, fmt, fmtN, fmtPeriodo, periodos, unidades, lineas, linea, esConteo, ponderado,
-  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto,
+  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto, empresasVisibles,
 } from './datos.js';
 import { kpi, tabla, graficoLineas, leyenda, serie, css, destruirGraficos, ETIQUETA_ESTADO } from './componentes.js';
 
@@ -73,7 +73,7 @@ export function general(cont) {
       <div class="tarjeta filtros" style="margin-bottom:16px">
         <div class="campo"><label for="g-per">Mes</label><select id="g-per">${pers.slice().reverse().map(x =>
           `<option value="${x}" ${x === per ? 'selected' : ''}>${fmtPeriodo(x)}${x === hoy ? ' (en curso)' : ''}</option>`).join('')}</select></div>
-        <div class="campo"><label for="g-emp">Empresa</label><select id="g-emp"><option value="">Todas</option>${S.portal.empresas.map(x =>
+        <div class="campo"><label for="g-emp">Empresa</label><select id="g-emp"><option value="">Todas</option>${empresasVisibles().map(x =>
           `<option value="${x.id}" ${x.id === e ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></div>
         <div class="acciones"><a class="btn" href="#/ver">Ver dashboards</a></div>
       </div>
@@ -196,7 +196,7 @@ export function kpis(cont) {
       <div class="tarjeta filtros" style="margin-bottom:16px">
         <div class="campo"><label for="k-per">Mes</label><select id="k-per">${pers.slice().reverse().map(p =>
           `<option value="${p}" ${p === estado.per ? 'selected' : ''}>${fmtPeriodo(p)}${p === hoy ? ' (en curso)' : ''}</option>`).join('')}</select></div>
-        <div class="campo"><label for="k-emp">Empresa</label><select id="k-emp"><option value="">Todas</option>${S.portal.empresas.map(x =>
+        <div class="campo"><label for="k-emp">Empresa</label><select id="k-emp"><option value="">Todas</option>${empresasVisibles().map(x =>
           `<option value="${x.id}" ${x.id === estado.e ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></div>
         <div class="acciones"><button class="btn" id="k-csv">Exportar CSV</button></div>
       </div>

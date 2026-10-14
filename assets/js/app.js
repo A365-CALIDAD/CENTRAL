@@ -1,5 +1,5 @@
 // CENTRAL · arranque, navegación por hash y tema.
-import { S, cargar, unidades, lineas, esc } from './datos.js';
+import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, unidades, lineas, esc } from './datos.js';
 import { destruirGraficos } from './componentes.js';
 import * as V from './vistas.js';
 import * as G from './general.js';
@@ -42,13 +42,14 @@ function menu() {
     ${enlace('#/seguimiento', 'Seguimiento de cuentas')}
     <div class="nav-grupo">Herramientas</div>
     ${enlace('#/ver', 'Dashboards')}
-    ${enlace('#/calidad', 'Calidad de datos')}`;
+    ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
   document.getElementById('pie-sidebar').textContent = S.portal.plataforma.organizacion;
 }
 
 function navegar() {
   const [ruta = 'general', ...params] = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  const def = RUTAS[ruta] || RUTAS.general;
+  // Calidad de datos es solo para el administrador
+  const def = (ruta === 'calidad' && !esAdmin()) ? RUTAS.general : (RUTAS[ruta] || RUTAS.general);
   const cont = document.getElementById('vista');
   destruirGraficos();
   // Enlace activo: coincidencia exacta de la ruta (o prefijo para el visor de dashboards); la cuenta activa
@@ -93,8 +94,57 @@ function tema() {
   });
 }
 
+// ---------- ingreso por perfil
+function pantallaIngreso(error = '') {
+  document.body.classList.add('sin-sesion');
+  let el = document.getElementById('ingreso');
+  if (!el) { el = document.createElement('div'); el.id = 'ingreso'; document.body.appendChild(el); }
+  let ultimo = '';
+  try { ultimo = localStorage.getItem('central.ultimo-perfil') || ''; } catch { /* sin almacenamiento */ }
+  el.innerHTML = `<form class="ingreso-card" id="form-ingreso" autocomplete="on">
+      <img src="assets/img/logo.png" alt="Área de Calidad" width="112" height="112">
+      <h1>Calidad A365</h1>
+      <p class="sub">Selecciona tu perfil e ingresa la contraseña</p>
+      <div class="campo"><label for="i-perfil">Perfil</label>
+        <select id="i-perfil" name="username">${S.perfiles.map(p => `<option value="${esc(p.id)}" ${p.id === ultimo ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label for="i-clave">Contraseña</label>
+        <input id="i-clave" name="password" type="password" autocomplete="current-password" required></div>
+      ${error ? `<div class="aviso error" role="alert">${esc(error)}</div>` : ''}
+      <button class="btn primario" type="submit" id="i-entrar">Ingresar</button>
+    </form>`;
+  const form = el.querySelector('#form-ingreso');
+  el.querySelector('#i-clave').focus();
+  form.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const perfil = el.querySelector('#i-perfil').value, clave = el.querySelector('#i-clave').value;
+    const btn = el.querySelector('#i-entrar');
+    btn.disabled = true; btn.textContent = 'Verificando…';
+    let ok = false, msg = 'Contraseña incorrecta.';
+    try { ok = await iniciarSesion(perfil, clave); } catch (e) { msg = e.message; }
+    if (!ok) { pantallaIngreso(msg); return; }
+    try { localStorage.setItem('central.ultimo-perfil', perfil); } catch { /* sin almacenamiento */ }
+    el.remove();
+    document.body.classList.remove('sin-sesion');
+    arrancar();
+  });
+}
+
+let arrancado = false;
+function arrancar() {
+  menu();
+  document.getElementById('meta-datos').textContent = S.generado ? `Datos actualizados: ${S.generado.replace('T', ' ').slice(0, 16)}` : '';
+  document.getElementById('perfil-actual').textContent = S.perfil?.nombre || '';
+  if (!arrancado) { window.addEventListener('hashchange', navegar); arrancado = true; }
+  navegar();
+}
+
 async function iniciar() {
   tema();
+  document.getElementById('btn-salir').addEventListener('click', () => {
+    cerrarSesion();
+    location.hash = '';
+    location.reload();
+  });
   const app = document.getElementById('app');
   const alternarMenu = ev => { ev.stopPropagation(); app.classList.toggle('menu-abierto'); };
   document.getElementById('btn-menu').addEventListener('click', alternarMenu);
@@ -104,16 +154,18 @@ async function iniciar() {
     if (app.classList.contains('menu-abierto') && !ev.target.closest('#sidebar')) app.classList.remove('menu-abierto');
   });
   try {
-    await cargar();
+    await cargarBase();
   } catch (e) {
     document.getElementById('vista').innerHTML = `<div class="aviso error"><b>No se pudo cargar la configuración.</b> ${esc(e.message)}<br>
       Si abrió el archivo directamente (file://), sirva la carpeta con <code>python -m http.server 8000</code> y entre a http://localhost:8000.</div>`;
     return;
   }
-  menu();
-  if (S.generado) document.getElementById('meta-datos').textContent = `Datos actualizados: ${S.generado.replace('T', ' ').slice(0, 16)}`;
-  window.addEventListener('hashchange', navegar);
-  navegar();
+  if (!window.crypto?.subtle) {
+    document.getElementById('vista').innerHTML = '<div class="aviso error">Este navegador no permite descifrar los datos. Abra la página con https:// o desde localhost.</div>';
+    return;
+  }
+  if (await restaurarSesion()) arrancar();
+  else pantallaIngreso();
 }
 
 iniciar();

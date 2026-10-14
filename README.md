@@ -71,6 +71,20 @@ Pendientes:
 3. **Metas:** solo hay metas donde el dashboard las define (EPA Entel Inbound y Mesa Técnica, Nota COPC de Claro). Acordar las del resto en `config/indicadores.json`.
 4. **GitHub Pages:** Settings → Pages → *Deploy from a branch* → `main` / raíz. Ver privacidad.
 
-## Privacidad
+## Perfiles y privacidad
 
-Un sitio de GitHub Pages es accesible públicamente aunque el repositorio sea privado (salvo GitHub Enterprise Cloud con Pages privado), y publicar Pages desde un repo privado requiere plan Team o Enterprise. `data/` contiene solo indicadores agregados por cuenta, sin datos personales, y los Excel de entrada están excluidos por `.gitignore`. Si los resultados son confidenciales, revisar las alternativas de [docs/arquitectura.md](docs/arquitectura.md#6-seguridad-y-privacidad-importante).
+La página pide **perfil y contraseña**. Hay un perfil **Administrador** (ve todo, incluida Calidad de datos) y **uno por cuenta** (Entel Inbound, Entel C2C, Claro Outbound…), que ve solo su cuenta. La lista está en `config/perfiles.json`.
+
+- Los datos **no se publican en claro**: el ETL genera un paquete cifrado por perfil en `data/seguro/` (PBKDF2-SHA256, 600.000 iteraciones + AES-256-GCM) y el navegador lo descifra con la contraseña. Sin ella, el archivo no se puede leer aunque la página sea pública.
+- Las contraseñas están **solo en este PC**, en `config/perfiles.local.json` (excluido de Git). Se generan solas la primera vez.
+- Los datos en claro (`data/consolidado.json`, `data/historico/`, `data/cargas/`, `data/seguimiento.json`) quedan solo en este PC; en `data/seguro/respaldo.json` se publica un respaldo cifrado con la clave del administrador.
+- Los dashboards originales de cada cuenta siguen siendo públicos en sus propias URLs.
+
+```bash
+python etl/perfiles.py lista                          # perfiles y cuentas (sin mostrar contraseñas)
+python etl/perfiles.py clave entel-c2c NuevaClave123  # cambiar una contraseña (sin la clave, genera una)
+python etl/perfiles.py importar-seguimiento archivo.json   # unir acciones exportadas desde la página
+python etl/perfiles.py restaurar-respaldo             # recuperar data/ desde el respaldo cifrado
+```
+
+Después de cambiar una contraseña hay que publicar (`git add data/seguro && git commit && git push`) y avisar al usuario de ese perfil.
