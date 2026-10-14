@@ -80,6 +80,8 @@ La página pide **perfil y contraseña**. Hay un perfil **Administrador** (ve to
 - Los datos en claro (`data/consolidado.json`, `data/historico/`, `data/cargas/`, `data/seguimiento.json`) quedan solo en este PC; en `data/seguro/respaldo.json` se publica un respaldo cifrado con la clave del administrador.
 - Los dashboards originales de cada cuenta siguen siendo públicos en sus propias URLs.
 
+**Cambiar contraseñas:** doble clic en `cambiar_contrasenas.bat`. Elige el perfil y escribe la contraseña nueva dos veces (mínimo 10 caracteres, letras y números); al terminar, los datos se cifran de nuevo. También se puede editar `config/perfiles.local.json` a mano y luego ejecutar `python etl/perfiles.py cifrar`. En ambos casos hay que publicar `data/seguro/` (commit y push).
+
 ```bash
 python etl/perfiles.py lista                          # perfiles y cuentas (sin mostrar contraseñas)
 python etl/perfiles.py clave entel-c2c NuevaClave123  # cambiar una contraseña (sin la clave, genera una)

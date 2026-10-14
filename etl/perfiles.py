@@ -13,6 +13,7 @@ navegador descifra al iniciar sesión. Sin la contraseña el archivo no se puede
 Uso:
     python etl/perfiles.py cifrar                       # regenera los paquetes (lo hace solo el ETL al publicar)
     python etl/perfiles.py lista                        # perfiles y cuentas, sin mostrar contraseñas
+    python etl/perfiles.py editar                       # cambiar contraseñas en forma interactiva (cambiar_contrasenas.bat)
     python etl/perfiles.py clave <perfil> [nueva]       # cambia la contraseña (sin 'nueva' genera una)
     python etl/perfiles.py importar-seguimiento <archivo.json>
     python etl/perfiles.py restaurar-respaldo           # recupera data/ desde el respaldo cifrado
@@ -96,7 +97,13 @@ def claves(lista=None, avisar=True) -> dict:
     nuevas = [p["id"] for p in lista if not guardadas.get(p["id"])]
     for pid in nuevas:
         guardadas[pid] = generar_clave()
-    if nuevas:
+    ids = {p["id"] for p in lista}
+    sobran = [k for k in guardadas if k != "_comentario" and k not in ids]   # perfiles eliminados
+    for k in sobran:
+        del guardadas[k]
+    if sobran and avisar:
+        print(f"Perfiles: se eliminaron las contraseñas de {', '.join(sobran)}")
+    if nuevas or sobran:
         _escribir(CLAVES, {"_comentario": "Contraseñas de los perfiles. NO subir a GitHub (está en .gitignore).",
                            **{k: v for k, v in guardadas.items() if k != "_comentario"}})
         if avisar:
@@ -181,6 +188,62 @@ def restaurar_respaldo(clave: str | None = None):
     print(f"Respaldo restaurado: {len(miembros)} archivos en data/")
 
 
+MINIMO = 10
+
+
+def validar_clave(clave: str) -> str | None:
+    """Devuelve el problema de la contraseña, o None si sirve."""
+    if len(clave) < MINIMO:
+        return f"debe tener al menos {MINIMO} caracteres"
+    if clave.strip() != clave:
+        return "no puede empezar ni terminar con espacios"
+    if clave.isdigit() or clave.isalpha():
+        return "debe combinar letras y números"
+    return None
+
+
+def editar():
+    """Menú en consola para cambiar contraseñas; al terminar vuelve a cifrar los datos."""
+    from getpass import getpass
+    lista = perfiles()
+    cl = claves(lista, avisar=False)
+    cambios = 0
+    while True:
+        print("\nPerfiles:")
+        for i, p in enumerate(lista, 1):
+            print(f"  {i}. {p['nombre']}  ({p['id']})")
+        op = input("\nNúmero del perfil a cambiar (Enter para terminar): ").strip()
+        if not op:
+            break
+        if not op.isdigit() or not 1 <= int(op) <= len(lista):
+            print("Opción no válida.")
+            continue
+        p = lista[int(op) - 1]
+        print(f"\nNueva contraseña para {p['nombre']} (no se verá al escribir; Enter vacío = generar una automática).")
+        nueva = getpass("Contraseña: ")
+        if not nueva:
+            nueva = generar_clave()
+            print(f"Se generó una contraseña automática; la verás en {CLAVES.relative_to(RAIZ)}.")
+        else:
+            problema = validar_clave(nueva)
+            if problema:
+                print(f"No se cambió: la contraseña {problema}.")
+                continue
+            if getpass("Repite la contraseña: ") != nueva:
+                print("No se cambió: las contraseñas no coinciden.")
+                continue
+        cl[p["id"]] = nueva
+        _escribir(CLAVES, cl)
+        cambios += 1
+        print(f"Contraseña de '{p['nombre']}' actualizada.")
+    if cambios:
+        cifrar_perfiles(silencioso=True)
+        print(f"\n{cambios} contraseña(s) cambiada(s) y datos cifrados de nuevo.")
+        print("Para publicar: git add data/seguro  ->  git commit -m \"Cambio de contraseñas\"  ->  git push")
+    else:
+        print("Sin cambios.")
+
+
 def main(argv=None):
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -193,9 +256,13 @@ def main(argv=None):
         for p in perfiles():
             alcance = "todo" if p.get("admin") else ", ".join(p.get("lineas", []))
             print(f"{p['id']:<14} {p['nombre']:<28} {alcance:<40} contraseña: {'definida' if cl.get(p['id']) else 'falta'}")
+    elif cmd == "editar":
+        editar()
     elif cmd == "clave" and len(args) >= 2:
         if args[1] not in {p["id"] for p in perfiles()}:
             raise SystemExit(f"No existe el perfil '{args[1]}'")
+        if len(args) > 2 and validar_clave(args[2]):
+            raise SystemExit(f"La contraseña {validar_clave(args[2])}.")
         cl = claves(avisar=False)
         cl[args[1]] = args[2] if len(args) > 2 else generar_clave()
         _escribir(CLAVES, cl)

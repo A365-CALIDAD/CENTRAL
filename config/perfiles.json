@@ -1,5 +1,5 @@
 {
-  "_comentario": "Perfiles de acceso. Cada uno ve solo las cuentas de 'lineas' (ids de config/portal.json); 'admin' ve todo. Las contraseñas están en config/perfiles.local.json (no se publica).",
+  "_comentario": "Perfiles de acceso por persona. Cada uno ve solo las cuentas de 'lineas' (ids de config/portal.json); 'admin' ve todo. Las contraseñas están en config/perfiles.local.json (no se publica).",
   "perfiles": [
     {
       "id": "admin",
@@ -8,10 +8,29 @@
       "descripcion": "Ve todos los clientes y cuentas, incluida Calidad de datos"
     },
     {
-      "id": "entel-in",
-      "nombre": "Entel Chile · Inbound",
+      "id": "claro-ec",
+      "nombre": "Claro Ecuador · Inbound, Outbound y NPS",
       "lineas": [
-        "entel-in"
+        "claro-ec-in",
+        "claro-ec-out",
+        "claro-ec-nps"
+      ]
+    },
+    {
+      "id": "entel-comercial",
+      "nombre": "Entel Chile · Outbound, E-commerce y Empresas",
+      "lineas": [
+        "entel-out",
+        "entel-ec",
+        "entel-emp"
+      ]
+    },
+    {
+      "id": "entel-in-c2c",
+      "nombre": "Entel Chile · Inbound y C2C",
+      "lineas": [
+        "entel-in",
+        "entel-c2c"
       ]
     },
     {
@@ -19,55 +38,6 @@
       "nombre": "Entel Chile · Mesa Técnica",
       "lineas": [
         "entel-mt"
-      ]
-    },
-    {
-      "id": "entel-c2c",
-      "nombre": "Entel Chile · C2C",
-      "lineas": [
-        "entel-c2c"
-      ]
-    },
-    {
-      "id": "entel-out",
-      "nombre": "Entel Chile · Outbound",
-      "lineas": [
-        "entel-out"
-      ]
-    },
-    {
-      "id": "entel-ec",
-      "nombre": "Entel Chile · E-commerce",
-      "lineas": [
-        "entel-ec"
-      ]
-    },
-    {
-      "id": "entel-emp",
-      "nombre": "Entel Chile · Empresas",
-      "lineas": [
-        "entel-emp"
-      ]
-    },
-    {
-      "id": "claro-ec-in",
-      "nombre": "Claro Ecuador · Inbound",
-      "lineas": [
-        "claro-ec-in"
-      ]
-    },
-    {
-      "id": "claro-ec-out",
-      "nombre": "Claro Ecuador · Outbound",
-      "lineas": [
-        "claro-ec-out"
-      ]
-    },
-    {
-      "id": "claro-ec-nps",
-      "nombre": "Claro Ecuador · NPS",
-      "lineas": [
-        "claro-ec-nps"
       ]
     }
   ]
