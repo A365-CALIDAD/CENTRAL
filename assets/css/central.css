@@ -345,3 +345,10 @@ body.sin-sesion .app { display: none; }
 .pie-marca { background: #fff; border-radius: 10px; padding: 8px 10px; display: inline-flex; }
 .pie-marca img { width: 96px; height: auto; display: block; }
 .pie-sidebar { opacity: 1; }
+
+/* bitácora de acciones */
+.campo.solo-lectura textarea, .campo.solo-lectura input { background: var(--surface-2); color: var(--ink-2); }
+dialog .aviso { margin: 0; }
+.historial { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 50vh; overflow: auto; }
+.historial li { border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; font-size: 13px; }
+.historial small { color: var(--muted); }

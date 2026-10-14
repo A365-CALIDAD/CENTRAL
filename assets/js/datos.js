@@ -87,8 +87,8 @@ function aplicarPaquete(paquete) {
   S.hayDemo = !!cons.hay_datos_demo;
   S.metasEjemplo = !!cons.metas_son_ejemplo;
   S.resumen = resumen;
-  S.seguimientoBase = seg.acciones || [];
-  S.seguimiento = combinarSeguimiento(S.seguimientoBase, borradoresLocales());
+  S.bitacora = paquete.bitacora || null;
+  S.seguimiento = seg.acciones || [];        // se reemplaza por la bitácora en línea al abrir Seguimiento
 }
 
 // ---------- catálogo
@@ -231,47 +231,34 @@ export function opciones(regs, campo) {
   return [...new Set(regs.map(r => r[campo]))].sort((a, b) => String(a).localeCompare(String(b), 'es'));
 }
 
-// ---------- seguimiento (observaciones y acciones)
-// El archivo data/seguimiento.json es la fuente oficial (versionada en Git).
-// Lo que se registra en el navegador queda como borrador local hasta exportarlo y subirlo al repositorio.
+// ---------- bitácora de acciones en línea (Google Apps Script)
+// La URL y la clave de acceso del perfil vienen dentro de su paquete cifrado. Permisos (los valida el
+// servicio): el administrador crea, edita y elimina; cada perfil ve sus acciones y actualiza estado y avance.
 
-const claveBorradores = () => `central.seguimiento.borradores.v1.${S.perfil?.id || 'sin-perfil'}`;
+export const bitacoraEnLinea = () => !!(S.bitacora?.url && S.bitacora?.token);
 
-export function borradoresLocales() {
-  try { return JSON.parse(localStorage.getItem(claveBorradores()) || '[]'); } catch { return []; }
+async function apiBitacora(op, extra = {}) {
+  let r;
+  try {
+    r = await fetch(S.bitacora.url, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // sin "preflight" CORS
+      body: JSON.stringify({ op, perfil: S.perfil.id, token: S.bitacora.token, ...extra }),
+    });
+  } catch { throw new Error('No hay conexión con la bitácora. Revisa tu internet e inténtalo de nuevo.'); }
+  const d = await r.json().catch(() => ({ ok: false, error: 'Respuesta no válida de la bitácora' }));
+  if (!d.ok) throw new Error(d.error || 'Error de la bitácora');
+  return d;
 }
 
-function guardarBorradores(lista) {
-  try { localStorage.setItem(claveBorradores(), JSON.stringify(lista)); return true; } catch { return false; }
+export async function cargarBitacora() {
+  const d = await apiBitacora('listar');
+  S.seguimiento = (d.acciones || []).sort((a, b) => (b.actualizado || '').localeCompare(a.actualizado || ''));
+  return S.seguimiento;
 }
-
-function combinarSeguimiento(base, locales) {
-  const m = new Map(base.map(a => [a.id, { ...a, local: false }]));
-  for (const a of locales) m.set(a.id, { ...a, local: true });
-  return [...m.values()].sort((a, b) => (b.actualizado || '').localeCompare(a.actualizado || ''));
-}
-
-export function guardarAccion(accion) {
-  const locales = borradoresLocales().filter(a => a.id !== accion.id);
-  const ahora = new Date().toISOString().slice(0, 19);
-  const a = { ...accion, id: accion.id || `seg-${Date.now().toString(36)}`, creado: accion.creado || ahora, actualizado: ahora };
-  delete a.local;
-  locales.push(a);
-  const ok = guardarBorradores(locales);
-  S.seguimiento = combinarSeguimiento(S.seguimientoBase, locales);
-  return ok;
-}
-
-export function descartarBorradores() {
-  guardarBorradores([]);
-  S.seguimiento = combinarSeguimiento(S.seguimientoBase, []);
-}
-
-export function exportarSeguimiento() {
-  const acciones = S.seguimiento.map(({ local, ...a }) => a);
-  descargar(`seguimiento_${S.perfil?.id || 'perfil'}_${new Date().toISOString().slice(0, 10)}.json`,
-    JSON.stringify({ version: 1, perfil: S.perfil?.id, acciones }, null, 2), 'application/json');
-}
+export const crearAccion = accion => apiBitacora('crear', { accion }).then(d => d.accion);
+export const actualizarAccion = (id, cambios) => apiBitacora('actualizar', { id, cambios }).then(d => d.accion);
+export const eliminarAccion = id => apiBitacora('eliminar', { id });
+export const historialAccion = id => apiBitacora('historial', { id }).then(d => d.historial || []);
 
 export function descargar(nombre, contenido, tipo) {
   const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));

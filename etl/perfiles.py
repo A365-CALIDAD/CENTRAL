@@ -17,10 +17,16 @@ Uso:
     python etl/perfiles.py clave <perfil> [nueva]       # cambia la contraseña (sin 'nueva' genera una)
     python etl/perfiles.py importar-seguimiento <archivo.json>
     python etl/perfiles.py restaurar-respaldo           # recupera data/ desde el respaldo cifrado
+    python etl/perfiles.py bitacora                     # genera bitacora/Codigo.gs para pegar en Google Apps Script
+    python etl/perfiles.py bitacora-url <url>           # guarda la URL de la aplicación web publicada
+
+Bitácora en línea: cada perfil tiene una clave de acceso aleatoria (config/bitacora.local.json, solo en este
+PC) que viaja dentro de su paquete cifrado; el script de Google solo guarda su huella SHA-256.
 """
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 import json
 import os
@@ -43,6 +49,9 @@ CLAVES = CONFIG / "perfiles.local.json"
 DIR_SEGURO = DATA / "seguro"
 ITERACIONES = 600_000           # costo de derivar la clave: frena los intentos de adivinar contraseñas
 RESPALDAR = ["historico", "cargas", "seguimiento.json"]
+BITACORA = CONFIG / "bitacora.local.json"          # URL de la aplicación web y claves de acceso (no se publica)
+PLANTILLA_GS = Path(__file__).resolve().parent / "bitacora_codigo.gs"
+SALIDA_GS = RAIZ / "bitacora" / "Codigo.gs"
 
 
 def _leer(ruta: Path, defecto=None):
@@ -113,10 +122,12 @@ def claves(lista=None, avisar=True) -> dict:
     return guardadas
 
 
-def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento) -> dict:
+def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento, bitacora=None) -> dict:
     admin = bool(p.get("admin"))
     lineas = None if admin else set(p.get("lineas", []))
     return {
+        "bitacora": ({"url": bitacora["url"], "token": bitacora["tokens"][p["id"]]}
+                     if bitacora and bitacora.get("url") and bitacora.get("tokens", {}).get(p["id"]) else None),
         "perfil": {"id": p["id"], "nombre": p["nombre"], "admin": admin, "lineas": "*" if admin else sorted(lineas)},
         "consolidado": {**cons, "registros": cons.get("registros", []) if admin
                         else [r for r in cons.get("registros", []) if r.get("l") in lineas]},
@@ -137,9 +148,10 @@ def cifrar_perfiles(silencioso=False) -> int:
     validacion = _leer(DATA / "cargas" / "validacion.json")
     seguimiento = (_leer(DATA / "seguimiento.json", {}) or {}).get("acciones", [])
     DIR_SEGURO.mkdir(parents=True, exist_ok=True)
+    bitacora = config_bitacora(lista) if BITACORA.exists() else None
     vigentes = set()
     for p in lista:
-        datos = json.dumps(_paquete(p, cons, resumen, validacion, seguimiento), ensure_ascii=False, separators=(",", ":"))
+        datos = json.dumps(_paquete(p, cons, resumen, validacion, seguimiento, bitacora), ensure_ascii=False, separators=(",", ":"))
         _escribir(DIR_SEGURO / f"{p['id']}.json", cifrar(datos.encode("utf-8"), cl[p["id"]]), compacto=True)
         vigentes.add(f"{p['id']}.json")
     admin = next((p for p in lista if p.get("admin")), None)
@@ -188,6 +200,68 @@ def restaurar_respaldo(clave: str | None = None):
         miembros = [m for m in tar.getmembers() if m.name.startswith("data/") and ".." not in m.name]
         tar.extractall(RAIZ, members=miembros, filter="data")
     print(f"Respaldo restaurado: {len(miembros)} archivos en data/")
+
+
+# ---------------------------------------------------------------- bitácora en línea (Google Apps Script)
+
+def config_bitacora(lista=None) -> dict:
+    """{url, hoja, tokens}: crea las claves de acceso que falten y quita las de perfiles eliminados."""
+    lista = lista if lista is not None else perfiles()
+    cfg = _leer(BITACORA, {}) or {}
+    tokens = cfg.get("tokens", {})
+    ids = {p["id"] for p in lista}
+    cambio = False
+    for pid in ids - set(tokens):
+        tokens[pid] = secrets.token_urlsafe(32)
+        cambio = True
+    for pid in set(tokens) - ids:
+        del tokens[pid]
+        cambio = True
+    cfg["tokens"] = tokens
+    if cambio or not BITACORA.exists():
+        _escribir(BITACORA, {"_comentario": "Bitácora en línea: URL de la aplicación web de Google y claves de acceso por perfil. "
+                                            "NO subir a GitHub (está en .gitignore).", **{k: v for k, v in cfg.items() if k != "_comentario"}})
+    return cfg
+
+
+def generar_script_bitacora() -> Path:
+    """Escribe bitacora/Codigo.gs con la huella de la clave de cada perfil (nunca la clave)."""
+    lista = perfiles()
+    cfg = config_bitacora(lista)
+    conf = {"perfiles": {p["id"]: {"hash": hashlib.sha256(cfg["tokens"][p["id"]].encode()).hexdigest(),
+                                   "admin": bool(p.get("admin")), "lineas": [] if p.get("admin") else p.get("lineas", [])}
+                         for p in lista}}
+    plantilla = PLANTILLA_GS.read_text(encoding="utf-8")
+    codigo = plantilla.replace("/*CONFIG*/{}/*FIN_CONFIG*/", "/*CONFIG*/" + json.dumps(conf, ensure_ascii=False) + "/*FIN_CONFIG*/")
+    SALIDA_GS.parent.mkdir(parents=True, exist_ok=True)
+    SALIDA_GS.write_text(codigo, encoding="utf-8")
+    return SALIDA_GS
+
+
+def guardar_url_bitacora(url: str):
+    if not url.startswith("https://script.google.com/") and not url.startswith("http://localhost"):
+        raise SystemExit("La URL debe ser la de la aplicación web: https://script.google.com/macros/s/.../exec")
+    cfg = config_bitacora()
+    cfg["url"] = url.strip()
+    _escribir(BITACORA, cfg)
+    cifrar_perfiles(silencioso=True)
+    print("URL de la bitácora guardada y paquetes cifrados de nuevo (publica data/seguro para activarla).")
+
+
+def api_bitacora(op: str, perfil_id: str | None = None, **extra) -> dict:
+    """Llama a la bitácora en línea (por defecto como administrador). Lanza RuntimeError si falla."""
+    import urllib.request
+    cfg = _leer(BITACORA, {}) or {}
+    if not cfg.get("url"):
+        raise RuntimeError("La bitácora en línea no está configurada")
+    pid = perfil_id or next((p["id"] for p in perfiles() if p.get("admin")), "admin")
+    cuerpo = json.dumps({"op": op, "perfil": pid, "token": cfg["tokens"][pid], **extra}).encode("utf-8")
+    pedido = urllib.request.Request(cfg["url"], data=cuerpo, headers={"Content-Type": "text/plain;charset=utf-8"})
+    with urllib.request.urlopen(pedido, timeout=60) as r:
+        d = json.loads(r.read().decode("utf-8"))
+    if not d.get("ok"):
+        raise RuntimeError(d.get("error") or "Error de la bitácora")
+    return d
 
 
 MINIMO = 10
@@ -272,6 +346,11 @@ def main(argv=None):
         print(f"Contraseña de '{args[1]}' actualizada en config/perfiles.local.json y paquetes regenerados")
     elif cmd == "importar-seguimiento" and len(args) >= 2:
         importar_seguimiento(args[1])
+    elif cmd == "bitacora":
+        ruta = generar_script_bitacora()
+        print(f"Código generado en {ruta.relative_to(RAIZ)}. Pégalo completo en Extensiones › Apps Script de la hoja de la bitácora.")
+    elif cmd == "bitacora-url" and len(args) > 1:
+        guardar_url_bitacora(args[1])
     elif cmd == "restaurar-respaldo":
         restaurar_respaldo(args[1] if len(args) > 1 else None)
     else:

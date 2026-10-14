@@ -48,6 +48,8 @@ def revisar_equipo() -> list[str]:
         faltan.append("No se encontró config/fuentes.json: el .exe debe estar dentro de la carpeta CENTRAL.")
     if not (RAIZ / "config" / "perfiles.local.json").exists():
         faltan.append("Falta config/perfiles.local.json (contraseñas): cópialo desde el PC del administrador.")
+    if not (RAIZ / "config" / "bitacora.local.json").exists():
+        faltan.append("Falta config/bitacora.local.json (bitácora en línea): cópialo desde el PC del administrador.")
     if not shutil.which("git"):
         faltan.append("Git no está instalado: no se podrá publicar (instálalo desde https://git-scm.com).")
     if not (RAIZ / "data" / "historico" / "mediciones.csv").exists() and (RAIZ / "data" / "seguro" / "respaldo.json").exists():
@@ -139,6 +141,26 @@ def recuperar_respaldo():
         print(e)
 
 
+def bitacora_en_linea():
+    titulo("Bitácora en línea (hoja de Google)")
+    print("1. Generar el código para Google Apps Script")
+    print("2. Guardar la URL de la aplicación web publicada")
+    op = input("\nOpción: ").strip()
+    if op == "1":
+        ruta = perfiles.generar_script_bitacora()
+        print(f"\nCódigo generado en {ruta}.")
+        print("Ábrelo, copia todo y pégalo en la hoja: Extensiones › Apps Script (reemplazando lo que haya).")
+        os.startfile(ruta.parent)
+    elif op == "2":
+        url = input("URL de la aplicación web (https://script.google.com/macros/s/.../exec): ").strip()
+        try:
+            perfiles.guardar_url_bitacora(url)
+            print("Prueba de conexión:", "correcta" if perfiles.api_bitacora("listar").get("ok") else "con problemas")
+            print("Usa la opción 2 del menú principal para publicar.")
+        except (SystemExit, RuntimeError, OSError) as e:
+            print(f"No se pudo: {e}")
+
+
 def abrir_pagina():
     webbrowser.open(URL)
     print(f"Abriendo {URL}")
@@ -151,6 +173,7 @@ OPCIONES = [
     ("Ver correos de aviso (vista previa)", ver_avisos),
     ("Enviar correo de prueba", enviar_prueba),
     ("Preparar este PC (recuperar datos del respaldo)", recuperar_respaldo),
+    ("Bitácora en línea (código y URL)", bitacora_en_linea),
     ("Abrir la plataforma", abrir_pagina),
 ]
 

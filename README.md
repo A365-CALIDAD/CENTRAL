@@ -120,3 +120,22 @@ Se genera con `generar_exe.bat` y no se sube a GitHub (pesa ~46 MB); se copia a 
 5. Desde ahí, **1** para actualizar y **2** para publicar.
 
 Las bases de Drive (Entel Outbound, E-commerce, EPA Outbound, Empresas y Claro Ecuador) se descargan en cualquier PC. Las de carpetas locales (Entel Inbound, Mesa Técnica y C2C) solo se leen si ese PC tiene las carpetas `ENTEL\...` al lado de `CENTRAL`; si no, se conservan sus últimos datos. "Publicar" trae primero lo que publicó el otro PC, para no pisarse.
+
+## Bitácora de acciones en línea
+
+Las acciones de seguimiento se guardan en una **hoja de Google** mediante un script de Google Apps publicado como aplicación web, así que se ven al instante en cualquier equipo.
+
+- **Administrador:** en *Gestión › Seguimiento de cuentas* ve las cuentas bajo meta, crea acciones ("+ Crear acción"), las edita, elimina y revisa su historial.
+- **Perfiles de cuenta:** en *Gestión › Mis acciones* ven solo las acciones de sus cuentas y pueden **Actualizar avance** (estado + comentario).
+- Cada cambio queda en la hoja "Historial". Los correos de aviso usan las acciones vencidas de la bitácora.
+- Seguridad: cada perfil tiene una clave de acceso aleatoria (`config/bitacora.local.json`, no se publica) que viaja dentro de su paquete cifrado; el script solo guarda su huella SHA-256 y valida los permisos en cada pedido.
+
+**Puesta en marcha (una vez)**
+
+1. `python etl/perfiles.py bitacora` (o `.exe` › Bitácora en línea › 1) genera `bitacora/Codigo.gs`.
+2. En la hoja de Google: *Extensiones › Apps Script*, borrar lo que haya, pegar todo `Codigo.gs` y guardar.
+3. *Implementar › Nueva implementación › Tipo: Aplicación web* · Ejecutar como: **Yo** · Quién tiene acceso: **Cualquier usuario** · Implementar y autorizar.
+4. Copiar la URL que termina en `/exec` y guardarla: `python etl/perfiles.py bitacora-url <URL>` (o `.exe` › Bitácora en línea › 2).
+5. Publicar (`data/seguro`).
+
+Si se agregan o quitan perfiles, repetir 1 y 2 y, en Apps Script, *Implementar › Administrar implementaciones › Editar › Nueva versión* (la URL no cambia). Cambiar contraseñas no requiere tocar el script. Para probar sin Google: `python etl/bitacora_simulador.py` y `python etl/perfiles.py bitacora-url http://localhost:8791`.

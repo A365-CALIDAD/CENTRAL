@@ -117,3 +117,23 @@ class Perfiles(unittest.TestCase):
         c = P.generar_clave()
         self.assertGreaterEqual(len(c), 14)
         self.assertTrue(any(x.isdigit() for x in c) and any(x.isupper() for x in c) and any(x.islower() for x in c))
+
+
+class Bitacora(unittest.TestCase):
+    def test_script_lleva_huellas_y_no_claves(self):
+        import hashlib, json, re, tempfile
+        from pathlib import Path
+        import perfiles as P
+        tmp = Path(tempfile.mkdtemp())
+        orig = (P.BITACORA, P.SALIDA_GS)
+        P.BITACORA, P.SALIDA_GS = tmp / "bitacora.json", tmp / "Codigo.gs"
+        try:
+            codigo = P.generar_script_bitacora().read_text(encoding="utf-8")
+            tokens = json.loads(P.BITACORA.read_text(encoding="utf-8"))["tokens"]
+            conf = json.loads(re.search(r"/\*CONFIG\*/(.*?)/\*FIN_CONFIG\*/", codigo, re.S).group(1))
+            for pid, tok in tokens.items():
+                self.assertNotIn(tok, codigo)
+                self.assertEqual(conf["perfiles"][pid]["hash"], hashlib.sha256(tok.encode()).hexdigest())
+            self.assertTrue(any(v["admin"] for v in conf["perfiles"].values()))
+        finally:
+            P.BITACORA, P.SALIDA_GS = orig

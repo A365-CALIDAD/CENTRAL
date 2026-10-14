@@ -39,7 +39,7 @@ function menu() {
     ${enlace('#/historico', 'Histórico y evolución')}
     ${enlace('#/indicadores', 'Tabla consolidada')}
     <div class="nav-grupo">Gestión</div>
-    ${enlace('#/seguimiento', 'Seguimiento de cuentas')}
+    ${enlace('#/seguimiento', esAdmin() ? 'Seguimiento de cuentas' : 'Mis acciones')}
     <div class="nav-grupo">Herramientas</div>
     ${enlace('#/ver', 'Dashboards')}
     ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
@@ -65,7 +65,7 @@ function navegar() {
     : ['servicio', 'ver'].includes(ruta) && params[0] ? (l => l && `${l.e}/${l.p}`)(lineas().find(x => x.id === params[0])) : null;
   document.querySelectorAll('#nav details.nav-emp').forEach(d => { if (d.dataset.emp === emp) d.open = true; });
   const srv = ruta === 'servicio' ? lineas().find(x => x.id === params[0]) : null;
-  const titulo = def.titulo ?? (srv ? `${srv.unidad.nombre.split(' ')[0]} ${srv.servicio}`
+  const titulo = (ruta === 'seguimiento' && !esAdmin()) ? 'Mis acciones' : def.titulo ?? (srv ? `${srv.unidad.nombre.split(' ')[0]} ${srv.servicio}`
     : unidades().find(u => u.e === params[0] && u.p === params[1])?.nombre || 'Empresa');
   document.getElementById('titulo').textContent = titulo;
   document.title = `${titulo} · ${S.portal?.plataforma?.nombre || 'Calidad A365'}`;

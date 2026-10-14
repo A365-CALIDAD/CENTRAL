@@ -208,6 +208,12 @@ def _preparar():
     perfiles = (_leer(CONFIG / "perfiles.json", {}) or {}).get("perfiles", [])
     cons = _leer(DATA / "consolidado.json", {"registros": []})
     seg = (_leer(DATA / "seguimiento.json", {}) or {}).get("acciones", [])
+    try:                                          # si la bitácora está en línea, se usan sus acciones al día
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import perfiles
+        seg = perfiles.api_bitacora("listar")["acciones"]
+    except Exception:
+        pass
     catalogo = {i["id"]: i for i in _leer(CONFIG / "indicadores.json")["indicadores"]}
     portal = _leer(CONFIG / "portal.json")
     return cfg, perfiles, cons, seg, catalogo, portal

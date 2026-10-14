@@ -1,8 +1,8 @@
 // CENTRAL · vistas del portal. Cada vista recibe el contenedor y los parámetros de la ruta.
 import {
   S, esc, fmt, fmtN, fmtPct, fmtPeriodo, brecha, filtrar, ultimas, racha, comparar, periodos, opciones,
-  unidades, unidad, nombreEmpresa, nombrePais, nombreIndicador, guardarAccion, exportarSeguimiento,
-  descartarBorradores, borradoresLocales, descargar, aCSV, nombreLinea, esConteo, mesPorDefecto,
+  unidades, unidad, nombreEmpresa, nombrePais, nombreIndicador, descargar, aCSV, nombreLinea, esConteo, mesPorDefecto,
+  esAdmin, bitacoraEnLinea, cargarBitacora, crearAccion, actualizarAccion, eliminarAccion, historialAccion,
 } from './datos.js';
 import {
   badge, kpi, tabla, barraFiltros, filtrosGlobales, graficoLineas, graficoBarrasApiladas, leyenda, css, serie, ETIQUETA_ESTADO, destruirGraficos,
@@ -150,7 +150,7 @@ export function indicadores(cont) {
   const t = tabla(cont.querySelector('#tabla'), {
     filas, porPagina: 50, orden: { id: 'per', dir: 'desc' },
     tarjeta: { titulo: r => `${esc(nombreIndicador(r.i))} · ${esc(r.c)}`, sub: r => `${esc(servicio(r))} · ${fmtPeriodo(r.per)}`, omitir: ['e', 'p', 'l', 'c', 'i', 'per'] },
-    columnas: [...COLS_CONSOLIDADO, { id: 'acc', titulo: '', sinOrden: true, render: r => enRiesgo(r) ? `<button class="btn chico" data-seg='${esc(JSON.stringify({ e: r.e, p: r.p, l: r.l, c: r.c, i: r.i, per: r.per }))}'>+ Seguimiento</button>` : '' }],
+    columnas: [...COLS_CONSOLIDADO, { id: 'acc', titulo: '', sinOrden: true, render: r => enRiesgo(r) && esAdmin() && bitacoraEnLinea() ? `<button class="btn chico" data-seg='${esc(JSON.stringify({ e: r.e, p: r.p, l: r.l, c: r.c, i: r.i, per: r.per }))}'>+ Seguimiento</button>` : '' }],
   });
   const aplicar = () => {
     filas = filtrar(S.registros, filtrosGlobales);
@@ -250,30 +250,58 @@ export function historico(cont) {
   pintar();
 }
 
-// ===================================================================== SEGUIMIENTO
+// ===================================================================== SEGUIMIENTO (bitácora de acciones)
 
-export function seguimiento(cont) {
-  let tab = 'cuentas';
-  cont.innerHTML = `${avisos()}<div id="filtros"></div>
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+const vencida = a => a.estado !== 'cerrada' && a.fecha_compromiso && a.fecha_compromiso < hoyISO();
+const ESTADOS_ACCION = [['abierta', 'Abierta'], ['en_curso', 'En curso'], ['cerrada', 'Cerrada']];
+const contextoAccion = a => [nombreUnidad(a.empresa_id, a.pais_id), a.linea_id && nombreLinea(a.linea_id), a.cuenta,
+  a.indicador_id && nombreIndicador(a.indicador_id), a.periodo && fmtPeriodo(a.periodo)].filter(Boolean).join(' · ');
+
+export async function seguimiento(cont) {
+  const admin = esAdmin();
+  if (!bitacoraEnLinea()) {
+    cont.innerHTML = `${avisos()}<div class="tarjeta"><h2>Bitácora de acciones</h2>
+      <p class="sub">La bitácora en línea todavía no está configurada. ${admin ? 'Sigue los pasos de "Bitácora en línea" en el README y publica de nuevo.' : 'Avísale al administrador.'}</p></div>`;
+    return;
+  }
+  cont.innerHTML = `${avisos()}<div class="vacio">Cargando la bitácora…</div>`;
+  try {
+    await cargarBitacora();
+  } catch (e) {
+    cont.innerHTML = `<div class="aviso error"><b>No se pudo cargar la bitácora.</b> ${esc(e.message)}</div>`;
+    return;
+  }
+  if (!cont.isConnected) return;
+  let tab = admin ? 'cuentas' : 'mias';
+  let estadoFiltro = 'pendientes';
+  cont.innerHTML = `${avisos()}${admin ? '<div id="filtros"></div>' : ''}
     <div class="tarjeta">
-      <div class="tabs" role="tablist"><button data-tab="cuentas" class="activo">Cuentas a seguir</button><button data-tab="bitacora">Bitácora de acciones</button></div>
+      ${admin ? `<div class="tabs" role="tablist"><button data-tab="cuentas">Cuentas a seguir</button><button data-tab="bitacora">Bitácora de acciones</button></div>` : ''}
       <div id="panel"></div>
     </div>`;
   const panel = cont.querySelector('#panel');
 
+  const filtrarAcciones = () => {
+    const f = filtrosGlobales;
+    return S.seguimiento.filter(a => (!admin || ((!f.e || a.empresa_id === f.e) && (!f.p || a.pais_id === f.p) && (!f.l || a.linea_id === f.l)
+      && (!f.c || a.cuenta === f.c) && (!f.i || a.indicador_id === f.i)))
+      && (estadoFiltro === 'todas' || (estadoFiltro === 'pendientes' ? a.estado !== 'cerrada' : estadoFiltro === 'vencidas' ? vencida(a) : a.estado === estadoFiltro)));
+  };
+
   const pintar = () => {
     cont.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('activo', b.dataset.tab === tab));
-    const f = filtrosGlobales;
     if (tab === 'cuentas') {
+      const f = filtrosGlobales;
       const filas = ultimas(filtrar(S.registros, { ...f, s: '' })).filter(r => enRiesgo(r) && (!f.s || r.s === f.s))
         .map(r => ({ ...r, racha: racha(S.registros, r), acciones: accionesAbiertas(r), rel: brechaRel(r) }));
-      panel.innerHTML = `<p class="sub">Última medición en estado Alerta o Crítico. "Periodos seguidos" indica cuántos meses consecutivos lleva sin cumplir la meta.</p><div id="t"></div>`;
+      panel.innerHTML = `<p class="sub">Última medición en estado Alerta o Crítico. "Periodos seguidos" indica cuántos meses consecutivos lleva sin cumplir la meta. Usa "+ Crear acción" para asignar un plan.</p><div id="t"></div>`;
       tabla(panel.querySelector('#t'), {
         filas, porPagina: 50, orden: { id: 'rel', dir: 'asc' }, vacio: 'No hay cuentas que requieran seguimiento con estos filtros.',
         tarjeta: { titulo: r => `${esc(r.c)} · ${esc(nombreIndicador(r.i))}`, sub: r => esc(servicio(r)), omitir: ['u', 'c', 'i'] },
         columnas: [
           { id: 'u', titulo: 'Servicio', valor: r => servicio(r), render: r => esc(servicio(r)) },
-          { id: 'c', titulo: 'Cuenta', render: r => `<b>${esc(r.c)}</b>` },
+          { id: 'c', titulo: 'Plataforma', render: r => `<b>${esc(r.c)}</b>` },
           { id: 'i', titulo: 'Indicador', render: r => esc(nombreIndicador(r.i)) },
           { id: 'per', titulo: 'Periodo', render: r => fmtPeriodo(r.per) },
           { id: 'v', titulo: 'Valor', num: true, render: r => fmt(r.v, r.i) },
@@ -282,77 +310,149 @@ export function seguimiento(cont) {
           { id: 'racha', titulo: 'Periodos seguidos', num: true, render: r => `${r.racha}${r.racha >= 3 ? ' ⚠' : ''}` },
           { id: 's', titulo: 'Estado', render: r => badge(r.s) },
           { id: 'acciones', titulo: 'Acciones abiertas', num: true },
-          { id: 'x', titulo: '', sinOrden: true, render: r => `<button class="btn chico" data-seg='${esc(JSON.stringify({ e: r.e, p: r.p, l: r.l, c: r.c, i: r.i, per: r.per }))}'>+ Registrar</button>` },
+          { id: 'x', titulo: '', sinOrden: true, render: r => `<button class="btn chico" data-seg='${esc(JSON.stringify({ e: r.e, p: r.p, l: r.l, c: r.c, i: r.i, per: r.per }))}'>+ Crear acción</button>` },
         ],
       });
-    } else {
-      const locales = borradoresLocales().length;
-      const filas = S.seguimiento.filter(a => (!f.e || a.empresa_id === f.e) && (!f.p || a.pais_id === f.p) && (!f.c || a.cuenta === f.c) && (!f.i || a.indicador_id === f.i));
-      panel.innerHTML = `<div class="cabecera"><p class="sub" style="margin:0;max-width:720px">Lo que registre aquí se guarda como borrador en este navegador${locales ? ` (<b>${locales} sin publicar</b>)` : ''}.
-        Para publicarlo, exporte el archivo y envíelo al administrador, que lo incorpora a la bitácora oficial con <code>python etl/perfiles.py importar-seguimiento</code>.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primario" id="btn-nueva">+ Nueva</button><button class="btn" id="btn-exp">Exportar seguimiento</button>${locales ? '<button class="btn" id="btn-desc">Descartar borradores</button>' : ''}</div></div><div id="t"></div>`;
-      tabla(panel.querySelector('#t'), {
-        filas, porPagina: 50, orden: { id: 'actualizado', dir: 'desc' }, vacio: 'Sin acciones registradas.',
-        columnas: [
-          { id: 'u', titulo: 'Empresa', valor: a => nombreUnidad(a.empresa_id, a.pais_id), render: a => esc(nombreUnidad(a.empresa_id, a.pais_id)) },
-          { id: 'cuenta', titulo: 'Cuenta' },
-          { id: 'indicador_id', titulo: 'Indicador', render: a => esc(a.indicador_id ? nombreIndicador(a.indicador_id) : 'General') },
-          { id: 'observacion', titulo: 'Observación', clase: 'texto' },
-          { id: 'accion', titulo: 'Acción', clase: 'texto' },
-          { id: 'responsable', titulo: 'Responsable' },
-          { id: 'fecha_compromiso', titulo: 'Compromiso', render: a => esc(a.fecha_compromiso || '—') + (a.estado !== 'cerrada' && a.fecha_compromiso && a.fecha_compromiso < new Date().toISOString().slice(0, 10) ? ' <span class="delta-mal">vencida</span>' : '') },
-          { id: 'estado', titulo: 'Estado', render: a => badge(a.estado) + (a.local ? ' <span class="pendiente">borrador</span>' : '') },
-          { id: 'actualizado', titulo: 'Actualizado', render: a => esc((a.actualizado || '').replace('T', ' ').slice(0, 16)) },
-          { id: 'x', titulo: '', sinOrden: true, render: a => `<button class="btn chico" data-editar="${esc(a.id)}">Editar</button>` },
-        ],
-      });
-      panel.querySelector('#btn-nueva').addEventListener('click', () => abrirSeguimiento({ e: f.e, p: f.p, c: f.c, i: f.i }).then(ok => ok && pintar()));
-      panel.querySelector('#btn-exp').addEventListener('click', exportarSeguimiento);
-      panel.querySelector('#btn-desc')?.addEventListener('click', () => { if (confirm('¿Descartar los borradores locales no exportados?')) { descartarBorradores(); pintar(); } });
+      return;
     }
+    const filas = filtrarAcciones();
+    const cuenta = (est) => S.seguimiento.filter(a => est === 'vencidas' ? vencida(a) : est === 'pendientes' ? a.estado !== 'cerrada' : est === 'todas' || a.estado === est).length;
+    panel.innerHTML = `<div class="cabecera">
+        <div><h2 style="margin:0">${admin ? 'Bitácora de acciones' : 'Mis acciones'}</h2>
+          <p class="sub" style="margin:4px 0 0">${admin ? 'Acciones de todas las cuentas, guardadas en línea.' : 'Acciones asignadas a tus cuentas. Usa "Actualizar avance" para cambiar el estado o contar cómo va.'}</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div class="campo" style="min-width:170px"><label for="b-estado">Mostrar</label><select id="b-estado">
+            ${[['pendientes', 'Pendientes'], ['vencidas', 'Vencidas'], ['abierta', 'Abiertas'], ['en_curso', 'En curso'], ['cerrada', 'Cerradas'], ['todas', 'Todas']]
+              .map(([v, t]) => `<option value="${v}" ${v === estadoFiltro ? 'selected' : ''}>${t} (${cuenta(v)})</option>`).join('')}</select></div>
+          <button class="btn" id="b-recargar" title="Traer los últimos cambios">↻ Actualizar</button>
+          ${admin ? '<button class="btn primario" id="b-nueva">+ Nueva acción</button>' : ''}
+        </div></div><div id="t"></div>`;
+    tabla(panel.querySelector('#t'), {
+      filas, porPagina: 50, orden: { id: 'fecha_compromiso', dir: 'asc' },
+      vacio: admin ? 'No hay acciones con estos filtros.' : 'No tienes acciones en esta vista.',
+      tarjeta: { titulo: a => esc(a.accion || a.observacion || 'Acción'), sub: a => esc(contextoAccion(a)), omitir: ['u', 'accion'] },
+      columnas: [
+        { id: 'u', titulo: 'Cuenta', valor: a => contextoAccion(a), render: a => `${esc(nombreLinea(a.linea_id))}<br><small style="color:var(--muted)">${esc(a.cuenta)}${a.indicador_id ? ' · ' + esc(nombreIndicador(a.indicador_id)) : ''}${a.periodo ? ' · ' + fmtPeriodo(a.periodo) : ''}</small>` },
+        { id: 'observacion', titulo: 'Observación', clase: 'texto' },
+        { id: 'accion', titulo: 'Acción', clase: 'texto' },
+        { id: 'responsable', titulo: 'Responsable' },
+        { id: 'fecha_compromiso', titulo: 'Compromiso', render: a => esc(a.fecha_compromiso || '—') + (vencida(a) ? ' <span class="delta-mal">vencida</span>' : '') },
+        { id: 'estado', titulo: 'Estado', render: a => badge(a.estado) },
+        { id: 'avance', titulo: 'Último avance', clase: 'texto', render: a => esc(a.avance || '—') },
+        { id: 'actualizado', titulo: 'Actualizado', render: a => esc((a.actualizado || '').replace('T', ' ').slice(0, 16)) },
+        { id: 'x', titulo: '', sinOrden: true, render: a => `<div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn chico ${admin ? '' : 'primario'}" data-avance="${esc(a.id)}">Actualizar avance</button>
+            ${admin ? `<button class="btn chico" data-editar="${esc(a.id)}">Editar</button>` : ''}
+            <button class="btn chico" data-historial="${esc(a.id)}">Historial</button>
+            ${admin ? `<button class="btn chico" data-eliminar="${esc(a.id)}">Eliminar</button>` : ''}</div>` },
+      ],
+    });
+    panel.querySelector('#b-estado').addEventListener('change', ev => { estadoFiltro = ev.target.value; pintar(); });
+    panel.querySelector('#b-recargar').addEventListener('click', recargar);
+    panel.querySelector('#b-nueva')?.addEventListener('click', () => {
+      const f = filtrosGlobales;
+      abrirSeguimiento({ e: f.e, p: f.p, l: f.l, c: f.c, i: f.i }).then(ok => ok && pintar());
+    });
   };
-  panel.addEventListener('click', ev => {
-    const b = ev.target.closest('[data-seg]');
-    if (b) abrirSeguimiento(JSON.parse(b.dataset.seg)).then(ok => ok && pintar());
-    const ed = ev.target.closest('[data-editar]');
-    if (ed) abrirSeguimiento(null, S.seguimiento.find(a => a.id === ed.dataset.editar)).then(ok => ok && pintar());
+
+  async function recargar() {
+    panel.innerHTML = '<div class="vacio">Actualizando…</div>';
+    try { await cargarBitacora(); } catch (e) { alert(e.message); }
+    pintar();
+  }
+
+  panel.addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-seg],[data-editar],[data-avance],[data-historial],[data-eliminar]');
+    if (!btn) return;
+    const buscar = id => S.seguimiento.find(a => a.id === id);
+    if (btn.dataset.seg) { if (await abrirSeguimiento(JSON.parse(btn.dataset.seg))) { tab = 'bitacora'; pintar(); } }
+    else if (btn.dataset.editar) { if (await abrirSeguimiento(null, buscar(btn.dataset.editar))) pintar(); }
+    else if (btn.dataset.avance) { if (await abrirSeguimiento(null, buscar(btn.dataset.avance), 'avance')) pintar(); }
+    else if (btn.dataset.historial) { verHistorial(buscar(btn.dataset.historial)); }
+    else if (btn.dataset.eliminar) {
+      const a = buscar(btn.dataset.eliminar);
+      if (!confirm(`¿Eliminar la acción "${a.accion || a.observacion}"? Queda registrada en el historial.`)) return;
+      btn.disabled = true;
+      try { await eliminarAccion(a.id); S.seguimiento = S.seguimiento.filter(x => x.id !== a.id); pintar(); } catch (e) { alert(e.message); btn.disabled = false; }
+    }
   });
   cont.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; pintar(); }));
-  barraFiltros(cont.querySelector('#filtros'), { campos: ['e', 'p', 'l', 'c', 'i', 's'], alCambiar: pintar });
+  if (admin) barraFiltros(cont.querySelector('#filtros'), { campos: ['e', 'p', 'l', 'c', 'i', 's'], alCambiar: pintar });
   pintar();
 }
 
-// Diálogo para registrar o editar una acción de seguimiento. Resuelve true si se guardó.
-export function abrirSeguimiento(ctx, existente = null) {
+async function verHistorial(a) {
+  const dlg = document.getElementById('dlg-historial');
+  dlg.querySelector('#h-contexto').textContent = `${a.accion || a.observacion} · ${contextoAccion(a)}`;
+  const lista = dlg.querySelector('#h-lista');
+  lista.innerHTML = '<p class="sub">Cargando…</p>';
+  dlg.showModal();
+  try {
+    const h = await historialAccion(a.id);
+    lista.innerHTML = h.length ? `<ul class="historial">${h.slice().reverse().map(x => `<li><b>${esc(x.cambio)}</b>${x.comentario ? `<br>${esc(x.comentario)}` : ''}
+      <br><small>${esc((x.fecha || '').replace('T', ' ').slice(0, 16))} · ${esc(S.perfiles.find(p => p.id === x.perfil)?.nombre || x.perfil)}</small></li>`).join('')}</ul>` : '<p class="sub">Sin cambios registrados.</p>';
+  } catch (e) { lista.innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; }
+}
+
+// Diálogo de acciones. modo: 'crear' / 'editar' (administrador) o 'avance' (cualquier perfil: estado + comentario).
+export function abrirSeguimiento(ctx, existente = null, modo = null) {
+  modo = modo || (existente ? 'editar' : 'crear');
   const dlg = document.getElementById('dlg-seguimiento');
-  const form = document.getElementById('form-seguimiento');
   const a = existente || { empresa_id: ctx.e, pais_id: ctx.p, linea_id: ctx.l || '', cuenta: ctx.c, indicador_id: ctx.i, periodo: ctx.per, estado: 'abierta' };
-  if (!a.empresa_id || !a.cuenta) {
-    alert('Seleccione primero una empresa, país y cuenta en los filtros (o use el botón "+ Registrar" de una fila).');
+  if (modo === 'crear' && (!a.linea_id || !a.cuenta)) {
+    alert('Elige primero un servicio y una cuenta en los filtros, o usa "+ Crear acción" en una cuenta de "Cuentas a seguir".');
     return Promise.resolve(false);
   }
-  document.getElementById('dlg-contexto').textContent = `${nombreUnidad(a.empresa_id, a.pais_id)}${a.linea_id ? ' · ' + nombreLinea(a.linea_id) : ''} · ${a.cuenta}${a.indicador_id ? ' · ' + nombreIndicador(a.indicador_id) : ''}${a.periodo ? ' · ' + fmtPeriodo(a.periodo) : ''}`;
-  document.getElementById('f-obs').value = a.observacion || '';
-  document.getElementById('f-acc').value = a.accion || '';
-  document.getElementById('f-resp').value = a.responsable || '';
-  document.getElementById('f-fecha').value = a.fecha_compromiso || '';
-  document.getElementById('f-estado').value = a.estado || 'abierta';
+  const avance = modo === 'avance';
+  dlg.querySelector('#dlg-titulo').textContent = avance ? 'Actualizar avance' : modo === 'crear' ? 'Nueva acción' : 'Editar acción';
+  dlg.querySelector('#dlg-contexto').textContent = contextoAccion(a);
+  const campos = { obs: 'observacion', acc: 'accion', resp: 'responsable', fecha: 'fecha_compromiso', estado: 'estado' };
+  for (const [k, c] of Object.entries(campos)) {
+    const el = dlg.querySelector(`#f-${k}`);
+    el.value = a[c] || (k === 'estado' ? 'abierta' : '');
+    const bloquear = avance && k !== 'estado';
+    el.disabled = bloquear;
+    el.closest('.campo').classList.toggle('solo-lectura', bloquear);
+  }
+  dlg.querySelector('#f-obs').required = !avance;
+  const avanceCampo = dlg.querySelector('#f-avance');
+  avanceCampo.value = '';
+  avanceCampo.closest('.campo').hidden = modo === 'crear';
+  const error = dlg.querySelector('#dlg-error');
+  error.hidden = true;
   dlg.returnValue = '';
   dlg.showModal();
   return new Promise(res => {
-    dlg.addEventListener('close', () => {
-      if (dlg.returnValue !== 'guardar') return res(false);
-      const ok = guardarAccion({
-        ...a,
-        observacion: document.getElementById('f-obs').value.trim(),
-        accion: document.getElementById('f-acc').value.trim(),
-        responsable: document.getElementById('f-resp').value.trim(),
-        fecha_compromiso: document.getElementById('f-fecha').value,
-        estado: document.getElementById('f-estado').value,
-      });
-      if (!ok) alert('No se pudo guardar el borrador en este navegador (almacenamiento bloqueado). Exporte el archivo para no perder el cambio.');
-      res(true);
-    }, { once: true });
+    const form = dlg.querySelector('#form-seguimiento');
+    const alEnviar = async ev => {
+      if (ev.submitter?.value !== 'guardar') return;          // "Cancelar" cierra normal
+      ev.preventDefault();
+      const btn = ev.submitter;
+      btn.disabled = true; btn.textContent = 'Guardando…';
+      const valor = id => dlg.querySelector(id).value.trim();
+      try {
+        if (modo === 'crear') {
+          const nueva = await crearAccion({ ...a, observacion: valor('#f-obs'), accion: valor('#f-acc'), responsable: valor('#f-resp'),
+            fecha_compromiso: valor('#f-fecha'), estado: valor('#f-estado') });
+          S.seguimiento.unshift(nueva);
+        } else {
+          const cambios = avance ? { estado: valor('#f-estado'), avance: valor('#f-avance') }
+            : { observacion: valor('#f-obs'), accion: valor('#f-acc'), responsable: valor('#f-resp'), fecha_compromiso: valor('#f-fecha'),
+              estado: valor('#f-estado'), ...(valor('#f-avance') ? { avance: valor('#f-avance') } : {}) };
+          const nueva = await actualizarAccion(a.id, cambios);
+          S.seguimiento = S.seguimiento.map(x => x.id === a.id ? nueva : x);
+        }
+        form.removeEventListener('submit', alEnviar);
+        dlg.close('guardado');
+        res(true);
+      } catch (e) {
+        error.textContent = e.message; error.hidden = false;
+      } finally {
+        btn.disabled = false; btn.textContent = 'Guardar';
+      }
+    };
+    form.addEventListener('submit', alEnviar);
+    dlg.addEventListener('close', () => { form.removeEventListener('submit', alEnviar); if (dlg.returnValue !== 'guardado') res(false); }, { once: true });
   });
 }
 

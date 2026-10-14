@@ -44,10 +44,10 @@
 
   <dialog id="dlg-seguimiento">
     <form method="dialog" id="form-seguimiento">
-      <h2 style="margin:0;font-size:16px">Registrar seguimiento</h2>
+      <h2 id="dlg-titulo" style="margin:0;font-size:16px">Acción</h2>
       <div class="sub" id="dlg-contexto" style="color:var(--muted);font-size:12px"></div>
-      <div class="campo"><label for="f-obs">Observación</label><textarea id="f-obs" required></textarea></div>
-      <div class="campo"><label for="f-acc">Acción pendiente</label><textarea id="f-acc"></textarea></div>
+      <div class="campo"><label for="f-obs">Observación (qué pasa)</label><textarea id="f-obs"></textarea></div>
+      <div class="campo"><label for="f-acc">Acción (qué se hará)</label><textarea id="f-acc"></textarea></div>
       <div class="fila">
         <div class="campo"><label for="f-resp">Responsable</label><input id="f-resp"></div>
         <div class="campo"><label for="f-fecha">Fecha compromiso</label><input id="f-fecha" type="date"></div>
@@ -55,10 +55,21 @@
       <div class="campo"><label for="f-estado">Estado</label>
         <select id="f-estado"><option value="abierta">Abierta</option><option value="en_curso">En curso</option><option value="cerrada">Cerrada</option></select>
       </div>
+      <div class="campo"><label for="f-avance">Comentario de avance</label><textarea id="f-avance" placeholder="Qué se hizo, resultado, próximos pasos…"></textarea></div>
+      <div class="aviso error" id="dlg-error" hidden></div>
       <div class="pie">
         <button class="btn" value="cancelar" formnovalidate>Cancelar</button>
         <button class="btn primario" value="guardar">Guardar</button>
       </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-historial">
+    <form method="dialog">
+      <h2 style="margin:0;font-size:16px">Historial de la acción</h2>
+      <div class="sub" id="h-contexto" style="color:var(--muted);font-size:12px"></div>
+      <div id="h-lista"></div>
+      <div class="pie"><button class="btn" value="cerrar">Cerrar</button></div>
     </form>
   </dialog>
 
