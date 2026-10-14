@@ -740,7 +740,11 @@ def leer_archivo(ruta: Path, fuente: dict, catalogo: Catalogo, err: Errores):
                     if x is not None:
                         sumar(cuenta, periodo, d["indicador"], x, fecha)
                     continue
-                if col is None or vacio(r[col]):
+                if col is None:
+                    continue
+                if vacio(r[col]):
+                    if d.get("vacio_es_negativo"):      # p. ej. venta sin marcar = no venta, como el dashboard
+                        sumar(cuenta, periodo, d["indicador"], 0.0, fecha)
                     continue
                 v = r[col]
                 if "recodificar" in d:
@@ -1004,6 +1008,11 @@ def procesar(args):
 
     for fuente in seleccion:
         carpeta = ruta_fuente(fuente)
+        if fuente.get("complementos") and not archivos_complemento(fuente):
+            # Sin las descargas diarias el resultado sería incompleto y pisaría el del PC que sí las tiene.
+            print(f"[{fuente['id']}] se omite: este PC no tiene las descargas complementarias "
+                  f"({', '.join(c['patron'] for c in fuente['complementos'])}); se conserva lo último publicado")
+            continue
         desde_drive = sincronizar_drive(fuente)
         if desde_drive:
             archivos = [desde_drive]

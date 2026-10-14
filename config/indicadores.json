@@ -172,7 +172,7 @@
     {
       "id": "efectividad",
       "nombre": "Efectividad de venta",
-      "descripcion": "% de llamadas monitoreadas con venta concretada (excluye 'no aplica')",
+      "descripcion": "% de llamadas monitoreadas con venta concretada sobre el total (NO APLICA cuenta como no venta)",
       "unidad": "%",
       "rango": [
         0,

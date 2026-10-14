@@ -181,7 +181,7 @@ def claro_out():
         return 0 if any(it[3] and e["it"][i] == 0 for i, it in enumerate(items)) else e["ecs"]
 
     def efe(g):
-        si, no = sum(e.get("efe") == "SI" for e in g), sum(e.get("efe") == "NO" for e in g)
+        si, no = sum(e.get("efe") == "SI" for e in g), sum(e.get("efe") != "SI" for e in g)   # NO APLICA = no venta
         return si / (si + no) * 100 if si + no else None
 
     return "claro-ec-out", fecha, por_mes(d, lambda e: (e.get("fl") or "")[:7], {

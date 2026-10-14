@@ -137,3 +137,18 @@ class Bitacora(unittest.TestCase):
             self.assertTrue(any(v["admin"] for v in conf["perfiles"].values()))
         finally:
             P.BITACORA, P.SALIDA_GS = orig
+
+
+class Programa(unittest.TestCase):
+    def test_modulos_del_exe_cargan(self):
+        import importlib
+        for m in ("menu", "avisos", "perfiles", "validar_dashboards"):
+            importlib.import_module(m)      # detecta errores de sintaxis antes de generar el .exe
+
+
+class Complementos(unittest.TestCase):
+    def test_fuente_sin_complementos_en_este_pc_se_omite(self):
+        import io, contextlib, json, tempfile
+        from pathlib import Path
+        cfg = {"id": "prueba", "complementos": [{"carpeta": str(Path(tempfile.mkdtemp()) / "no-existe"), "patron": "x*.xlsx"}]}
+        self.assertEqual(etl.archivos_complemento(cfg), [])

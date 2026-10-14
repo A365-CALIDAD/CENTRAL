@@ -715,7 +715,7 @@
       "empresa_id": "claro",
       "pais_id": "ec",
       "linea_id": "claro-ec-out",
-      "descripcion": "Monitoreos Qualtrics Claro Ecuador Outbound. Nota COPC = columna EC, 0 si hay error crítico (ítems críticos del dashboard). Efectividad = SI / (SI + NO).",
+      "descripcion": "Monitoreos Qualtrics Claro Ecuador Outbound. Nota COPC = columna EC, 0 si hay error crítico (ítems críticos del dashboard). Efectividad = SI / total de evaluaciones (NO APLICA y vacíos cuentan como no venta, regla del dashboard desde el 14/10/2026).",
       "carpeta": "../CLARO/ECUADOR/CLARO_OUT/filtrado",
       "patron": "*.xlsx",
       "seleccion": "mas_reciente",
@@ -895,9 +895,7 @@
             "SI",
             "SÍ"
           ],
-          "negativos": [
-            "NO"
-          ]
+          "vacio_es_negativo": true
         }
       ],
       "filtros": [

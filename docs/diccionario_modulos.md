@@ -185,7 +185,7 @@ _Acceso a los dashboards originales y control de la carga de datos._
 | **PEC** | `pec` | % | Puntaje de errores críticos de la pauta de monitoreo; 100 = sin error crítico. | Mayor es mejor |
 | **PENC** | `penc` | % | Puntaje de errores no críticos de la pauta de monitoreo. | Mayor es mejor |
 | **Adherencia** | `adherencia` | % | Cumplimiento del bloque de adherencia de la pauta (*Adherencia (100%)*). Solo Entel Inbound. | Mayor es mejor |
-| **Efectividad de venta** | `efectividad` | % | Llamadas monitoreadas con venta concretada: SI ÷ (SI + NO); excluye "no aplica". Solo Claro Outbound. | Mayor es mejor |
+| **Efectividad de venta** | `efectividad` | % | Llamadas monitoreadas con venta concretada: SI ÷ total de evaluaciones ("no aplica" cuenta como no venta, como su dashboard). Solo Claro Outbound. | Mayor es mejor |
 | **Satisfacción global** | `global` | puntos (1–5) | Promedio de la pregunta *Global* de la encuesta. | Mayor es mejor |
 
 **Nota COPC (Claro Ecuador).** Réplica exacta de la fórmula de sus dashboards:
