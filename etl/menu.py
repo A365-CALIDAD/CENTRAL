@@ -231,7 +231,7 @@ def bitacora_en_linea():
         try:
             perfiles.guardar_url_bitacora(url)
             print("Prueba de conexión:", "correcta" if perfiles.api_bitacora("listar").get("ok") else "con problemas")
-            print("Usa "Solo publicar" (o "Actualizar datos y publicar") en el menú principal para activarla en la página.")
+            print("Usa 'Solo publicar' (o 'Actualizar datos y publicar') en el menú principal para activarla en la página.")
         except (SystemExit, RuntimeError, OSError) as e:
             print(f"No se pudo: {e}")
 
