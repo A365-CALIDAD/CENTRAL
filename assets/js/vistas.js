@@ -255,6 +255,8 @@ export function historico(cont) {
 const hoyISO = () => new Date().toISOString().slice(0, 10);
 const vencida = a => a.estado !== 'cerrada' && a.fecha_compromiso && a.fecha_compromiso < hoyISO();
 const ESTADOS_ACCION = [['abierta', 'Abierta'], ['en_curso', 'En curso'], ['cerrada', 'Cerrada']];
+// Perfiles de cuenta que verán una acción (además del administrador).
+const perfilesQueVen = l => S.perfiles.filter(p => !p.admin && (p.lineas || []).includes(l)).map(p => p.nombre);
 const contextoAccion = a => [nombreUnidad(a.empresa_id, a.pais_id), a.linea_id && nombreLinea(a.linea_id), a.cuenta,
   a.indicador_id && nombreIndicador(a.indicador_id), a.periodo && fmtPeriodo(a.periodo)].filter(Boolean).join(' · ');
 
@@ -340,6 +342,8 @@ export async function seguimiento(cont) {
         { id: 'estado', titulo: 'Estado', render: a => badge(a.estado) },
         { id: 'avance', titulo: 'Último avance', clase: 'texto', render: a => esc(a.avance || '—') },
         { id: 'actualizado', titulo: 'Actualizado', render: a => esc((a.actualizado || '').replace('T', ' ').slice(0, 16)) },
+        ...(admin ? [{ id: 'visible', titulo: 'Visible para', clase: 'texto', valor: a => perfilesQueVen(a.linea_id).join(', '),
+          render: a => esc(perfilesQueVen(a.linea_id).join(', ') || 'Solo administrador') }] : []),
         { id: 'x', titulo: '', sinOrden: true, render: a => `<div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn chico ${admin ? '' : 'primario'}" data-avance="${esc(a.id)}">Actualizar avance</button>
             ${admin ? `<button class="btn chico" data-editar="${esc(a.id)}">Editar</button>` : ''}
@@ -405,7 +409,9 @@ export function abrirSeguimiento(ctx, existente = null, modo = null) {
   }
   const avance = modo === 'avance';
   dlg.querySelector('#dlg-titulo').textContent = avance ? 'Actualizar avance' : modo === 'crear' ? 'Nueva acción' : 'Editar acción';
-  dlg.querySelector('#dlg-contexto').textContent = contextoAccion(a);
+  const ven = perfilesQueVen(a.linea_id);
+  dlg.querySelector('#dlg-contexto').textContent = contextoAccion(a)
+    + (esAdmin() ? ` — La verá: ${ven.length ? ven.join(', ') : 'solo el administrador (ningún perfil tiene esta cuenta)'}` : '');
   const campos = { obs: 'observacion', acc: 'accion', resp: 'responsable', fecha: 'fecha_compromiso', estado: 'estado' };
   for (const [k, c] of Object.entries(campos)) {
     const el = dlg.querySelector(`#f-${k}`);
