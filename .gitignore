@@ -22,3 +22,10 @@ data/seguimiento.json
 data/historico/
 data/cargas/
 data/chatbot/
+
+# Avisos por correo: destinatarios, estado de envíos y vistas previas (solo en este PC)
+config/avisos.local.json
+data/avisos/
+
+# Ejecutable generado (se copia a mano a otros PC)
+CalidadA365.exe

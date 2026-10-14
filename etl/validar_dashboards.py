@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 import gzip
 import json
+import os
 import re
 import sys
 import zlib
@@ -23,7 +24,9 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parent.parent
+# En el .exe (PyInstaller) la raíz es la carpeta donde está el ejecutable, junto a config/ y data/.
+RAIZ = Path(os.environ.get("CALIDAD_A365_RAIZ") or (Path(sys.executable).resolve().parent if getattr(sys, "frozen", False)
+            else Path(__file__).resolve().parent.parent))
 A365 = RAIZ.parent
 TOLERANCIA = 0.15          # puntos de diferencia aceptados por redondeos
 TOTAL = "(TOTAL)"

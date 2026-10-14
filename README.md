@@ -90,3 +90,33 @@ python etl/perfiles.py restaurar-respaldo             # recuperar data/ desde el
 ```
 
 Después de cambiar una contraseña hay que publicar (`git add data/seguro && git commit && git push`) y avisar al usuario de ese perfil.
+
+## Avisos por correo
+
+`etl/avisos.py` envía a cada perfil un resumen de sus indicadores bajo meta (Crítico / Alerta), los meses seguidos bajo meta y las acciones de seguimiento vencidas. Solo envía cuando algo cambió desde el último aviso, como máximo una vez al día por perfil. `actualizar_central.bat` lo ejecuta al final.
+
+1. `python etl/avisos.py iniciar` crea `config/avisos.local.json` (no se publica): escribe los correos de cada perfil y pon `"activo": true`.
+2. En `CENTRAL/.env` (no se publica) agrega el remitente: `AVISOS_SMTP_USUARIO=cuenta@gmail.com` y `AVISOS_SMTP_CLAVE=` la **contraseña de aplicación** de esa cuenta de Google (Cuenta de Google › Seguridad › Verificación en 2 pasos › Contraseñas de aplicaciones).
+3. `python etl/avisos.py vista` genera los correos en `data/avisos/vista/` para revisarlos sin enviar.
+4. `python etl/avisos.py prueba tu-correo@gmail.com` envía solo el correo del administrador a esa dirección.
+
+Los correos llevan el resumen en claro (fuera del cifrado de la página); solo incluyen lo que está bajo meta, no el detalle completo.
+
+## Programa CalidadA365.exe (para usar en otro PC)
+
+`CalidadA365.exe` reúne todo en un menú y no necesita Python: **1** Actualizar datos · **2** Publicar en la página · **3** Cambiar contraseñas · **4** Ver correos de aviso · **5** Enviar correo de prueba · **6** Preparar este PC (recuperar datos del respaldo) · **7** Abrir la plataforma.
+
+Se genera con `generar_exe.bat` y no se sube a GitHub (pesa ~46 MB); se copia a mano.
+
+**Instalar en otro PC**
+
+1. Instalar Git (https://git-scm.com) e iniciar sesión con una cuenta con acceso a `A365-CALIDAD/CENTRAL`.
+2. Clonar el repositorio: `git clone https://github.com/A365-CALIDAD/CENTRAL.git`
+3. Copiar dentro de esa carpeta `CENTRAL`, desde el PC del administrador:
+   - `CalidadA365.exe`
+   - `config/perfiles.local.json` (contraseñas, obligatorio)
+   - `config/avisos.local.json` y `.env` (solo si ese PC enviará avisos)
+4. Abrir `CalidadA365.exe` y elegir **6** para recuperar el histórico desde el respaldo cifrado.
+5. Desde ahí, **1** para actualizar y **2** para publicar.
+
+Las bases de Drive (Entel Outbound, E-commerce, EPA Outbound, Empresas y Claro Ecuador) se descargan en cualquier PC. Las de carpetas locales (Entel Inbound, Mesa Técnica y C2C) solo se leen si ese PC tiene las carpetas `ENTEL\...` al lado de `CENTRAL`; si no, se conservan sus últimos datos. "Publicar" trae primero lo que publicó el otro PC, para no pisarse.

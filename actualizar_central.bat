@@ -17,6 +17,10 @@ echo Validando contra los dashboards...
 python etl\validar_dashboards.py
 
 echo.
+echo Avisos por correo (solo si estan activos en config\avisos.local.json)...
+python etl\avisos.py enviar
+
+echo.
 echo Revise data\cargas\errores\ si hubo registros rechazados.
 echo Para publicar en GitHub Pages:
 echo     git add data

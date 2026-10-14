@@ -49,7 +49,9 @@ from pathlib import Path
 
 import pandas as pd
 
-RAIZ = Path(__file__).resolve().parent.parent
+# En el .exe (PyInstaller) la raíz es la carpeta donde está el ejecutable, junto a config/ y data/.
+RAIZ = Path(os.environ.get("CALIDAD_A365_RAIZ") or (Path(sys.executable).resolve().parent if getattr(sys, "frozen", False)
+            else Path(__file__).resolve().parent.parent))
 CONFIG = RAIZ / "config"
 DATA = RAIZ / "data"
 HISTORICO = DATA / "historico" / "mediciones.csv"
