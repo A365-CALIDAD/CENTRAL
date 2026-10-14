@@ -9,7 +9,7 @@ Integra en una sola interfaz los dashboards existentes de **Entel Chile**, **Cla
 - **ETL en Python** (`etl/central_etl.py`): lee los Excel de cada empresa, valida columnas y tipos, homologa cuentas, fechas e indicadores, detecta duplicados y errores, registra cada carga y conserva el histórico versionado sin sobrescribir periodos anteriores.
 - **Configuración centralizada** (`config/`): agregar un dashboard, país, indicador o formato de Excel no requiere tocar el código.
 
-Detalle técnico: [docs/arquitectura.md](docs/arquitectura.md).
+Detalle técnico: [docs/arquitectura.md](docs/arquitectura.md). Qué hace cada página y cómo se calcula cada KPI: [docs/diccionario_modulos.md](docs/diccionario_modulos.md).
 
 ## Estructura
 

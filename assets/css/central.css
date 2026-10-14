@@ -272,7 +272,7 @@ iframe.visor { position: relative; display: block; width: 100%; height: calc(100
 }
 
 @media (max-width: 860px) {
-  .nav-movil { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
+  .nav-movil { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
     background: var(--surface); border-top: 1px solid var(--border); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
   .nav-movil a, .nav-movil button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; background: none;
     color: var(--ink-2); font-size: 11px; text-decoration: none; border-radius: 8px; min-height: 48px; justify-content: center; cursor: pointer; }
@@ -316,3 +316,12 @@ iframe.visor { position: relative; display: block; width: 100%; height: calc(100
 
 .logo-top { display: none; width: 36px; height: 36px; object-fit: contain; flex: none; }
 @media (max-width: 860px) { .logo-top { display: block; } }
+
+/* menú por módulos: empresas desplegables con sus cuentas */
+.nav-emp summary { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; cursor: pointer; list-style: none; }
+.nav-emp summary::-webkit-details-marker { display: none; }
+.nav-emp summary::after { content: "▸"; opacity: .6; font-size: 11px; transition: transform .15s; }
+.nav-emp[open] summary::after { transform: rotate(90deg); }
+.nav-emp summary:hover { background: rgba(255,255,255,.06); }
+.nav a.sub { padding: 6px 10px 6px 30px; font-size: 13px; opacity: .9; }
+.nav a.sub.activo { opacity: 1; }

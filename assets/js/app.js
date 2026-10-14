@@ -16,21 +16,32 @@ const RUTAS = {
   calidad: { titulo: 'Calidad de datos', vista: V.calidad },
 };
 
+// Menú por módulos. En "Clientes" cada empresa se despliega con sus cuentas como submódulos.
 function menu() {
-  const enlace = (href, texto, extra = '', punto = '') =>
-    `<a href="${href}" data-ruta="${href}"><span class="item">${punto}${texto}</span>${extra}</a>`;
+  const enlace = (href, texto, extra = '', punto = '', clase = '') =>
+    `<a href="${href}" data-ruta="${href}" class="${clase}"><span class="item">${punto}${texto}</span>${extra}</a>`;
+  const tieneDatos = l => S.totales.some(z => z.l === l);
+  const empresa = u => u.proximamente
+    ? enlace(`#/empresa/${u.e}/${u.p}`, esc(u.nombre), '<span class="chip-prox">Próximamente</span>', `<span class="punto" style="background:${esc(u.color)}"></span>`)
+    : `<details class="nav-emp" data-emp="${u.e}/${u.p}">
+        <summary><span class="item"><span class="punto" style="background:${esc(u.color)}"></span>${esc(u.nombre)}</span></summary>
+        ${enlace(`#/empresa/${u.e}/${u.p}`, 'Resumen de la empresa', '', '', 'sub')}
+        ${lineas().filter(x => x.e === u.e && x.p === u.p).map(x => tieneDatos(x.l)
+          ? enlace(`#/servicio/${x.id}`, esc(x.servicio), '', '', 'sub')
+          : enlace(`#/ver/${x.id}`, esc(x.servicio), '<span class="chip-prox">Dashboard</span>', '', 'sub')).join('')}
+      </details>`;
   document.getElementById('nav').innerHTML = `
+    <div class="nav-grupo">Inicio</div>
     ${enlace('#/general', 'Vista general')}
-    ${enlace('#/kpis', 'KPI por cuenta')}
-    ${enlace('#/ver', 'Dashboards')}
-    <div class="nav-grupo">Empresas</div>
-    ${unidades().map(u => enlace(`#/empresa/${u.e}/${u.p}`, esc(u.nombre), u.proximamente ? '<span class="chip-prox">Próximamente</span>' : '',
-      `<span class="punto" style="background:${esc(u.color)}"></span>`)).join('')}
+    <div class="nav-grupo">Clientes</div>
+    ${unidades().map(empresa).join('')}
     <div class="nav-grupo">Análisis</div>
-    ${enlace('#/seguimiento', 'Seguimiento de cuentas')}
-    ${enlace('#/indicadores', 'Tabla consolidada')}
     ${enlace('#/historico', 'Histórico y evolución')}
-    <div class="nav-grupo">Operación</div>
+    ${enlace('#/indicadores', 'Tabla consolidada')}
+    <div class="nav-grupo">Gestión</div>
+    ${enlace('#/seguimiento', 'Seguimiento de cuentas')}
+    <div class="nav-grupo">Herramientas</div>
+    ${enlace('#/ver', 'Dashboards')}
     ${enlace('#/calidad', 'Calidad de datos')}`;
   document.getElementById('pie-sidebar').textContent = S.portal.plataforma.organizacion;
 }
@@ -40,8 +51,17 @@ function navegar() {
   const def = RUTAS[ruta] || RUTAS.general;
   const cont = document.getElementById('vista');
   destruirGraficos();
-  document.querySelectorAll('#nav a, #nav-movil a').forEach(a => a.classList.toggle('activo', location.hash.startsWith(a.dataset.ruta)
-    || ((!location.hash || ruta === 'servicio') && a.dataset.ruta === '#/general')));
+  // Enlace activo: coincidencia exacta de la ruta (o prefijo para el visor de dashboards); la cuenta activa
+  // también marca "General" en la barra inferior del celular.
+  const hash = location.hash || '#/general';
+  document.querySelectorAll('#nav a, #nav-movil a').forEach(a => a.classList.toggle('activo',
+    hash === a.dataset.ruta || (a.dataset.ruta === '#/ver' && ruta === 'ver')
+    || (ruta === 'kpis' && a.dataset.ruta === '#/general')   // la tabla completa de KPI se abre desde Vista general
+    || (a.closest('#nav-movil') && ruta === 'servicio' && a.dataset.ruta === '#/general')));
+  // Se despliega la empresa de la cuenta o empresa que se está viendo
+  const emp = ruta === 'empresa' ? `${params[0]}/${params[1]}`
+    : ['servicio', 'ver'].includes(ruta) && params[0] ? (l => l && `${l.e}/${l.p}`)(lineas().find(x => x.id === params[0])) : null;
+  document.querySelectorAll('#nav details.nav-emp').forEach(d => { if (d.dataset.emp === emp) d.open = true; });
   const srv = ruta === 'servicio' ? lineas().find(x => x.id === params[0]) : null;
   const titulo = def.titulo ?? (srv ? `${srv.unidad.nombre.split(' ')[0]} ${srv.servicio}`
     : unidades().find(u => u.e === params[0] && u.p === params[1])?.nombre || 'Empresa');
