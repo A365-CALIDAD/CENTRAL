@@ -289,8 +289,16 @@ def modo_automatico() -> int:
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    if "--auto" in sys.argv[1:]:
-        return modo_automatico()
+    # Modo automático: con --auto, o si el ejecutable se llama "...Actualizar..." / "...Auto..."
+    # (CalidadA365_Actualizar.exe), para usarlo con doble clic o en el Programador de tareas sin menú.
+    nombre = Path(sys.executable).stem.lower() if getattr(sys, "frozen", False) else ""
+    if "--auto" in sys.argv[1:] or "actualizar" in nombre or "auto" in nombre:
+        codigo = modo_automatico()
+        if sys.stdin and sys.stdin.isatty() and "--sin-espera" not in sys.argv[1:]:
+            print("\nEsta ventana se cierra en 15 segundos...")
+            import time
+            time.sleep(15)
+        return codigo
     os.system("title Calidad A365")
     while True:
         titulo("CALIDAD A365 · Administración")

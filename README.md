@@ -139,3 +139,10 @@ Las acciones de seguimiento se guardan en una **hoja de Google** mediante un scr
 5. Publicar (`data/seguro`).
 
 Si se agregan o quitan perfiles, repetir 1 y 2 y, en Apps Script, *Implementar › Administrar implementaciones › Editar › Nueva versión* (la URL no cambia). Cambiar contraseñas no requiere tocar el script. Para probar sin Google: `python etl/bitacora_simulador.py` y `python etl/perfiles.py bitacora-url http://localhost:8791`.
+
+## Actualización automática
+
+- `CalidadA365_Actualizar.exe` es el mismo programa que `CalidadA365.exe`, pero **no muestra el menú**: al abrirlo trae lo publicado, actualiza (Drive + carpetas locales), valida, envía avisos y publica. Al terminar cierra solo y deja el registro en `logsutomatico.log`. (`CalidadA365.exe --auto` hace lo mismo.)
+- Para que corra solo: doble clic en `programar_actualizacion.bat` (o `programar_actualizacion.bat 08:30 4 10` = desde las 08:30, cada 4 horas, durante 10 horas). Crea la tarea "Calidad A365 - Actualizar y publicar" en el Programador de tareas de Windows.
+- Requisitos del PC: haber usado una vez *Solo publicar* en `CalidadA365.exe` (nombre/correo de Git y sesión de GitHub guardados), estar encendido con la sesión iniciada, y correr después de los scripts de descarga de los dashboards. Conviene automatizar un solo PC: el que tiene las carpetas `ENTEL` y `CLARO` con sus descargas diarias.
+- Si un PC no tiene las descargas diarias "Reporte Pauta" de Outbound o E-commerce, omite esas fuentes y conserva lo publicado por el PC que sí las tiene.

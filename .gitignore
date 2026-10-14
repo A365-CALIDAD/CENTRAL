@@ -29,6 +29,8 @@ data/avisos/
 
 # Ejecutable generado (se copia a mano a otros PC)
 CalidadA365.exe
+CalidadA365_Actualizar.exe
+*.anterior.exe
 
 # Bitácora en línea: URL y claves de acceso, y el código generado para Apps Script (solo en este PC)
 config/bitacora.local.json
