@@ -43,7 +43,8 @@ function menu() {
     <div class="nav-grupo">Herramientas</div>
     ${enlace('#/ver', 'Dashboards')}
     ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
-  document.getElementById('pie-sidebar').textContent = S.portal.plataforma.organizacion;
+  document.getElementById('pie-sidebar').innerHTML =
+    `<div class="pie-marca"><img src="assets/img/logo-a365.png" alt="${esc(S.portal.plataforma.organizacion)}" width="96" height="59"></div>`;
 }
 
 function navegar() {
@@ -111,6 +112,7 @@ function pantallaIngreso(error = '') {
         <input id="i-clave" name="password" type="password" autocomplete="current-password" required></div>
       ${error ? `<div class="aviso error" role="alert">${esc(error)}</div>` : ''}
       <button class="btn primario" type="submit" id="i-entrar">Ingresar</button>
+      <div class="ingreso-marca"><span>un servicio de</span><img src="assets/img/logo-a365.png" alt="A365" width="110" height="67"></div>
     </form>`;
   const form = el.querySelector('#form-ingreso');
   el.querySelector('#i-clave').focus();

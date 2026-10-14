@@ -338,3 +338,10 @@ body.sin-sesion .app { display: none; }
 .ingreso-card .btn { justify-content: center; min-height: 44px; font-size: 15px; }
 .perfil-actual { font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 99px; padding: 3px 10px; white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 600px) { .perfil-actual { display: none; } }
+
+/* logo de la empresa (A365) en fondos claros */
+.ingreso-marca { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.ingreso-marca img { width: 110px; height: auto; }
+.pie-marca { background: #fff; border-radius: 10px; padding: 8px 10px; display: inline-flex; }
+.pie-marca img { width: 96px; height: auto; display: block; }
+.pie-sidebar { opacity: 1; }

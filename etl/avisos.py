@@ -195,6 +195,7 @@ def _html(perfil, per, items, acciones, cfg) -> str:
     <p style="margin:24px 0 8px"><a href="{e(url)}" style="background:#2a78d6;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;display:inline-block">Abrir la plataforma</a></p>
     <p style="color:#888;font-size:12px;margin:16px 0 0">Ingresa con tu perfil y contraseña. Recibes este aviso porque hay indicadores bajo meta o acciones vencidas en tus cuentas; solo se envía cuando algo cambia.</p>
   </div>
+  <div style="text-align:center;padding:16px 0 4px"><img src="{e(url.rstrip('/'))}/assets/img/logo-a365.png" alt="A365" width="90" style="opacity:.9"></div>
 </div></body></html>"""
 
 
