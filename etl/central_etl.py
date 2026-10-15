@@ -259,7 +259,7 @@ def validar_config(catalogo: Catalogo, fuentes) -> list[str]:
             problemas.append(f"{fid}: pais_id '{f.get('pais_id')}' no existe para {f['empresa_id']}")
         if f.get("formato") not in ("ancho", "largo", "detalle"):
             problemas.append(f"{fid}: formato debe ser 'ancho', 'largo' o 'detalle'")
-        elif not ruta_fuente(f).is_dir():
+        elif not ruta_fuente(f).is_dir() and not f.get("drive"):     # con Drive la carpeta local es solo respaldo
             problemas.append(f"{fid}: no existe la carpeta {f.get('carpeta')}")
         if f.get("formato") == "detalle":
             if not f.get("indicadores_detalle"):
@@ -433,10 +433,28 @@ def fecha_en_nombre(nombre: str):
     return f.replace(year=anio - 1) if not m[3] and f > hoy.replace(hour=23, minute=59) else f
 
 
+def descargar_api_json(d: dict, destino: Path):
+    """Aplicación web de Apps Script que publica un Sheet como {ok, items, filas} (ej. BN Fraude) -> Excel local.
+    'columnas' nombra cada posición de la fila; las que quedan en "" (p. ej. el asesor) no se guardan.
+    Una posición con lista (ítems con error) se guarda como su cantidad."""
+    pedido = urllib.request.Request(d["api_json"], headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(pedido, timeout=120) as r:
+        datos = json.loads(r.read().decode("utf-8"))
+    if not datos.get("ok") or not datos.get("filas"):
+        raise RuntimeError(f"la aplicación web no devolvió datos ({datos.get('error', 'sin filas')})")
+    nombres = d["columnas"]
+    filas = [{n: (len(v) if isinstance(v, list) else v) for n, v in zip(nombres, f) if n} for f in datos["filas"]]
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    tmp = destino.with_name(destino.name + ".tmp.xlsx")
+    pd.DataFrame(filas, columns=[n for n in nombres if n]).to_excel(tmp, index=False)
+    tmp.replace(destino)
+
+
 def sincronizar_drive(fuente) -> Path | None:
     """Trae de Drive el archivo más reciente de la fuente y devuelve su ruta local (None si no usa Drive).
     'drive': {"carpeta_id", "patron"} -> el archivo con la fecha más reciente en el nombre;
-    'drive': {"hoja_id", "nombre"}    -> una hoja de Google exportada a Excel (se descarga siempre).
+    'drive': {"hoja_id", "nombre"}    -> una hoja de Google exportada a Excel (se descarga siempre);
+    'drive': {"api_json", "columnas", "nombre"} -> datos ya preparados por una aplicación web de Apps Script.
     Si Drive falla, se usa la última copia descargada; si no hay, la carpeta local de la fuente."""
     d = fuente.get("drive")
     if not d:
@@ -456,6 +474,10 @@ def sincronizar_drive(fuente) -> Path | None:
                 print(f"[{fuente['id']}] Drive: descargado {nombre}")
             else:
                 print(f"[{fuente['id']}] Drive: {nombre} ya estaba descargado")
+        elif d.get("api_json"):
+            destino = destino_dir / d.get("nombre", "datos.xlsx")
+            descargar_api_json(d, destino)
+            print(f"[{fuente['id']}] Drive: datos del Sheet actualizados ({destino.name})")
         else:
             destino = destino_dir / d.get("nombre", f"{d['hoja_id']}.xlsx")
             _descargar(f"https://docs.google.com/spreadsheets/d/{d['hoja_id']}/export?format=xlsx", destino)

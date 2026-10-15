@@ -61,7 +61,7 @@ python -m unittest discover -s etl/tests -v
 
 - **Vista general** (página de inicio): todos los servicios de Entel Chile (Inbound, Mesa Técnica, C2C, Outbound, E-commerce, Empresas) y Claro Ecuador (Inbound, Outbound, NPS) en una pantalla, con cantidad de evaluaciones y encuestas, indicadores principales y la tabla **Evaluaciones por servicio y mes**.
 - **Dashboards**: visor que muestra cada dashboard publicado dentro de CENTRAL, con pestañas por servicio.
-- Bases más recientes de **Google Drive** para Entel Outbound, E-commerce, EPA Outbound y Empresas, y Claro Ecuador Inbound y Outbound (detalle en [docs/arquitectura.md](docs/arquitectura.md#descarga-desde-google-drive)); el resto, desde las carpetas locales.
+- Bases más recientes de **Google Drive** para Entel Outbound, E-commerce, EPA Outbound y Empresas, y Claro Ecuador Inbound y Outbound; Banco de la Nación · Fraude se lee del Google Sheet de fraude a través de la aplicación web que alimenta su dashboard, sin datos del cliente ni nombre del asesor (detalle en [docs/arquitectura.md](docs/arquitectura.md#descarga-desde-google-drive)); el resto, desde las carpetas locales.
 - Datos reales leídos de las carpetas locales `C:\A365\ENTEL` y `C:\A365\CLARO` (detalle en [docs/arquitectura.md](docs/arquitectura.md#41-conexión-con-las-bases-de-los-dashboards)).
 
 Pendientes:
@@ -119,7 +119,7 @@ Se genera con `generar_exe.bat` y no se sube a GitHub (pesa ~46 MB); se copia a 
 4. Abrir `CalidadA365.exe` y elegir **6** para recuperar el histórico desde el respaldo cifrado.
 5. Desde ahí, **1** para actualizar y **2** para publicar.
 
-Las bases de Drive (Entel Outbound, E-commerce, EPA Outbound, Empresas y Claro Ecuador) se descargan en cualquier PC. Las de carpetas locales (Entel Inbound, Mesa Técnica y C2C) solo se leen si ese PC tiene las carpetas `ENTEL\...` al lado de `CENTRAL`; si no, se conservan sus últimos datos. "Publicar" trae primero lo que publicó el otro PC, para no pisarse.
+Las bases de Drive (Entel Outbound, E-commerce, EPA Outbound, Empresas, Claro Ecuador y BN Fraude) se descargan en cualquier PC. Las de carpetas locales (Entel Inbound, Mesa Técnica y C2C) solo se leen si ese PC tiene las carpetas `ENTEL\...` al lado de `CENTRAL`; si no, se conservan sus últimos datos. "Publicar" trae primero lo que publicó el otro PC, para no pisarse.
 
 ## Bitácora de acciones en línea
 

@@ -913,6 +913,90 @@
       }
     },
     {
+      "id": "bn_fraude_monitoreo",
+      "activo": true,
+      "demo": false,
+      "empresa_id": "bn",
+      "pais_id": "pe",
+      "linea_id": "bn-fraude",
+      "descripcion": "Monitoreos de Banco de la Nación · Fraude. Se leen del Google Sheet de fraude a través de la aplicación web que alimenta el dashboard (sin nombre ni DNI del cliente; el asesor no se guarda). Cuenta = gestión. Nota final, PEC y PENC = promedio por evaluación, como el dashboard.",
+      "carpeta": "etl/entrada/drive/bn_fraude_monitoreo",
+      "patron": "*.xlsx",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha"
+        ],
+        "cuenta": [
+          "Gestion"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Nota final",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec",
+          "columna": "PEC Global",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_uf",
+          "columna": "PEC UF",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_neg",
+          "columna": "PEC NEG",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_cum",
+          "columna": "PEC CUM",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "penc",
+          "columna": "PENC",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        }
+      ],
+      "drive": {
+        "api_json": "https://script.google.com/macros/s/AKfycbyp7m4vpYdZbTVWgvNxqQimABzq9GVcsC1_ONItQUDQKDoGeglifx4w7PpebZFh6O2d/exec",
+        "nombre": "bn_fraude.xlsx",
+        "columnas": [
+          "Fecha",
+          "",
+          "Semana",
+          "Gestion",
+          "Estado",
+          "Antiguedad",
+          "PEC UF",
+          "PEC NEG",
+          "PEC CUM",
+          "PENC",
+          "Nota final",
+          "PEC Global",
+          "Errores"
+        ],
+        "_carpeta": "Google Sheet de fraude (1sTETmJs2gI6UK3oBbPSxHTHaVIPfvXSWIg-IukKSV_E) vía la aplicación web del dashboard"
+      }
+    },
+    {
       "id": "demo_entel_cl",
       "activo": false,
       "demo": true,
@@ -1029,6 +1113,7 @@
     "total_servicio": "true por defecto: publica la cuenta '(TOTAL)' con el resultado de todo el servicio, sin mínimo de muestras",
     "id_deduplicar": "false = no quitar repetidos dentro de la base (Outbound y E-commerce no lo hacen); los complementos siempre se unen sin repetir",
     "filtros_extra": "{columna, numerico: true} · {alguno_no_vacio: [columnas]} · {min_palabras: 2, columnas: [...], quitar: regex} (asesores de prueba)",
-    "drive": "Descarga desde Google Drive público antes de procesar: {carpeta_id, patron} toma el archivo con la fecha más reciente en el nombre; {hoja_id, nombre} exporta una hoja de Google. Si Drive falla se usa la última copia (etl/entrada/drive/) o la carpeta local."
+    "drive": "Descarga desde Google Drive público antes de procesar: {carpeta_id, patron} toma el archivo con la fecha más reciente en el nombre; {hoja_id, nombre} exporta una hoja de Google. Si Drive falla se usa la última copia (etl/entrada/drive/) o la carpeta local. {api_json, columnas, nombre} lee los datos ya preparados por una aplicación web de Apps Script (columnas en \"\" no se guardan).",
+    "multiplicar": "Factor aplicado a cada valor antes de promediar (ej. 100 si la base trae 0-1)"
   }
 }

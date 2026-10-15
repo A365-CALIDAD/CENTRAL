@@ -170,6 +170,57 @@
       ]
     },
     {
+      "id": "pec_uf",
+      "nombre": "PEC Usuario final",
+      "descripcion": "Puntaje de errores críticos que afectan al usuario final (0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "pec uf",
+        "pec usuario final"
+      ]
+    },
+    {
+      "id": "pec_neg",
+      "nombre": "PEC Negocio",
+      "descripcion": "Puntaje de errores críticos de negocio (0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "pec neg",
+        "pec negocio"
+      ]
+    },
+    {
+      "id": "pec_cum",
+      "nombre": "PEC Cumplimiento",
+      "descripcion": "Puntaje de errores críticos de cumplimiento (0-100)",
+      "unidad": "%",
+      "rango": [
+        0,
+        100
+      ],
+      "sentido": "mayor_mejor",
+      "meta": null,
+      "umbral_critico": null,
+      "alias": [
+        "pec cum",
+        "pec cumplimiento"
+      ]
+    },
+    {
       "id": "efectividad",
       "nombre": "Efectividad de venta",
       "descripcion": "% de llamadas monitoreadas con venta concretada sobre el total (NO APLICA cuenta como no venta)",

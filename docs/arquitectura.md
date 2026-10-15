@@ -125,6 +125,7 @@ Antes de procesar, el ETL descarga desde Drive (carpetas públicas, sin iniciar 
 | Claro EC Inbound / Outbound | Carpeta ECUADOR/INBOUND y ECUADOR/OUTBOUND | Ídem |
 | Entel Outbound (EPA) | Hoja "Resultados encuesta post atención Móvil A365" | Se exporta completa en cada ejecución |
 | Entel Empresas | Hoja "CAMPAÑA EMPRESA - NO VENTAS" | Se exporta completa en cada ejecución |
+| BN Fraude | Google Sheet de fraude, vía la aplicación web de Apps Script del dashboard (`drive.api_json`) | Las filas ya preparadas (fecha, gestión, notas PEC/PENC, cantidad de errores) en cada ejecución; el nombre del asesor no se guarda. Cuenta = gestión (Inbound/Outbound) |
 
 Las copias quedan en `etl/entrada/drive/<fuente>/` (no se versionan). Si Drive falla se usa la última copia o la carpeta local. Las descargas diarias "Reporte Pauta" de Outbound y E-commerce se siguen sumando desde las carpetas locales sin repetir ID Pauta. Se configura con la clave `drive` de cada fuente en `config/fuentes.json`.
 

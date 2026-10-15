@@ -6,7 +6,7 @@ import {
 import { kpi, tabla, graficoLineas, leyenda, serie, css, destruirGraficos, ETIQUETA_ESTADO } from './componentes.js';
 
 // Orden de los indicadores en el resumen y en la página de cada cuenta
-const ORDEN = ['evaluaciones', 'encuestas', 'calidad', 'epa', 'fcr', 'efectividad', 'pec', 'penc', 'adherencia', 'global'];
+const ORDEN = ['evaluaciones', 'encuestas', 'calidad', 'epa', 'fcr', 'efectividad', 'pec', 'pec_uf', 'pec_neg', 'pec_cum', 'penc', 'adherencia', 'global'];
 const hoyMes = () => new Date().toISOString().slice(0, 7);
 const totalDe = (l, i, per) => S.totales.find(z => z.l === l && z.i === i && z.per === per);
 
@@ -140,7 +140,7 @@ function tarjetaServicio(x, delPer, delAnt, per, perAnt) {
     return { i, v: t ? t.v : ponderado(r), cuentas: r.length, ok, conMeta: conMeta.length, peor: t ? t.s : 'SIN_META', meta: t?.m };
   });
   // Primero los indicadores con meta y los principales; el resto queda en "Ver más".
-  const PRIORIDAD = ['calidad', 'epa', 'fcr', 'efectividad', 'pec', 'penc', 'adherencia', 'global'];
+  const PRIORIDAD = ['calidad', 'epa', 'fcr', 'efectividad', 'pec', 'pec_uf', 'pec_neg', 'pec_cum', 'penc', 'adherencia', 'global'];
   inds.sort((a, b) => (b.meta != null) - (a.meta != null) || PRIORIDAD.indexOf(a.i) - PRIORIDAD.indexOf(b.i));
   const fila = d => `<li title="${d.meta != null ? `Meta ${fmt(d.meta, d.i)} · ` : ''}${d.conMeta ? `${d.ok} de ${d.conMeta} cuentas cumplen la meta` : 'Sin meta definida en el dashboard'}">
         <span class="p" style="background:${colorEstado(d.peor)}"></span><span class="n">${esc(nombreIndicador(d.i))}</span>
