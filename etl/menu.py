@@ -74,12 +74,61 @@ def _huella(ruta: Path) -> str:
     return hashlib.sha256(ruta.read_bytes()).hexdigest() if ruta.exists() else ""
 
 
+def reparar_git() -> bool:
+    """Deja el repositorio listo para sincronizar: cancela un rebase/merge a medias y descarta los conflictos
+    en data/seguro (paquetes cifrados que se regeneran en cada actualización). Si hay conflictos en otros
+    archivos no toca nada y lo informa."""
+    carpeta_git = RAIZ / ".git"
+    if (carpeta_git / "rebase-merge").exists() or (carpeta_git / "rebase-apply").exists():
+        print("Había una sincronización a medias: se cancela.")
+        git("rebase", "--abort", mostrar=False)
+    if (carpeta_git / "MERGE_HEAD").exists():
+        print("Había una combinación a medias: se cancela.")
+        git("merge", "--abort", mostrar=False)
+    conflictos = git("diff", "--name-only", "--diff-filter=U", mostrar=False).stdout.split()
+    ajenos = [c for c in conflictos if not c.startswith("data/seguro/")]
+    if ajenos:
+        print("Hay conflictos en archivos que no son datos generados y hay que revisarlos a mano:")
+        for c in ajenos:
+            print(f"   - {c}")
+        return False
+    # Publicaciones locales que no llegaron a subirse: si solo traen datos cifrados (se regeneran), se
+    # descartan y se parte de lo publicado; si traen otros archivos, se avisa sin tocar nada.
+    if git("fetch", "-q", mostrar=False).returncode == 0:
+        base = git("merge-base", "HEAD", "@{u}", mostrar=False).stdout.strip()
+        pendientes = git("rev-list", "--count", "@{u}..HEAD", mostrar=False).stdout.strip()
+        if base and pendientes not in ("", "0"):
+            tocados = git("diff", "--name-only", base, "HEAD", mostrar=False).stdout.split()
+            otros = [t for t in tocados if not t.startswith("data/seguro/")]
+            if otros:
+                print("Hay publicaciones de este PC sin subir que incluyen otros archivos; revísalas a mano:")
+                for t in otros:
+                    print(f"   - {t}")
+                return False
+            print(f"Se descartan {pendientes} publicación(es) de este PC que no se subieron (solo datos cifrados).")
+            git("reset", "-q", "--", "data/seguro", mostrar=False)
+            git("checkout", "HEAD", "--", "data/seguro", mostrar=False)
+            # --keep: lleva todo a lo publicado y conserva los cambios propios del PC que no estén en conflicto.
+            if git("reset", "-q", "--keep", "@{u}", mostrar=False).returncode != 0:
+                print("No se pudo alinear con lo publicado sin perder cambios locales; revisa la carpeta a mano.")
+                return False
+    # Los paquetes cifrados se vuelven a generar al actualizar: se parte siempre de la versión publicada.
+    git("reset", "-q", "--", "data/seguro", mostrar=False)
+    git("checkout", "HEAD", "--", "data/seguro", mostrar=False)
+    if conflictos:
+        print(f"Se descartaron {len(conflictos)} datos cifrados en conflicto (se regeneran al actualizar).")
+    return True
+
+
 def sincronizar() -> bool:
     """Trae lo último publicado; si otro PC publicó datos nuevos, recupera su respaldo antes de actualizar."""
     if shutil.which("git"):
+        if not reparar_git():
+            return False
         print("Trayendo lo último publicado...")
         if git("pull", "--rebase", "--autostash").returncode != 0:
-            print("No se pudo traer lo publicado (revisa conexión e inicio de sesión de Git).")
+            reparar_git()
+            print("No se pudo traer lo publicado (revisa la conexión y el inicio de sesión de Git) y vuelve a intentar.")
             return False
     huella = _huella(RESPALDO)
     if huella and (not MARCA.exists() or MARCA.read_text().strip() != huella):
