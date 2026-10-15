@@ -115,7 +115,15 @@
               "estado": "activo"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "movistar",
+      "nombre": "Movistar",
+      "color": "#e3262f",
+      "estado": "activo",
+      "paises": [
         {
           "id": "mx",
           "nombre": "México",
@@ -124,5 +132,6 @@
         }
       ]
     }
+
   ]
 }
