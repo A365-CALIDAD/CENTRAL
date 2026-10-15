@@ -119,6 +119,30 @@
       ]
     },
     {
+      "id": "bn",
+      "nombre": "Banco de la Nación",
+      "color": "#c8102e",
+      "estado": "activo",
+      "paises": [
+        {
+          "id": "pe",
+          "nombre": "Perú",
+          "estado": "activo",
+          "dashboards": [
+            {
+              "id": "bn-fraude",
+              "servicio": "Fraude",
+              "nombre": "Fraude",
+              "descripcion": "",
+              "url": "https://a365-calidad-bn.github.io/Reporte-Fraude/",
+              "repo": "https://github.com/A365-CALIDAD-BN/Reporte-Fraude",
+              "estado": "activo"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "movistar",
       "nombre": "Movistar",
       "color": "#e3262f",

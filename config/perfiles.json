@@ -39,6 +39,13 @@
       "lineas": [
         "entel-mt"
       ]
+    },
+    {
+      "id": "bn-fraude",
+      "nombre": "Banco de la Nación · Fraude",
+      "lineas": [
+        "bn-fraude"
+      ]
     }
   ]
 }
