@@ -262,7 +262,7 @@ _Acceso a los dashboards originales y control de la carga de datos._
 | `assets/js/componentes.js` | Piezas reutilizables: tarjetas KPI, tablas (con vista de tarjetas en celular), filtros y gráficos |
 | `assets/js/general.js` | Vista general, KPI por cuenta, detalle de cuenta y visor de dashboards |
 | `assets/js/vistas.js` | Empresa, Seguimiento, Tabla consolidada, Histórico y Calidad de datos |
-| `assets/img/` | Logo e ícono |
+| `assets/img/` | Logo de A365 (`logo-a365.png`), ícono de la pestaña y del .exe |
 | `config/portal.json` | Empresas, países y cuentas, con la URL de su dashboard y repositorio |
 | `config/indicadores.json` | Catálogo de KPI: unidad, rango, sentido, metas y alias |
 | `config/fuentes.json` | Cómo leer cada base: carpeta o Drive, hoja, columnas, fórmulas y filtros |

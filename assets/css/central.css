@@ -61,8 +61,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ---------- layout */
 .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
 .sidebar { background: var(--sidebar); color: var(--sidebar-ink); padding: 20px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-.marca { display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; }
-.marca .logo { width: 64px; height: 64px; flex: none; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.marca { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 0 8px 20px; }
+/* logo A365 sobre fondo blanco: sus colores no se leen sobre el menú oscuro */
+.marca .logo { background: #fff; border-radius: 10px; padding: 8px 12px; display: inline-flex; }
+.marca .logo img { width: 120px; height: auto; display: block; }
 .marca b { display: block; color: #fff; font-size: 17px; letter-spacing: .12em; }
 .marca small { font-size: 11px; opacity: .75; }
 .nav-grupo { margin: 14px 8px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .55; }
@@ -72,7 +74,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .nav .punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .nav .item { display: flex; align-items: center; gap: 8px; }
 .chip-prox { font-size: 10px; padding: 1px 6px; border-radius: 99px; border: 1px solid rgba(255,255,255,.25); opacity: .8; }
-.pie-sidebar { margin: 24px 8px 0; font-size: 11px; opacity: .6; }
 
 .main { min-width: 0; }
 .topbar { display: flex; align-items: center; gap: 12px; padding: 14px 28px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 5; }
@@ -314,8 +315,9 @@ iframe.visor { position: relative; display: block; width: 100%; height: calc(100
   .acc-srv .campo { flex: 1; }
 }
 
-.logo-top { display: none; width: 36px; height: 36px; object-fit: contain; flex: none; }
-@media (max-width: 860px) { .logo-top { display: block; } }
+.logo-top { display: none; flex: none; background: #fff; border-radius: 6px; padding: 3px 6px; }
+.logo-top img { width: 52px; height: auto; display: block; }
+@media (max-width: 860px) { .logo-top { display: inline-flex; } }
 
 /* menú por módulos: empresas desplegables con sus cuentas */
 .nav-emp summary { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; cursor: pointer; list-style: none; }
@@ -330,7 +332,7 @@ iframe.visor { position: relative; display: block; width: 100%; height: calc(100
 body.sin-sesion .app { display: none; }
 #ingreso { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--sidebar); }
 .ingreso-card { width: min(380px, 100%); background: var(--surface); border-radius: 16px; padding: 28px 24px; display: grid; gap: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
-.ingreso-card img { justify-self: center; width: 112px; height: 112px; object-fit: contain; }
+.ingreso-card img { justify-self: center; width: 180px; height: auto; }
 .ingreso-card h1 { margin: 0; text-align: center; font-size: 22px; }
 .ingreso-card .sub { margin: -8px 0 4px; text-align: center; color: var(--muted); }
 .ingreso-card .campo { min-width: 0; }
@@ -339,12 +341,6 @@ body.sin-sesion .app { display: none; }
 .perfil-actual { font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 99px; padding: 3px 10px; white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 600px) { .perfil-actual { display: none; } }
 
-/* logo de la empresa (A365) en fondos claros */
-.ingreso-marca { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; color: var(--muted); font-size: 12px; }
-.ingreso-marca img { width: 110px; height: auto; }
-.pie-marca { background: #fff; border-radius: 10px; padding: 8px 10px; display: inline-flex; }
-.pie-marca img { width: 96px; height: auto; display: block; }
-.pie-sidebar { opacity: 1; }
 
 /* bitácora de acciones */
 .campo.solo-lectura textarea, .campo.solo-lectura input { background: var(--surface-2); color: var(--ink-2); }
