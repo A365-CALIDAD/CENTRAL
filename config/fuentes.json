@@ -920,7 +920,7 @@
       "pais_id": "pe",
       "linea_id": "bn-fraude",
       "descripcion": "Monitoreos de Banco de la Nación · Fraude. Se leen del Google Sheet de fraude a través de la aplicación web que alimenta el dashboard (sin nombre ni DNI del cliente; el asesor no se guarda). Cuenta = gestión. Nota final, PEC y PENC = promedio por evaluación, como el dashboard.",
-      "carpeta": "etl/entrada/drive/bn_fraude_monitoreo",
+      "carpeta": "etl/entrada",
       "patron": "*.xlsx",
       "seleccion": "mas_reciente",
       "politica_cambios": "versionar",
@@ -994,7 +994,8 @@
           "Errores"
         ],
         "_carpeta": "Google Sheet de fraude (1sTETmJs2gI6UK3oBbPSxHTHaVIPfvXSWIg-IukKSV_E) vía la aplicación web del dashboard"
-      }
+      },
+      "_carpeta": "Respaldo local sin uso: la base se descarga en etl/entrada/drive/bn_fraude_monitoreo. Apunta a etl/entrada (existe en todos los PC) para que los .exe anteriores al 15/10 17:33 no se detengan."
     },
     {
       "id": "demo_entel_cl",
