@@ -998,6 +998,93 @@
       "_carpeta": "Respaldo local sin uso: la base se descarga en etl/entrada/drive/bn_fraude_monitoreo. Apunta a etl/entrada (existe en todos los PC) para que los .exe anteriores al 15/10 17:33 no se detengan."
     },
     {
+      "id": "mov_mx_out_monitoreo",
+      "activo": false,
+      "demo": false,
+      "empresa_id": "movistar",
+      "pais_id": "mx",
+      "linea_id": "mov-mx-out",
+      "descripcion": "Evaluaciones de Movistar México · Outbound. Se leen de los Google Forms (pauta de calidad) a través de una aplicación web de Apps Script aparte del dashboard, con sus mismos cálculos y sin datos personales (MOVISTAR/MEXICO/MOV_OUT/central_api). Cuenta = campaña. Nota, PEC y PENC (ENC) = promedio por evaluación; efectividad = % de llamadas de venta.",
+      "carpeta": "etl/entrada",
+      "patron": "*.xlsx",
+      "seleccion": "mas_reciente",
+      "politica_cambios": "versionar",
+      "hoja": 0,
+      "fila_encabezado": 0,
+      "formato": "detalle",
+      "min_muestras": 5,
+      "conteo": "evaluaciones",
+      "columnas": {
+        "fecha": [
+          "Fecha"
+        ],
+        "cuenta": [
+          "Campaña"
+        ]
+      },
+      "indicadores_detalle": [
+        {
+          "indicador": "calidad",
+          "columna": "Nota",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec",
+          "columna": "PEC Global",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_uf",
+          "columna": "PEC UF",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_neg",
+          "columna": "PEC NEG",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "pec_cum",
+          "columna": "PEC CUM",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "penc",
+          "columna": "ENC",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        },
+        {
+          "indicador": "efectividad",
+          "columna": "Venta",
+          "agregacion": "promedio",
+          "multiplicar": 100
+        }
+      ],
+      "drive": {
+        "api_json": "",
+        "nombre": "mov_mx_out.xlsx",
+        "columnas": [
+          "Fecha",
+          "Campaña",
+          "Tipo de llamada",
+          "Venta",
+          "Nota",
+          "PEC UF",
+          "PEC NEG",
+          "PEC CUM",
+          "ENC",
+          "PEC Global"
+        ],
+        "_carpeta": "Google Forms de Movistar MX vía la aplicación web MOVISTAR/MEXICO/MOV_OUT/central_api (pendiente: pegar aquí la URL /exec y poner activo en true)"
+      }
+    },
+    {
       "id": "demo_entel_cl",
       "activo": false,
       "demo": true,
