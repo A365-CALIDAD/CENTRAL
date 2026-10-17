@@ -145,14 +145,24 @@
     {
       "id": "movistar",
       "nombre": "Movistar",
-      "color": "#e3262f",
+      "color": "#019DF4",
       "estado": "activo",
       "paises": [
         {
           "id": "mx",
           "nombre": "México",
-          "estado": "proximamente",
-          "dashboards": []
+          "estado": "activo",
+          "dashboards": [
+            {
+              "id": "mov-mx-out",
+              "servicio": "Outbound",
+              "nombre": "Outbound",
+              "descripcion": "",
+              "url": "https://a365-calidad-movistar-mx.github.io/Reporte-OUT/",
+              "repo": "https://github.com/A365-CALIDAD-MOVISTAR-MX/Reporte-OUT",
+              "estado": "activo"
+            }
+          ]
         }
       ]
     }
