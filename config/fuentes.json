@@ -999,12 +999,12 @@
     },
     {
       "id": "mov_mx_out_monitoreo",
-      "activo": false,
+      "activo": true,
       "demo": false,
       "empresa_id": "movistar",
       "pais_id": "mx",
       "linea_id": "mov-mx-out",
-      "descripcion": "Evaluaciones de Movistar México · Outbound. Se leen de los Google Forms (pauta de calidad) a través de una aplicación web de Apps Script aparte del dashboard, con sus mismos cálculos y sin datos personales (MOVISTAR/MEXICO/MOV_OUT/central_api). Cuenta = campaña. Nota, PEC y PENC (ENC) = promedio por evaluación; efectividad = % de llamadas de venta.",
+      "descripcion": "Evaluaciones de Movistar México · Outbound. Se leen de los Google Forms (pauta de calidad) a través de la aplicación web del dashboard (?central=1), con sus mismos cálculos y sin datos personales (MOVISTAR/MEXICO/MOV_OUT/dashboard_calidad/Code.gs). Cuenta = campaña. Nota, PEC y PENC (ENC) = promedio por evaluación; efectividad = % de llamadas de venta.",
       "carpeta": "etl/entrada",
       "patron": "*.xlsx",
       "seleccion": "mas_reciente",
@@ -1067,7 +1067,7 @@
         }
       ],
       "drive": {
-        "api_json": "",
+        "api_json": "https://script.google.com/macros/s/AKfycbzYx8XOcOV5BX621s_skXBqwd5JtW1bwE_aZHQzKy-pm9xQwGHya1PHtay4uiHPExx-/exec?central=1",
         "nombre": "mov_mx_out.xlsx",
         "columnas": [
           "Fecha",
@@ -1081,7 +1081,7 @@
           "ENC",
           "PEC Global"
         ],
-        "_carpeta": "Google Forms de Movistar MX vía la aplicación web MOVISTAR/MEXICO/MOV_OUT/central_api (pendiente: pegar aquí la URL /exec y poner activo en true)"
+        "_carpeta": "Google Forms de Movistar MX vía la aplicación web del propio dashboard (MOVISTAR/MEXICO/MOV_OUT/dashboard_calidad/Code.gs, parámetro ?central=1: solo cálculos, sin datos personales)"
       }
     },
     {
