@@ -77,7 +77,7 @@ La página pide **perfil y contraseña**. Hay un perfil **Administrador** (ve to
 
 - Los datos **no se publican en claro**: el ETL genera un paquete cifrado por perfil en `data/seguro/` (PBKDF2-SHA256, 600.000 iteraciones + AES-256-GCM) y el navegador lo descifra con la contraseña. Sin ella, el archivo no se puede leer aunque la página sea pública.
 - Las contraseñas están **solo en este PC**, en `config/perfiles.local.json` (excluido de Git). Se generan solas la primera vez.
-- Los datos en claro (`data/consolidado.json`, `data/historico/`, `data/cargas/`, `data/seguimiento.json`) quedan solo en este PC; en `data/seguro/respaldo.json` se publica un respaldo cifrado con la clave del administrador.
+- Los datos en claro (`data/consolidado.json`, `data/historico/`, `data/cargas/`, `data/seguimiento.json`) quedan solo en este PC; en `data/seguro/respaldo.json` se publica un respaldo cifrado con la clave del administrador. Ese respaldo también lleva las contraseñas de los perfiles y las claves de la bitácora, para que todos los PC usen las mismas: gana lo publicado, salvo lo que se cambió en ese PC desde su última publicación.
 - Los dashboards originales de cada cuenta siguen siendo públicos en sus propias URLs.
 
 **Cambiar contraseñas:** doble clic en `cambiar_contrasenas.bat`. Elige el perfil y escribe la contraseña nueva dos veces (mínimo 10 caracteres, letras y números); al terminar, los datos se cifran de nuevo. También se puede editar `config/perfiles.local.json` a mano y luego ejecutar `python etl/perfiles.py cifrar`. En ambos casos hay que publicar `data/seguro/` (commit y push).

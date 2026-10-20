@@ -87,6 +87,34 @@ class Historico(unittest.TestCase):
         self.assertEqual(c["versionadas"], 1)
 
 
+class SecretosEntrePC(unittest.TestCase):
+    """Las contraseñas viajan en el respaldo: gana lo publicado, salvo lo cambiado en este PC desde la última sincronización."""
+
+    def test_combinar_secretos(self):
+        import json, tempfile
+        from pathlib import Path
+        import perfiles as P
+        tmp = Path(tempfile.mkdtemp())
+        orig = (P.CLAVES, P.BITACORA, P.MARCA_SECRETOS)
+        P.CLAVES, P.BITACORA, P.MARCA_SECRETOS = tmp / "claves.json", tmp / "bitacora.json", tmp / "marca.json"
+        leer = lambda: json.loads(P.CLAVES.read_text(encoding="utf-8"))
+        try:
+            # PC sin sincronizar que generó su propia clave para un perfil nuevo: gana la publicada
+            P.CLAVES.write_text(json.dumps({"admin": "A", "nuevo": "local"}), encoding="utf-8")
+            P.sincronizar_secretos({P.CLAVES: {"admin": "A", "nuevo": "publicada", "otro": "O"},
+                                    P.BITACORA: {"url": "u", "tokens": {"admin": "t1"}}})
+            self.assertEqual({k: v for k, v in leer().items() if k != "_comentario"},
+                             {"admin": "A", "nuevo": "publicada", "otro": "O"})
+            self.assertEqual(json.loads(P.BITACORA.read_text(encoding="utf-8"))["tokens"], {"admin": "t1"})
+            # se cambia una contraseña en este PC y otro PC publica antes: se conserva la de este PC
+            P.CLAVES.write_text(json.dumps({"admin": "A", "nuevo": "cambiada aquí", "otro": "O"}), encoding="utf-8")
+            P.sincronizar_secretos({P.CLAVES: {"admin": "A2", "nuevo": "publicada", "otro": "O"}})
+            d = leer()
+            self.assertEqual((d["admin"], d["nuevo"]), ("A2", "cambiada aquí"))
+        finally:
+            P.CLAVES, P.BITACORA, P.MARCA_SECRETOS = orig
+
+
 if __name__ == "__main__":
     unittest.main()
 

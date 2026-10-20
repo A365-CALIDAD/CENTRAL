@@ -46,6 +46,13 @@
       "lineas": [
         "bn-fraude"
       ]
+    },
+    {
+      "id": "movistar-mx",
+      "nombre": "Movistar México · Outbound",
+      "lineas": [
+        "mov-mx-out"
+      ]
     }
   ]
 }

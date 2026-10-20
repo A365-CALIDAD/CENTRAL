@@ -38,4 +38,5 @@ bitacora/
 
 # Marca local de sincronización entre PC y registro del modo automático
 data/.respaldo_sincronizado
+data/.secretos_sincronizados
 logs/

@@ -50,6 +50,9 @@ DIR_SEGURO = DATA / "seguro"
 ITERACIONES = 600_000           # costo de derivar la clave: frena los intentos de adivinar contraseñas
 RESPALDAR = ["historico", "cargas", "seguimiento.json"]
 BITACORA = CONFIG / "bitacora.local.json"          # URL de la aplicación web y claves de acceso (no se publica)
+# Contraseñas y claves de la bitácora viajan entre PC dentro del respaldo cifrado (clave del administrador).
+# La marca guarda la huella de cada valor en la última sincronización: lo cambiado aquí desde entonces gana.
+MARCA_SECRETOS = DATA / ".secretos_sincronizados"
 PLANTILLA_GS = Path(__file__).resolve().parent / "bitacora_codigo.gs"
 SALIDA_GS = RAIZ / "bitacora" / "Codigo.gs"
 
@@ -161,6 +164,9 @@ def cifrar_perfiles(silencioso=False) -> int:
             for nombre in RESPALDAR:
                 if (DATA / nombre).exists():
                     tar.add(DATA / nombre, arcname=f"data/{nombre}")
+            for ruta in (CLAVES, BITACORA):     # fuera de data/: los .exe anteriores no los extraen
+                if ruta.exists():
+                    tar.add(ruta, arcname=f"secretos/{ruta.name}")
         _escribir(DIR_SEGURO / "respaldo.json", cifrar(buf.getvalue(), cl[admin["id"]]), compacto=True)
         vigentes.add("respaldo.json")
     for viejo in DIR_SEGURO.glob("*.json"):     # perfiles eliminados
@@ -199,7 +205,66 @@ def restaurar_respaldo(clave: str | None = None):
     with tarfile.open(fileobj=io.BytesIO(datos), mode="r:gz") as tar:
         miembros = [m for m in tar.getmembers() if m.name.startswith("data/") and ".." not in m.name]
         tar.extractall(RAIZ, members=miembros, filter="data")
+        remotos = {}
+        for ruta in (CLAVES, BITACORA):
+            try:
+                remotos[ruta] = json.loads(tar.extractfile(f"secretos/{ruta.name}").read().decode("utf-8"))
+            except KeyError:
+                pass
     print(f"Respaldo restaurado: {len(miembros)} archivos en data/")
+    sincronizar_secretos(remotos)
+
+
+def _h(v) -> str:
+    return hashlib.sha256(json.dumps(v, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _secretos_planos() -> dict:
+    """{clave: valor} de contraseñas ('clave:<perfil>') y bitácora ('url', 'token:<perfil>'...)."""
+    out = {f"clave:{k}": v for k, v in (_leer(CLAVES, {}) or {}).items() if k != "_comentario"}
+    bit = _leer(BITACORA, {}) or {}
+    out.update({f"token:{k}": v for k, v in bit.get("tokens", {}).items()})
+    out.update({f"bitacora:{k}": v for k, v in bit.items() if k not in ("_comentario", "tokens")})
+    return out
+
+
+def marcar_secretos():
+    """Registra que los secretos de este PC son los publicados (después de publicar o de sincronizar)."""
+    _escribir(MARCA_SECRETOS, {k: _h(v) for k, v in _secretos_planos().items()})
+
+
+def _combinar(local: dict, remoto: dict, marca: dict, prefijo: str) -> dict:
+    """Gana lo publicado, salvo lo que se cambió en este PC desde la última sincronización."""
+    out = dict(remoto)
+    for k, v in local.items():
+        previo = marca.get(prefijo + k)
+        if k not in remoto or (previo is not None and _h(v) != previo):
+            out[k] = v
+    return out
+
+
+def sincronizar_secretos(remotos: dict):
+    """Une las contraseñas y claves de la bitácora publicadas por otro PC con las de este PC."""
+    if not remotos:
+        return
+    marca = _leer(MARCA_SECRETOS, {}) or {}
+    antes = _secretos_planos()
+    if CLAVES in remotos:
+        local = {k: v for k, v in (_leer(CLAVES, {}) or {}).items() if k != "_comentario"}
+        remoto = {k: v for k, v in remotos[CLAVES].items() if k != "_comentario"}
+        _escribir(CLAVES, {"_comentario": "Contraseñas de los perfiles. NO subir a GitHub (está en .gitignore).",
+                           **_combinar(local, remoto, marca, "clave:")})
+    if BITACORA in remotos:
+        local = _leer(BITACORA, {}) or {}
+        remoto = remotos[BITACORA]
+        planos = _combinar({k: v for k, v in local.items() if k not in ("_comentario", "tokens")},
+                           {k: v for k, v in remoto.items() if k not in ("_comentario", "tokens")}, marca, "bitacora:")
+        tokens = _combinar(local.get("tokens", {}), remoto.get("tokens", {}), marca, "token:")
+        _escribir(BITACORA, {"_comentario": "Bitácora en línea: URL de la aplicación web de Google y claves de acceso por perfil. "
+                                            "NO subir a GitHub (está en .gitignore).", **planos, "tokens": tokens})
+    if _secretos_planos() != antes:
+        print("Contraseñas y claves de la bitácora sincronizadas con las publicadas desde otro PC")
+    marcar_secretos()
 
 
 # ---------------------------------------------------------------- bitácora en línea (Google Apps Script)

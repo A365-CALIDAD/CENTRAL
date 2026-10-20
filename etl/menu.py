@@ -216,6 +216,7 @@ def publicar() -> bool:
         print("\nNo se pudo subir a GitHub. Revisa el inicio de sesión de Git y vuelve a intentar.")
         return False
     MARCA.write_text(_huella(RESPALDO))          # el respaldo publicado ahora es el de este PC
+    perfiles.marcar_secretos()                   # y sus contraseñas, las publicadas
     print("\nPublicado." if hay_cambios else "\nNo había datos nuevos; la página ya estaba al día.")
     print(f"La página se actualiza en 1 a 5 minutos: {URL}")
     return True
