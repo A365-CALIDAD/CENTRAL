@@ -26,7 +26,6 @@ from pathlib import Path
 import avisos
 import central_etl
 import perfiles
-import qualtrics
 import validar_dashboards
 
 RAIZ = central_etl.RAIZ
@@ -165,19 +164,6 @@ def actualizar(sincronizar_antes=True) -> bool:
     return True
 
 
-def actualizar_avance() -> bool:
-    """Solo el módulo Avance equipo (extracción de cada hora): descarga lo de hoy (Entel por la plataforma, Claro por
-    Qualtrics, Movistar y BN por sus aplicaciones web), lo reparte por franja, cifra y publica. No reprocesa los KPI."""
-    titulo("Avance equipo (extracción de la hora)")
-    if not sincronizar():
-        return False
-    descargar_avance_entel()
-    import avance
-    avance.generar(central_etl.leer_json(central_etl.CONFIG / "fuentes.json")["fuentes"])
-    perfiles.cifrar_perfiles()
-    return publicar()
-
-
 def actualizar_y_publicar() -> bool:
     if not actualizar():
         print("\nNo se publicó porque la actualización no terminó bien.")
@@ -300,11 +286,6 @@ def bitacora_en_linea():
             print(f"No se pudo: {e}")
 
 
-def conectar_qualtrics():
-    titulo("Conectar Qualtrics (Claro Ecuador)")
-    qualtrics.configurar()
-
-
 def abrir_pagina():
     webbrowser.open(URL)
     print(f"Abriendo {URL}")
@@ -313,66 +294,18 @@ def abrir_pagina():
 OPCIONES = [
     ("Actualizar datos y publicar (recomendado)", actualizar_y_publicar),
     ("Solo actualizar datos (sin publicar)", actualizar),
-    ("Solo Avance equipo: descargar lo de hoy y publicar", actualizar_avance),
     ("Solo publicar", publicar),
     ("Cambiar contraseñas", cambiar_contrasenas),
     ("Ver correos de aviso (vista previa)", ver_avisos),
     ("Enviar correo de prueba", enviar_prueba),
     ("Preparar este PC (recuperar datos del respaldo)", recuperar_respaldo),
     ("Bitácora en línea (código y URL)", bitacora_en_linea),
-    ("Conectar Qualtrics (Claro, avance del día)", conectar_qualtrics),
-    ("Probar descarga de Entel (Reporte Pauta de hoy)", lambda: descargar_avance_entel()),
     ("Abrir la plataforma", abrir_pagina),
 ]
 
 
-def descargar_avance_entel():
-    """Antes de cada extracción baja los Reporte Pauta de hoy de todas las cuentas de Entel con el proceso de las
-    adherencias (va dentro del .exe: no necesita Python). Si falla, se sigue con los archivos que haya."""
-    import descarga_entel
-    if not descarga_entel.BASE.exists():
-        print(f"Avance equipo: no está el proceso de adherencias de Entel en este PC ({descarga_entel.BASE}); se omite la descarga.")
-        return
-    titulo("Descargando los Reporte Pauta de hoy (Entel)")
-    try:
-        if descarga_entel.main() != 0:
-            print("La descarga de Entel terminó con problemas; se actualiza con los archivos que haya.")
-    except Exception:
-        traceback.print_exc()
-        print("La descarga de Entel falló; se actualiza con los archivos que haya.")
-
-
-def verificar_equipo() -> int:
-    """CalidadA365.exe --verificar: revisa sin abrir Chrome que este PC tenga lo necesario para la extracción de cada hora."""
-    titulo("Verificación de este PC para Avance equipo")
-    ok = True
-    import descarga_entel
-    import qualtrics
-    try:
-        A = descarga_entel.cargar_proceso()
-        print(f"  ✓ Proceso de adherencias de Entel cargado ({descarga_entel.BASE})")
-        print(f"    .env: {'sí' if A.ARCHIVO_ENV.exists() else 'NO'} · perfil de Chrome: {'sí' if A.PERFIL_CHROME_RPA.exists() else 'NO'}"
-              f" · Chrome: {'sí' if A.CHROME_EXE_PATH.exists() else 'NO'}")
-        ok &= A.ARCHIVO_ENV.exists() and A.CHROME_EXE_PATH.exists()
-    except Exception as e:
-        print(f"  ✗ Proceso de adherencias de Entel: {e}")
-        ok = False
-    try:
-        from selenium.webdriver.common.selenium_manager import SeleniumManager
-        print(f"  ✓ Selenium incluido (administrador de controladores: {SeleniumManager()._get_binary().name})")
-    except Exception as e:
-        print(f"  ✗ Selenium: {e}")
-        ok = False
-    q = qualtrics.leer_config()
-    print(f"  {'✓' if q.get('token') else '·'} Qualtrics {'conectado' if q.get('token') else 'sin conectar (opción Conectar Qualtrics)'}"
-          f"{' · encuestas: ' + str(len(q.get('encuestas') or {})) if q.get('token') else ''}")
-    print(f"  {'✓' if shutil.which('git') else '✗'} Git {'instalado' if shutil.which('git') else 'NO instalado'}")
-    print("\nTodo listo." if ok else "\nHay puntos por resolver (✗).")
-    return 0 if ok else 1
-
-
-def modo_automatico(solo_avance=False) -> int:
-    """Sin preguntas: sincroniza, actualiza y publica (o solo Avance equipo). Registro en logs/automatico.log."""
+def modo_automatico() -> int:
+    """Sin preguntas: sincroniza, actualiza y publica. Registro en logs/automatico.log."""
     global INTERACTIVO
     INTERACTIVO = False
     logs = RAIZ / "logs"
@@ -392,10 +325,9 @@ def modo_automatico(solo_avance=False) -> int:
 
     with open(logs / "automatico.log", "a", encoding="utf-8") as reg:
         sys.stdout = sys.stderr = Duplicar(sys.__stdout__, reg)
-        modo = "solo Avance equipo" if solo_avance else "ejecución automática"
-        print(f"\n######## {datetime.now():%d/%m/%Y %H:%M:%S} · {modo} ########")
+        print(f"\n######## {datetime.now():%d/%m/%Y %H:%M:%S} · ejecución automática ########")
         try:
-            ok = actualizar_avance() if solo_avance else actualizar_y_publicar()
+            ok = actualizar_y_publicar()
         except Exception:
             traceback.print_exc()
             ok = False
@@ -409,13 +341,9 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8")
     # Modo automático: con --auto, o si el ejecutable se llama "...Actualizar..." / "...Auto..."
     # (CalidadA365_Actualizar.exe), para usarlo con doble clic o en el Programador de tareas sin menú.
-    if "--verificar" in sys.argv[1:]:
-        return verificar_equipo()
     nombre = Path(sys.executable).stem.lower() if getattr(sys, "frozen", False) else ""
-    # CalidadA365_Avance.exe / --avance: solo Avance equipo (para la tarea de cada hora)
-    solo_avance = "--avance" in sys.argv[1:] or "avance" in nombre
-    if solo_avance or "--auto" in sys.argv[1:] or "actualizar" in nombre or "auto" in nombre:
-        codigo = modo_automatico(solo_avance)
+    if "--auto" in sys.argv[1:] or "actualizar" in nombre or "auto" in nombre:
+        codigo = modo_automatico()
         if sys.stdin and sys.stdin.isatty() and "--sin-espera" not in sys.argv[1:]:
             print("\nEsta ventana se cierra en 15 segundos...")
             import time

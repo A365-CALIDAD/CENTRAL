@@ -1,15 +1,15 @@
 @echo off
-REM Calidad A365 - programa la extraccion de cada hora del modulo Avance equipo (solo ese modulo, rapido).
-REM Crea la tarea "Calidad A365 - Avance equipo", que ejecuta CalidadA365_Avance.exe (sin menu).
+REM Calidad A365 - programa la extraccion de cada hora del modulo Avance equipo (programa aparte AvanceEquipo.exe).
+REM Crea la tarea "Calidad A365 - Avance equipo", que ejecuta AvanceEquipo.exe (sin menu).
 REM Los KPI siguen con programar_actualizacion.bat (ej. una vez al dia). Uso: doble clic, o:  programar_avance.bat 08:30 1 12
 REM      (primera hora del dia, repetir cada N horas -0 = una vez al dia-, durante M horas)
 chcp 65001 >nul
 setlocal
-set "EXE=%~dp0CalidadA365_Avance.exe"
+set "EXE=%~dp0AvanceEquipo.exe"
 set "TAREA=Calidad A365 - Avance equipo"
 
 if not exist "%EXE%" (
-  echo No se encontro CalidadA365_Avance.exe en esta carpeta.
+  echo No se encontro AvanceEquipo.exe en esta carpeta.
   pause
   exit /b 1
 )
