@@ -86,9 +86,7 @@ def descargas(fuente) -> list:
             out += [p for p in carpeta.glob(c.get("patron", "*.xlsx")) if not p.name.startswith("~$")]
     if fuente["avance"].get("qualtrics"):        # respuestas traídas por la API de Qualtrics (las más recientes)
         import qualtrics
-        csv = qualtrics.DESTINO / f"{fuente['id']}.csv"
-        if csv.exists():
-            out.append(csv)
+        out += list(qualtrics.DESTINO.glob(f"{fuente['id']}_*.csv"))
     return sorted(set(out), key=lambda p: (p.stat().st_mtime, p.name))
 
 
@@ -175,7 +173,7 @@ def leer_fuente(fuente, desde: str) -> tuple[list, list]:
     """Base principal + descargas de la cuenta; si una evaluación está en varias, gana la descarga más reciente."""
     if fuente["avance"].get("qualtrics"):
         import qualtrics
-        qualtrics.descargar(fuente, desde)
+        qualtrics.descargar(fuente)
     principal = archivo_fuente(fuente)
     usados, filas = [], {}
     if principal is not None:
@@ -223,7 +221,10 @@ def generar(fuentes: list) -> int:
             continue
         if not usados:
             continue                # base no disponible en este PC: se conserva lo anterior
-        filas = [f for f in filas if f[0] != fuente["linea_id"]] + nuevas
+        # Se reemplazan solo los días que trae la lectura nueva: si una descarga trae únicamente hoy,
+        # los días anteriores de esa cuenta se conservan.
+        dias_nuevos = {f[2] for f in nuevas}
+        filas = [f for f in filas if f[0] != fuente["linea_id"] or f[2] not in dias_nuevos] + nuevas
         reciente = max(usados, key=lambda p: p.stat().st_mtime if p.exists() else 0)
         info[fuente["linea_id"]] = {"fuente": fuente["id"], "archivo": reciente.name, "archivos": len(usados),
                                     "ultima": max((f"{x[2]} {x[3]}" for x in nuevas), default=None)}

@@ -4,8 +4,9 @@ config/qualtrics.local.json (solo en el PC que hace la extracción; está en .gi
     {"centro": "iad1" | "empresa.qualtrics.com", "token": "...", "zona": "America/Guayaquil",
      "encuestas": {"claro_ec_in_monitoreo": "SV_...", "claro_ec_out_monitoreo": "SV_..."}}
 Se configura desde CalidadA365.exe › "Conectar Qualtrics (Claro)": el token se escribe en la consola y no se muestra.
-Cada extracción baja en CSV las respuestas desde el inicio del periodo del avance a etl/entrada/qualtrics/<fuente>.csv,
-con las mismas columnas que la exportación manual (etiquetas de las opciones y hora local de Ecuador).
+Cada extracción (cada hora) baja en CSV solo las respuestas de HOY a etl/entrada/qualtrics/<fuente>_<día>.csv, con las
+mismas columnas que la exportación manual (etiquetas de las opciones y hora local de Ecuador). El módulo las reparte
+en las franjas horarias según la hora de envío (RecordedDate).
 """
 from __future__ import annotations
 
@@ -16,6 +17,8 @@ import time
 import urllib.error
 import urllib.request
 import zipfile
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import central_etl as etl
@@ -45,11 +48,18 @@ def _api(cfg: dict, ruta: str, cuerpo: dict | None = None, crudo=False):
     return datos if crudo else json.loads(datos.decode("utf-8"))
 
 
-def exportar(cfg: dict, encuesta: str, desde: str, destino: Path) -> Path:
-    """Exporta las respuestas desde 'desde' (YYYY-MM-DD) en CSV y las deja en 'destino'."""
+def hoy_local(cfg: dict) -> datetime:
+    return datetime.now(ZoneInfo(cfg.get("zona", "America/Guayaquil")))
+
+
+def exportar(cfg: dict, encuesta: str, destino: Path) -> Path:
+    """Exporta en CSV solo las respuestas de HOY (desde las 00:00 hora local hasta ahora) y las deja en 'destino'."""
+    ahora = hoy_local(cfg)
+    inicio_dia = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
     inicio = _api(cfg, f"/surveys/{encuesta}/export-responses", {
         "format": "csv", "useLabels": True, "breakoutSets": False,
-        "startDate": f"{desde}T00:00:00Z", "timeZone": cfg.get("zona", "America/Guayaquil"),
+        "startDate": inicio_dia.isoformat(timespec="seconds"), "endDate": ahora.isoformat(timespec="seconds"),
+        "timeZone": cfg.get("zona", "America/Guayaquil"),
     })
     progreso = inicio["result"]["progressId"]
     for _ in range(120):                         # hasta ~4 minutos
@@ -72,15 +82,16 @@ def exportar(cfg: dict, encuesta: str, desde: str, destino: Path) -> Path:
     return destino
 
 
-def descargar(fuente: dict, desde: str) -> Path | None:
-    """Respuestas de la encuesta de esa fuente; None si Qualtrics no está configurado o falla (se sigue sin ella)."""
+def descargar(fuente: dict) -> Path | None:
+    """Respuestas de hoy de la encuesta de esa fuente en etl/entrada/qualtrics/<fuente>_<día>.csv (un archivo por día,
+    así quedan los días anteriores). None si Qualtrics no está configurado o falla (se sigue sin ella)."""
     cfg = leer_config()
     encuesta = (cfg.get("encuestas") or {}).get(fuente["id"])
     if not (cfg.get("token") and cfg.get("centro") and encuesta):
         return None
     try:
-        ruta = exportar(cfg, encuesta, desde, DESTINO / f"{fuente['id']}.csv")
-        print(f"[avance] {fuente['id']}: respuestas traídas de Qualtrics")
+        ruta = exportar(cfg, encuesta, DESTINO / f"{fuente['id']}_{hoy_local(cfg):%Y-%m-%d}.csv")
+        print(f"[avance] {fuente['id']}: respuestas de hoy traídas de Qualtrics")
         return ruta
     except (urllib.error.URLError, RuntimeError, KeyError, StopIteration, ValueError, OSError) as e:
         detalle = f"HTTP {e.code}" if isinstance(e, urllib.error.HTTPError) else str(e)
