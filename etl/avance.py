@@ -22,8 +22,7 @@ import central_etl as etl
 
 SALIDA = etl.DATA / "avance.json"
 DIAS = 35                    # días hacia atrás que se publican
-CORTES = ["07:00", "07:30", "08:30", "09:30", "10:30", "11:30", "12:30", "13:30",
-          "14:30", "15:30", "16:30", "17:30", "18:30", "19:30", "20:30"]
+CORTES = [f"{h:02d}:00" for h in range(7, 22)]     # 07:00-08:00, 08:00-09:00... (se extrae a la media hora)
 
 
 def a_segundos(v):

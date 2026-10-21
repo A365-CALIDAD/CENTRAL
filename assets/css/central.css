@@ -353,3 +353,5 @@ dialog .aviso { margin: 0; }
 .tabla-avance th.franja { text-align: center; border-left: 1px solid var(--grid); white-space: nowrap; }
 .tabla-avance tbody td:nth-child(2n), .tabla-avance tfoot td:nth-child(2n), .tabla-avance thead tr:nth-child(2) th:nth-child(2n+1) { border-left: 1px solid var(--grid); }
 .tabla-avance td.num { white-space: nowrap; }
+.tabla-avance th.en-curso { color: var(--muted); font-style: italic; }
+.tabla-avance th.en-curso small { display: block; font-size: 10px; font-weight: 500; }

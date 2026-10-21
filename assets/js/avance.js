@@ -39,6 +39,9 @@ export function avance(cont) {
 
   const pintar = () => {
     const F = franjas(A.cortes);
+    // Franjas que seguían abiertas al momento de la extracción (solo el día de la extracción): conteo parcial
+    const [diaExt, horaExt] = (A.generado || '').split('T');
+    const enCurso = fr => dia === diaExt && fr.desde <= (horaExt || '').slice(0, 5) && fr.hasta > (horaExt || '').slice(0, 5);
     const filasDia = A.filas.filter(f => f[2] === dia && (!lin || f[0] === lin));
     const usadas = F.filter(fr => fr.id !== 'antes' && fr.id !== 'despues' || filasDia.some(f => f[3] >= fr.desde && f[3] < fr.hasta));
     const grupos = {};
@@ -49,10 +52,11 @@ export function avance(cont) {
       return `<td class="num">${sel.length ? fmtN(sel.length) : '<span style="color:var(--muted)">—</span>'}</td><td class="num">${sel.length ? fmtDur(prom(sel.map(f => f[4]))) : ''}</td>`;
     }).join('');
     const total = evs => `<td class="num"><b>${fmtN(evs.length)}</b></td><td class="num"><b>${fmtDur(prom(evs.map(f => f[4])))}</b></td>`;
-    cont.querySelector('#av-res').textContent = `${fmtN(filasDia.length)} evaluaciones · ${filas.length} monitor${filas.length === 1 ? '' : 'es'} · ${fmtDia(dia)}`;
+    cont.querySelector('#av-res').textContent = `${fmtN(filasDia.length)} evaluaciones · ${filas.length} monitor${filas.length === 1 ? '' : 'es'} · ${fmtDia(dia)}`
+      + (dia === diaExt ? ` · extracción de las ${horaExt.slice(0, 5)}` : '');
     cont.querySelector('#av-tabla').innerHTML = !filas.length ? '<div class="vacio">Sin evaluaciones ese día.</div>' : `
       <div class="tabla-wrap"><table class="tabla-eval tabla-avance">
-        <thead><tr><th rowspan="2">Monitor</th>${usadas.map(fr => `<th colspan="2" class="franja">${acumulado ? `Hasta ${fr.hasta === '24:00' ? 'fin del día' : fr.hasta}` : esc(fr.titulo)}</th>`).join('')}<th colspan="2" class="franja">Total del día</th></tr>
+        <thead><tr><th rowspan="2">Monitor</th>${usadas.map(fr => `<th colspan="2" class="franja ${enCurso(fr) ? 'en-curso' : ''}" ${enCurso(fr) ? `title="Extracción de las ${esc(horaExt.slice(0, 5))}: la franja aún no termina"` : ''}>${acumulado ? `Hasta ${fr.hasta === '24:00' ? 'fin del día' : fr.hasta}` : esc(fr.titulo)}${enCurso(fr) ? '<small>en curso</small>' : ''}</th>`).join('')}<th colspan="2" class="franja">Total del día</th></tr>
           <tr>${[...usadas, 0].map(() => '<th class="num">Q</th><th class="num">TMO</th>').join('')}</tr></thead>
         <tbody>${filas.map(g => `<tr><td><b>${esc(g.monitor)}</b><small>${esc(nombreCompleto(g.l))}</small></td>${celdas(g.evs)}${total(g.evs)}</tr>`).join('')}</tbody>
         ${filas.length > 1 ? `<tfoot><tr><td><b>Total</b></td>${celdas(filasDia)}${total(filasDia)}</tr></tfoot>` : ''}
