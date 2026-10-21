@@ -31,6 +31,7 @@ data/avisos/
 # Ejecutable generado (se copia a mano a otros PC)
 CalidadA365.exe
 CalidadA365_Actualizar.exe
+CalidadA365_Avance.exe
 *.anterior.exe
 
 # Bitácora en línea: URL y claves de acceso, y el código generado para Apps Script (solo en este PC)

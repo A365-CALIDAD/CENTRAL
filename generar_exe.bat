@@ -19,6 +19,7 @@ if errorlevel 1 (
 REM El mismo programa con nombre "_Actualizar" arranca directo en modo automatico.
 copy /Y "%SALIDA%\CalidadA365.exe" "%~dp0CalidadA365.exe" >nul || echo Cierra CalidadA365.exe e intenta de nuevo.
 copy /Y "%SALIDA%\CalidadA365.exe" "%~dp0CalidadA365_Actualizar.exe" >nul || echo Cierra CalidadA365_Actualizar.exe e intenta de nuevo.
+copy /Y "%SALIDA%\CalidadA365.exe" "%~dp0CalidadA365_Avance.exe" >nul || echo Cierra CalidadA365_Avance.exe e intenta de nuevo.
 echo.
-echo Listo: CalidadA365.exe y CalidadA365_Actualizar.exe
+echo Listo: CalidadA365.exe, CalidadA365_Actualizar.exe y CalidadA365_Avance.exe
 pause

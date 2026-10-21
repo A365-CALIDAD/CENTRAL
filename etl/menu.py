@@ -165,6 +165,19 @@ def actualizar(sincronizar_antes=True) -> bool:
     return True
 
 
+def actualizar_avance() -> bool:
+    """Solo el módulo Avance equipo (extracción de cada hora): descarga lo de hoy (Entel por la plataforma, Claro por
+    Qualtrics, Movistar y BN por sus aplicaciones web), lo reparte por franja, cifra y publica. No reprocesa los KPI."""
+    titulo("Avance equipo (extracción de la hora)")
+    if not sincronizar():
+        return False
+    descargar_avance_entel()
+    import avance
+    avance.generar(central_etl.leer_json(central_etl.CONFIG / "fuentes.json")["fuentes"])
+    perfiles.cifrar_perfiles()
+    return publicar()
+
+
 def actualizar_y_publicar() -> bool:
     if not actualizar():
         print("\nNo se publicó porque la actualización no terminó bien.")
@@ -300,6 +313,7 @@ def abrir_pagina():
 OPCIONES = [
     ("Actualizar datos y publicar (recomendado)", actualizar_y_publicar),
     ("Solo actualizar datos (sin publicar)", actualizar),
+    ("Solo Avance equipo: descargar lo de hoy y publicar", actualizar_avance),
     ("Solo publicar", publicar),
     ("Cambiar contraseñas", cambiar_contrasenas),
     ("Ver correos de aviso (vista previa)", ver_avisos),
@@ -334,8 +348,8 @@ def descargar_avance_entel():
         print("La descarga de Entel tardó más de 20 minutos; se omite esta vez.")
 
 
-def modo_automatico() -> int:
-    """Sin preguntas: sincroniza, actualiza y publica. Registro en logs/automatico.log."""
+def modo_automatico(solo_avance=False) -> int:
+    """Sin preguntas: sincroniza, actualiza y publica (o solo Avance equipo). Registro en logs/automatico.log."""
     global INTERACTIVO
     INTERACTIVO = False
     logs = RAIZ / "logs"
@@ -355,10 +369,10 @@ def modo_automatico() -> int:
 
     with open(logs / "automatico.log", "a", encoding="utf-8") as reg:
         sys.stdout = sys.stderr = Duplicar(sys.__stdout__, reg)
-        print(f"\n######## {datetime.now():%d/%m/%Y %H:%M:%S} · ejecución automática ########")
+        modo = "solo Avance equipo" if solo_avance else "ejecución automática"
+        print(f"\n######## {datetime.now():%d/%m/%Y %H:%M:%S} · {modo} ########")
         try:
-            descargar_avance_entel()
-            ok = actualizar_y_publicar()
+            ok = actualizar_avance() if solo_avance else actualizar_y_publicar()
         except Exception:
             traceback.print_exc()
             ok = False
@@ -373,8 +387,10 @@ def main():
     # Modo automático: con --auto, o si el ejecutable se llama "...Actualizar..." / "...Auto..."
     # (CalidadA365_Actualizar.exe), para usarlo con doble clic o en el Programador de tareas sin menú.
     nombre = Path(sys.executable).stem.lower() if getattr(sys, "frozen", False) else ""
-    if "--auto" in sys.argv[1:] or "actualizar" in nombre or "auto" in nombre:
-        codigo = modo_automatico()
+    # CalidadA365_Avance.exe / --avance: solo Avance equipo (para la tarea de cada hora)
+    solo_avance = "--avance" in sys.argv[1:] or "avance" in nombre
+    if solo_avance or "--auto" in sys.argv[1:] or "actualizar" in nombre or "auto" in nombre:
+        codigo = modo_automatico(solo_avance)
         if sys.stdin and sys.stdin.isatty() and "--sin-espera" not in sys.argv[1:]:
             print("\nEsta ventana se cierra en 15 segundos...")
             import time
