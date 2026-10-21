@@ -138,6 +138,7 @@ _Planes de acción sobre lo que está bajo meta._
 - **Filtros:** Día, Cuenta y Conteo (*Por franja* o *Acumulado al corte*). *Exportar CSV* descarga las evaluaciones del día.
 - **Origen:** hora de envío y duración de la llamada de cada base: Entel (base de adherencias más las descargas *Reporte Pauta* de cada cuenta, que se bajan varias veces al día; *Realizador*, *Fecha/Hora Envío*, *TMO del caso* / *TMO2*) y Claro (exportaciones de Qualtrics de la carpeta *filtrado*, sin repetir *ResponseId*: *Analista de Calidad A365*, *RecordedDate*, *Duración de llamada*); en Outbound de Entel solo las descargas *Centros 2.0*. Configurable con la clave `avance` de cada fuente; los cortes, en `avance_equipo.cortes` de `config/portal.json`.
 - **Movistar y BN:** desde sus aplicaciones web (`?avance=1` del dashboard de Movistar: Marca temporal y Evaluador; bloque `avance` de BN: Marca temporal y TMO, sin evaluador).
+- **Descarga de Entel:** en cada extracción automática, `CalidadA365_Actualizar.exe` ejecuta antes `ENTELAvance_EquipoDescargar_avance_hoy.py`, que con el proceso de las adherencias descarga de una vez los Reporte Pauta de hoy de las cinco cuentas.
 - **Actualización:** con cada actualización de CENTRAL; el día en curso se completa a medida que llegan las bases.
 
 ### 2.5 Herramientas

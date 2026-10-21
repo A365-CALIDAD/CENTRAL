@@ -311,6 +311,29 @@ OPCIONES = [
 ]
 
 
+DESCARGA_ENTEL = RAIZ.parent / "ENTEL" / "Avance_Equipo" / "Descargar_avance_hoy.py"
+
+
+def descargar_avance_entel():
+    """Antes de cada extracción automática baja los Reporte Pauta de hoy de todas las cuentas de Entel (mismo proceso
+    de las adherencias). Solo si el script está en este PC y hay Python; si falla, se actualiza con lo que haya."""
+    if not DESCARGA_ENTEL.exists():
+        return
+    python = shutil.which("py") or shutil.which("python")
+    if not python:
+        print("Avance equipo: no hay Python en este PC para descargar los Reporte Pauta de Entel; se omite.")
+        return
+    titulo("Descargando los Reporte Pauta de hoy (Entel)")
+    try:
+        r = subprocess.run([python, str(DESCARGA_ENTEL)], cwd=DESCARGA_ENTEL.parent, timeout=20 * 60,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        print((r.stdout or "") + (r.stderr or ""))
+        if r.returncode != 0:
+            print("La descarga de Entel terminó con problemas; se actualiza con los archivos que haya.")
+    except subprocess.TimeoutExpired:
+        print("La descarga de Entel tardó más de 20 minutos; se omite esta vez.")
+
+
 def modo_automatico() -> int:
     """Sin preguntas: sincroniza, actualiza y publica. Registro en logs/automatico.log."""
     global INTERACTIVO
@@ -334,6 +357,7 @@ def modo_automatico() -> int:
         sys.stdout = sys.stderr = Duplicar(sys.__stdout__, reg)
         print(f"\n######## {datetime.now():%d/%m/%Y %H:%M:%S} · ejecución automática ########")
         try:
+            descargar_avance_entel()
             ok = actualizar_y_publicar()
         except Exception:
             traceback.print_exc()
