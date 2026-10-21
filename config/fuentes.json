@@ -1100,7 +1100,8 @@
           "hora": 1,
           "duracion": 2
         },
-        "nombre": "Google Sheet de fraude (Marca temporal, TMO)"
+        "nombre": "Google Sheet de fraude (Marca temporal, TMO)",
+        "monitor_fijo": "Toda la cuenta"
       }
     },
     {
@@ -1195,10 +1196,10 @@
         "posiciones": {
           "fecha": 0,
           "hora": 1,
-          "monitor": 2,
-          "duracion": 3
+          "duracion": 2
         },
-        "nombre": "Google Forms (Marca temporal, Evaluador)"
+        "nombre": "Google Forms (Marca temporal)",
+        "monitor_fijo": "Toda la cuenta"
       }
     },
     {
