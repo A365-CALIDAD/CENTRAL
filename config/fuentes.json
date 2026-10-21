@@ -375,7 +375,17 @@
         "fecha": "Fecha Envío",
         "hora": "Hora Envío",
         "duracion": "TMO2",
-        "monitor": "Realizador"
+        "monitor": "Realizador",
+        "descargas": [
+          {
+            "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias",
+            "patron": "Reporte Pauta Outbound - Centros*.xls*"
+          },
+          {
+            "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias/Descargas",
+            "patron": "Reporte Pauta Outbound - Centros*.xls*"
+          }
+        ]
       }
     },
     {
@@ -770,7 +780,14 @@
       "avance": {
         "fecha": "RecordedDate",
         "duracion": "Duración de llamada",
-        "monitor": "A365"
+        "monitor": "A365",
+        "id": "ResponseId",
+        "descargas": [
+          {
+            "carpeta": "../CLARO/ECUADOR/CLARO_IN/filtrado",
+            "patron": "*.xlsx"
+          }
+        ]
       }
     },
     {
@@ -979,7 +996,14 @@
       "avance": {
         "fecha": "RecordedDate",
         "duracion": "Duración de llamada",
-        "monitor": "A365"
+        "monitor": "A365",
+        "id": "ResponseId",
+        "descargas": [
+          {
+            "carpeta": "../CLARO/ECUADOR/CLARO_OUT/filtrado",
+            "patron": "*.xlsx"
+          }
+        ]
       }
     },
     {

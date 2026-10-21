@@ -5,7 +5,8 @@ las descargas de adherencias de esa cuenta ("Reporte Pauta ..."), que se bajan v
 evaluación (ID Pauta) está en varios archivos, gana la descarga más reciente. Clave "avance" en config/fuentes.json:
     {"fecha": col, "hora": col (opcional si la fecha trae la hora), "duracion": col,
      "monitor": col (opcional), "monitor_fijo": "nombre" (opcional),
-     "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente)}
+     "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente),
+     "id": col que identifica cada evaluación (opcional; por defecto id_unico; Qualtrics: ResponseId)}
 Escribe data/avance.json (solo en este PC; viaja en los paquetes cifrados y en el respaldo):
     {"generado", "cortes", "dias", "fuentes": {linea: {"fuente", "archivo", "ultima"}},
      "filas": [[linea, monitor, "YYYY-MM-DD", "HH:MM", duracion_seg | null], ...]}
@@ -103,7 +104,8 @@ def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=F
     if faltan:
         print(f"[avance] {fuente['id']} · {origen}: faltan las columnas {', '.join(cfg[k] for k in faltan)}; se omite")
         return None
-    cid = etl.resolver_columnas(df, {"x": [fuente["id_unico"]]}).get("x") if fuente.get("id_unico") else None
+    id_col = cfg.get("id") or fuente.get("id_unico")
+    cid = etl.resolver_columnas(df, {"x": [id_col]}).get("x") if id_col else None
     for flt in fuente.get("filtros", []):      # p. ej. Qualtrics: solo encuestas terminadas
         real = etl.resolver_columnas(df, {"x": [flt.get("columna", "")]}).get("x") if flt.get("columna") else None
         if real is not None and "incluir" in flt:
@@ -140,7 +142,7 @@ def leer_fuente(fuente, desde: str) -> tuple[list, list]:
         if parte is not None:
             filas.update(parte)
             usados.append(principal)
-    clave = etl.normalizar(fuente.get("id_unico", ""))
+    clave = etl.normalizar(fuente["avance"].get("id") or fuente.get("id_unico", ""))
     for ruta in descargas(fuente) if clave else []:
         if datetime.fromtimestamp(ruta.stat().st_mtime).strftime("%Y-%m-%d") < desde:
             continue        # descargas anteriores al periodo publicado
