@@ -28,12 +28,14 @@ ENTEL = central_etl.RAIZ.parent / "ENTEL"                  # C:\A365\ENTEL, al l
 BASE = ENTEL / "ENTEL_BI_IN" / "Adherencias" / "Adherencias_Entel.py"     # proceso de adherencias (sesión y portal)
 
 # Pauta del portal → carpeta donde la busca CENTRAL
+# (pauta del portal, carpeta donde la busca CENTRAL, switch "Filtrar por" en Evaluador)
+# Mesa Técnica y C2C se filtran por Evaluador, como en sus procesos de adherencias; el resto por Evaluado.
 PAUTAS = [
-    ("Pauta VOZ - Móvil y Hogar 5.0", ENTEL / "ENTEL_BI_IN" / "Adherencias" / "Descargas"),
-    ("Pauta Voz - Fibra Técnico", ENTEL / "ENTEL_BI_MT" / "Adherencias" / "Descargas"),
-    ("Pauta Retenciones - Centros", ENTEL / "ENTEL_BI_CZC" / "Adherencias" / "Descargas"),
-    ("Pauta Outbound - Centros 2.0", ENTEL / "ENTEL_BI_OUT" / "Adherencias" / "Descargas"),
-    ("Pauta Ecommerce - Centros 3.0", ENTEL / "ENTEL_BI_EC" / "Adherencias" / "Descargas"),
+    ("Pauta VOZ - Móvil y Hogar 5.0", ENTEL / "ENTEL_BI_IN" / "Adherencias" / "Descargas", False),
+    ("Pauta Outbound - Centros 2.0", ENTEL / "ENTEL_BI_OUT" / "Adherencias" / "Descargas", False),
+    ("Pauta Ecommerce - Centros 3.0", ENTEL / "ENTEL_BI_EC" / "Adherencias" / "Descargas", False),
+    ("Pauta Voz - Fibra Técnico", ENTEL / "ENTEL_BI_MT" / "Adherencias" / "Descargas", True),
+    ("Pauta Retenciones - Centros", ENTEL / "ENTEL_BI_CZC" / "Adherencias" / "Descargas", True),
 ]
 
 
@@ -54,11 +56,20 @@ def seleccionar_hoy(A, driver):
     A.mostrar_info(f"Seleccionando el día de hoy: {hoy}")
     A.esperar_fin_carga(driver, 60)
     selector = A.WebDriverWait(driver, 30).until(A.EC.element_to_be_clickable((A.By.ID, "selector-fecha")))
-    try:
-        selector.click()
-    except Exception:
-        A.esperar_fin_carga(driver, 30)
-        driver.execute_script("arguments[0].click();", selector)
+    # Si el portal ya tiene hoy-hoy (quedó de la hora anterior, el Chrome sigue abierto), no hay nada que cambiar
+    actual = (selector.get_attribute("value") or selector.text or "")
+    if actual.count(hoy) >= 2:
+        A.mostrar_exito(f"La fecha ya está en hoy ({actual.strip()}).")
+        return
+
+    def abrir_calendario():
+        try:
+            selector.click()
+        except Exception:
+            A.esperar_fin_carga(driver, 30)
+            driver.execute_script("arguments[0].click();", selector)
+
+    abrir_calendario()
 
     def campos_fecha(navegador):
         campos = []
@@ -70,7 +81,12 @@ def seleccionar_hoy(A, driver):
                 continue
         return campos if len(campos) >= 2 else False
 
-    for campo in A.WebDriverWait(driver, 30).until(campos_fecha)[:2]:
+    try:
+        campos = A.WebDriverWait(driver, 15).until(campos_fecha)
+    except A.TimeoutException:          # el clic pudo cerrar un calendario que ya estaba abierto: otra vez
+        abrir_calendario()
+        campos = A.WebDriverWait(driver, 30).until(campos_fecha)
+    for campo in campos[:2]:
         try:
             campo.click()
             campo.send_keys(A.Keys.CONTROL, "a")
@@ -84,9 +100,40 @@ def seleccionar_hoy(A, driver):
     except Exception:
         driver.execute_script("arguments[0].click();", boton)
     time.sleep(1)
+
+
+def poner_switch(A, driver, evaluador: bool):
+    """Switch "Filtrar por": Evaluado (apagado) o Evaluador (encendido). Igual que en el proceso de Mesa Técnica:
+    el <input> está oculto y se hace clic en su <label>."""
+    A.esperar_fin_carga(driver, 60)
+    try:
+        switch = A.WebDriverWait(driver, 20).until(A.EC.presence_of_element_located((A.By.ID, "filtro-switch-filtro")))
+    except A.TimeoutException:
+        switch = driver.find_element(
+            A.By.XPATH, "//*[normalize-space(text())='Filtrar por']/following::input[@type='checkbox'][1]")
+    if switch.is_selected() == evaluador:
+        return
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", switch)
+    try:
+        driver.find_element(A.By.ID, "label-switch-filtro").click()
+    except Exception:
+        driver.execute_script("arguments[0].click();", switch)
+    try:
+        A.WebDriverWait(driver, 10).until(lambda d: switch.is_selected() == evaluador)
+    except A.TimeoutException:
+        driver.execute_script("arguments[0].click();", switch)
+    A.mostrar_exito(f"Filtrar por: {'Evaluador' if evaluador else 'Evaluado'}.")
+
+
+def filtrar(A, driver, evaluador: bool) -> dict:
+    """Switch en su posición + "Filtrar pautas". Devuelve las pautas que muestra el portal (y las anota en el log)."""
+    poner_switch(A, driver, evaluador)
     A.hacer_click_filtrar_pautas(driver)
     A.esperar_fin_carga(driver, 60)
-    A.mostrar_exito(f"Pautas filtradas para hoy ({hoy}).")
+    lista = pautas_en_pantalla(A, driver)
+    A.mostrar_info(f"Pautas de hoy filtrando por {'Evaluador' if evaluador else 'Evaluado'} ({len(lista)}): "
+                   f"{' | '.join(sorted(lista)) or 'ninguna'}")
+    return lista
 
 
 def _norm(texto) -> str:
@@ -232,6 +279,24 @@ def bajar_y_mover(A, driver, nombre, carpeta) -> bool | None:
     return True
 
 
+def rondas(A, driver, pautas, aviso) -> list:
+    """Primero las pautas filtradas por Evaluado, luego las de Evaluador. Devuelve las que fallaron."""
+    fallidas = []
+    for evaluador in (False, True):
+        grupo = [p for p in pautas if p[2] == evaluador]
+        if not grupo:
+            continue
+        filtrar(A, driver, evaluador)
+        for nombre, carpeta, ev in grupo:
+            try:
+                bajar_y_mover(A, driver, nombre, carpeta)
+            except Exception as e:
+                aviso(f"{nombre}: {str(e).splitlines()[0]}")
+                fallidas.append((nombre, carpeta, ev))
+    poner_switch(A, driver, False)           # se deja como estaba
+    return fallidas
+
+
 def main() -> int:
     A = cargar_proceso()
     print("=" * 70)
@@ -242,25 +307,12 @@ def main() -> int:
         A.validar_configuracion()
         navegador = conectar_chrome(A)
         abrir_reporte(A, navegador)
-        hoy = sorted(pautas_en_pantalla(A, navegador))
-        A.mostrar_info(f"Pautas con evaluaciones hoy en el portal ({len(hoy)}): {' | '.join(hoy) or 'ninguna'}")
-        for nombre, carpeta in PAUTAS:
-            try:
-                bajar_y_mover(A, navegador, nombre, carpeta)
-            except Exception as e:
-                A.mostrar_advertencia(f"{nombre}: {str(e).splitlines()[0]}")
-                fallidas.append((nombre, carpeta))
+        fallidas = rondas(A, navegador, PAUTAS, aviso=A.mostrar_advertencia)
         if fallidas:        # segundo intento: página recargada y más tiempo (los reportes grandes tardan en generarse)
             A.mostrar_info(f"Reintentando {len(fallidas)} pauta(s) con más tiempo...")
             A.TIEMPO_MAXIMO_DESCARGA = max(A.TIEMPO_MAXIMO_DESCARGA, 360)
             abrir_reporte(A, navegador)
-            pendientes, fallidas = fallidas, []
-            for nombre, carpeta in pendientes:
-                try:
-                    bajar_y_mover(A, navegador, nombre, carpeta)
-                except Exception as e:
-                    A.mostrar_error(f"{nombre}: {str(e).splitlines()[0]}")
-                    fallidas.append((nombre, carpeta))
+            fallidas = rondas(A, navegador, fallidas, aviso=A.mostrar_error)
     except Exception as e:
         A.mostrar_error(f"No se pudo completar la descarga: {e}")
         return 1
