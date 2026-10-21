@@ -42,6 +42,7 @@ export function avance(cont) {
       <div class="acciones"><button class="btn" id="av-csv">Exportar CSV</button></div>
     </div>
     <div class="tarjeta"><div class="cabecera"><div><h2>Avance por monitor</h2><p class="sub" style="margin:0" id="av-res"></p></div></div>
+      <div id="av-faltan"></div>
       <div id="av-tabla"></div>
       <p class="sub" style="margin-top:8px">Q = evaluaciones enviadas en la franja · Tiempo = suma de la duración de las llamadas evaluadas (h:mm:ss); * = alguna evaluación aún sin duración. Hora local de cada base.
       Las bases se actualizan cuando llega su archivo (Drive o carpetas): el día en curso se completa a medida que llegan.</p>
@@ -72,6 +73,14 @@ export function avance(cont) {
         <tbody>${filas.map(g => `<tr><td><b>${esc(g.monitor)}</b><small>${esc(nombreCompleto(g.l))}</small></td>${celdas(g.evs)}${total(g.evs)}</tr>`).join('')}</tbody>
         ${filas.length > 1 ? `<tfoot><tr><td><b>Total</b></td>${celdas(filasDia)}${total(filasDia)}</tr></tfoot>` : ''}
       </table></div>`;
+    // Cuentas sin evaluaciones ese día: casi siempre porque su base todavía no llega hasta esa fecha
+    const conDatos = new Set(filasDia.map(f => f[0]));
+    const faltan = lineasCon.filter(l => (!lin || l === lin) && !conDatos.has(l)).map(l => {
+      const ult = (A.fuentes?.[l]?.ultima || '').slice(0, 10);
+      return `${esc(nombreCompleto(l))}${ult && ult < dia ? ` (base hasta el ${esc(ult.slice(8, 10) + '/' + ult.slice(5, 7))})` : ''}`;
+    });
+    cont.querySelector('#av-faltan').innerHTML = faltan.length
+      ? `<div class="aviso" style="margin-bottom:10px">Sin evaluaciones este día: ${faltan.join(' · ')}. Se completan cuando llegan sus bases.</div>` : '';
     const fuentes = Object.entries(A.fuentes || {}).filter(([l]) => !lin || l === lin);
     cont.querySelector('#av-fuentes').innerHTML = fuentes.length ? `<details class="sub" style="margin-top:8px"><summary>Bases usadas</summary><ul>
       ${fuentes.map(([l, x]) => `<li>${esc(nombreCompleto(l))}: ${esc(x.archivo)}${x.ultima ? ` · última evaluación ${esc(x.ultima)}` : ''}</li>`).join('')}</ul></details>` : '';
