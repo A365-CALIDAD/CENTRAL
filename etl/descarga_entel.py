@@ -147,7 +147,7 @@ def pautas_en_pantalla(A, driver, espera=60) -> dict:
     botones = []
     while time.time() < fin:
         A.esperar_fin_carga(driver, 30)
-        botones = driver.find_elements(A.By.XPATH, "//button[@data-nombre_evaluacion]")
+        botones = driver.find_elements(A.By.CSS_SELECTOR, "button.btn-download-excel[data-nombre_evaluacion]")
         if botones:
             break
         time.sleep(2)
@@ -178,21 +178,51 @@ def confirmar_descarga(A, driver, espera=20) -> bool:
     return False
 
 
-def descargar_pauta(A, driver, nombre: str) -> Path | None:
-    """Descarga la pauta 'nombre' de la lista filtrada; None si hoy no tiene evaluaciones (no aparece en la lista)."""
-    lista = pautas_en_pantalla(A, driver)
+# Pautas que se piden solo con la primera categoría ("Identificación del caso": trae ID Pauta, fecha y hora de envío,
+# Realizador y TMO del caso, lo que usa el avance). Con todas sus categorías el portal no logra generar el reporte de
+# Inbound (error del servidor desde la tarde del 21/10/2026); así sale en segundos.
+LIVIANAS = {"Pauta VOZ - Móvil y Hogar 5.0"}
+
+
+def solo_primera_categoria(A, driver) -> bool:
+    """En la ventana "Seleccione las categorías a descargar" deja marcada solo la primera."""
+    fin = time.time() + 15
+    while time.time() < fin:
+        valores = driver.execute_script(
+            "return [...document.querySelectorAll('#select-categorias option')].map(o => o.value)")
+        if valores:
+            driver.execute_script("$('#select-categorias').selectpicker('val', [arguments[0]]);", valores[0])
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def descargar_pauta(A, driver, nombre: str, liviana=None) -> Path | None:
+    """Descarga la pauta 'nombre' de la lista filtrada; None si hoy no tiene evaluaciones (no aparece en la lista).
+    liviana=True pide solo la primera categoría (por defecto, las pautas de LIVIANAS)."""
+    liviana = nombre in LIVIANAS if liviana is None else liviana
     clave = _norm(nombre)
-    boton = lista.get(clave) or next((b for n, b in lista.items() if clave in n or n in clave), None)
-    if boton is None:
-        A.mostrar_advertencia(f"'{nombre}' no aparece hoy (sin evaluaciones todavía).")
-        return None
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton)
-    time.sleep(0.5)
     antes = {p: p.stat().st_mtime for p in A.CARPETA_DESCARGAS.glob("*.xlsx")}
-    try:
-        boton.click()
-    except Exception:
-        driver.execute_script("arguments[0].click();", boton)
+    # La tabla se vuelve a dibujar después de filtrar: el botón se busca justo antes del clic (y de nuevo si quedó viejo)
+    for intento in range(4):
+        lista = pautas_en_pantalla(A, driver)
+        boton = lista.get(clave) or next((b for n, b in lista.items() if clave in n or n in clave), None)
+        if boton is None:
+            A.mostrar_advertencia(f"'{nombre}' no aparece hoy (sin evaluaciones todavía).")
+            return None
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton)
+            time.sleep(0.5)
+            # Clic por JavaScript: el clic normal a veces cae en otro elemento encima (burbuja de chat, cabecera fija)
+            # y no abre la ventana de categorías.
+            driver.execute_script("arguments[0].click();", boton)
+            break
+        except A.StaleElementReferenceException:
+            time.sleep(2)
+    else:
+        raise A.TimeoutException(f"La lista de pautas no dejó de recargarse para '{nombre}'.")
+    if liviana and solo_primera_categoria(A, driver):
+        A.mostrar_info("Solo la primera categoría (reporte liviano).")
     if not confirmar_descarga(A, driver):
         A.mostrar_info("No apareció la ventana de categorías; se espera la descarga directa.")
     inicio = time.perf_counter()
@@ -267,8 +297,8 @@ def abrir_reporte(A, driver):
     seleccionar_hoy(A, driver)
 
 
-def bajar_y_mover(A, driver, nombre, carpeta) -> bool | None:
-    archivo = descargar_pauta(A, driver, nombre)
+def bajar_y_mover(A, driver, nombre, carpeta, liviana=None) -> bool | None:
+    archivo = descargar_pauta(A, driver, nombre, liviana)
     if archivo is None:
         return None
     carpeta.mkdir(parents=True, exist_ok=True)
@@ -279,7 +309,7 @@ def bajar_y_mover(A, driver, nombre, carpeta) -> bool | None:
     return True
 
 
-def rondas(A, driver, pautas, aviso) -> list:
+def rondas(A, driver, pautas, aviso, liviana=None) -> list:
     """Primero las pautas filtradas por Evaluado, luego las de Evaluador. Devuelve las que fallaron."""
     fallidas = []
     for evaluador in (False, True):
@@ -289,7 +319,7 @@ def rondas(A, driver, pautas, aviso) -> list:
         filtrar(A, driver, evaluador)
         for nombre, carpeta, ev in grupo:
             try:
-                bajar_y_mover(A, driver, nombre, carpeta)
+                bajar_y_mover(A, driver, nombre, carpeta, liviana)
             except Exception as e:
                 aviso(f"{nombre}: {str(e).splitlines()[0]}")
                 fallidas.append((nombre, carpeta, ev))
@@ -312,7 +342,7 @@ def main() -> int:
             A.mostrar_info(f"Reintentando {len(fallidas)} pauta(s) con más tiempo...")
             A.TIEMPO_MAXIMO_DESCARGA = max(A.TIEMPO_MAXIMO_DESCARGA, 360)
             abrir_reporte(A, navegador)
-            fallidas = rondas(A, navegador, fallidas, aviso=A.mostrar_error)
+            fallidas = rondas(A, navegador, fallidas, aviso=A.mostrar_error, liviana=True)   # reintento liviano
     except Exception as e:
         A.mostrar_error(f"No se pudo completar la descarga: {e}")
         return 1
