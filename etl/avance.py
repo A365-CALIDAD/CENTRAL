@@ -198,11 +198,54 @@ def leer_api(fuente, desde: str) -> tuple[list, list]:
     return filas, [Path(cfg.get("nombre", "aplicacion_web"))]
 
 
+# Pasos que AvanceEquipo.exe hace antes y en su orden (Qualtrics → Entel → BN → Movistar); generar() usa lo ya traído.
+PRECARGA: dict = {}          # id de fuente -> (filas, usados) leídos de su aplicación web
+QUALTRICS_LISTO = False      # las respuestas de hoy ya se trajeron de Qualtrics
+
+
+def desde_periodo() -> str:
+    return (pd.Timestamp.now().normalize() - pd.Timedelta(days=DIAS)).strftime("%Y-%m-%d")
+
+
+def descargar_qualtrics(fuentes: list) -> int:
+    """Trae de Qualtrics las respuestas de hoy de las fuentes que lo usan (Claro). Devuelve cuántas se trajeron."""
+    global QUALTRICS_LISTO
+    import qualtrics
+    if not (qualtrics.leer_config().get("token")):
+        print("Qualtrics sin conectar (AvanceEquipo.exe › Q): se usan las exportaciones de la carpeta filtrado.")
+        QUALTRICS_LISTO = True
+        return 0
+    n = 0
+    for f in fuentes:
+        if f.get("activo") and (f.get("avance") or {}).get("qualtrics"):
+            n += qualtrics.descargar(f) is not None
+    QUALTRICS_LISTO = True
+    return n
+
+
+def precargar(fuentes: list, fuente_id: str) -> int:
+    """Lee ya la aplicación web de una fuente (BN, Movistar) y la deja lista para generar(). Devuelve evaluaciones."""
+    f = next((x for x in fuentes if x["id"] == fuente_id and x.get("activo") and x.get("avance")), None)
+    if f is None:
+        return 0
+    try:
+        PRECARGA[fuente_id] = leer_api(f, desde_periodo())
+    except Exception as e:
+        print(f"[avance] {fuente_id}: no se pudo leer ({e}); se conservan sus datos anteriores")
+        PRECARGA[fuente_id] = ([], [])
+    filas = PRECARGA[fuente_id][0]
+    hoy = datetime.now(ZoneInfo(zona_destino())).strftime("%Y-%m-%d")
+    print(f"{len(filas)} evaluaciones de los últimos {DIAS} días · {sum(1 for x in filas if x[2] == hoy)} de hoy")
+    return len(filas)
+
+
 def leer_fuente(fuente, desde: str) -> tuple[list, list]:
+    if fuente["id"] in PRECARGA:
+        return PRECARGA.pop(fuente["id"])
     if fuente["avance"].get("api_json"):
         return leer_api(fuente, desde)
     """Base principal + descargas de la cuenta; si una evaluación está en varias, gana la descarga más reciente."""
-    if fuente["avance"].get("qualtrics"):
+    if fuente["avance"].get("qualtrics") and not QUALTRICS_LISTO:
         import qualtrics
         qualtrics.descargar(fuente)
     principal = archivo_fuente(fuente)
@@ -241,7 +284,7 @@ def generar(fuentes: list) -> int:
         previo = json.loads(SALIDA.read_text(encoding="utf-8")) if SALIDA.exists() else {}
     except ValueError:
         previo = {}
-    desde = (pd.Timestamp.now().normalize() - pd.Timedelta(days=DIAS)).strftime("%Y-%m-%d")
+    desde = desde_periodo()
     filas = [f for f in previo.get("filas", []) if f[2] >= desde]
     info = dict(previo.get("fuentes", {}))
     for fuente in con_avance:

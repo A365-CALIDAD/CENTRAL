@@ -2,9 +2,9 @@
 
 Cada vez que se abre (doble clic o la tarea de cada hora):
   1. trae lo último publicado (y los datos del otro PC si los hay);
-  2. descarga de una vez los Reporte Pauta de HOY de las cinco cuentas de Entel con el proceso de las adherencias;
-  3. trae lo de hoy de Claro (Qualtrics), Movistar y Banco de la Nación (sus aplicaciones web);
-  4. reparte cada evaluación en su franja horaria, cifra los paquetes y publica. No toca los KPI.
+  2. en este orden: Claro (Qualtrics) → Entel (Reporte Pauta de HOY de las cinco cuentas, con el proceso de las
+     adherencias) → Banco de la Nación → Movistar (sus aplicaciones web);
+  3. reparte cada evaluación en su franja horaria, cifra los paquetes y publica. No toca los KPI.
 Registro en logs/avance_equipo.log. No necesita Python en el PC.
 
 Opciones (desde una ventana de comandos):
@@ -34,7 +34,7 @@ def descargar_entel():
     if not descarga_entel.BASE.exists():
         print(f"No está el proceso de adherencias de Entel en este PC ({descarga_entel.BASE}); se omite la descarga.")
         return
-    menu.titulo("Descargando los Reporte Pauta de hoy (Entel)")
+    menu.titulo("2/4 · Entel: Reporte Pauta de hoy (plataforma de adherencias)")
     try:
         if descarga_entel.main() != 0:
             print("La descarga de Entel terminó con problemas; se sigue con los archivos que haya.")
@@ -47,10 +47,19 @@ def extraer(con_entel=True) -> bool:
     menu.titulo(f"Avance equipo · extracción de las {datetime.now():%H:%M}")
     if not menu.sincronizar():
         return False
+    fuentes = central_etl.leer_json(central_etl.CONFIG / "fuentes.json")["fuentes"]
+    menu.titulo("1/4 · Claro Ecuador: Qualtrics")
+    avance.descargar_qualtrics(fuentes)
     if con_entel:
         descargar_entel()
-    menu.titulo("Ordenando las evaluaciones por franja horaria")
-    avance.generar(central_etl.leer_json(central_etl.CONFIG / "fuentes.json")["fuentes"])
+    else:
+        print("\n(Entel: descarga omitida con --sin-entel; se usan los archivos que haya)")
+    menu.titulo("3/4 · Banco de la Nación")
+    avance.precargar(fuentes, "bn_fraude_monitoreo")
+    menu.titulo("4/4 · Movistar México")
+    avance.precargar(fuentes, "mov_mx_out_monitoreo")
+    menu.titulo("Ordenando las evaluaciones por franja horaria y publicando")
+    avance.generar(fuentes)
     perfiles.cifrar_perfiles()
     return menu.publicar()
 
