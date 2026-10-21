@@ -1101,7 +1101,7 @@
           "duracion": 2
         },
         "nombre": "Google Sheet de fraude (Marca temporal, TMO)",
-        "monitor_fijo": "Toda la cuenta"
+        "monitor_fijo": "Monitor único"
       }
     },
     {
@@ -1199,7 +1199,7 @@
           "duracion": 2
         },
         "nombre": "Google Forms (Marca temporal)",
-        "monitor_fijo": "Toda la cuenta"
+        "monitor_fijo": "Monitor único"
       }
     },
     {

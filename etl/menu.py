@@ -321,31 +321,54 @@ OPCIONES = [
     ("Preparar este PC (recuperar datos del respaldo)", recuperar_respaldo),
     ("Bitácora en línea (código y URL)", bitacora_en_linea),
     ("Conectar Qualtrics (Claro, avance del día)", conectar_qualtrics),
+    ("Probar descarga de Entel (Reporte Pauta de hoy)", lambda: descargar_avance_entel()),
     ("Abrir la plataforma", abrir_pagina),
 ]
 
 
-DESCARGA_ENTEL = RAIZ.parent / "ENTEL" / "Avance_Equipo" / "Descargar_avance_hoy.py"
-
-
 def descargar_avance_entel():
-    """Antes de cada extracción automática baja los Reporte Pauta de hoy de todas las cuentas de Entel (mismo proceso
-    de las adherencias). Solo si el script está en este PC y hay Python; si falla, se actualiza con lo que haya."""
-    if not DESCARGA_ENTEL.exists():
-        return
-    python = shutil.which("py") or shutil.which("python")
-    if not python:
-        print("Avance equipo: no hay Python en este PC para descargar los Reporte Pauta de Entel; se omite.")
+    """Antes de cada extracción baja los Reporte Pauta de hoy de todas las cuentas de Entel con el proceso de las
+    adherencias (va dentro del .exe: no necesita Python). Si falla, se sigue con los archivos que haya."""
+    import descarga_entel
+    if not descarga_entel.BASE.exists():
+        print(f"Avance equipo: no está el proceso de adherencias de Entel en este PC ({descarga_entel.BASE}); se omite la descarga.")
         return
     titulo("Descargando los Reporte Pauta de hoy (Entel)")
     try:
-        r = subprocess.run([python, str(DESCARGA_ENTEL)], cwd=DESCARGA_ENTEL.parent, timeout=20 * 60,
-                           capture_output=True, text=True, encoding="utf-8", errors="replace")
-        print((r.stdout or "") + (r.stderr or ""))
-        if r.returncode != 0:
+        if descarga_entel.main() != 0:
             print("La descarga de Entel terminó con problemas; se actualiza con los archivos que haya.")
-    except subprocess.TimeoutExpired:
-        print("La descarga de Entel tardó más de 20 minutos; se omite esta vez.")
+    except Exception:
+        traceback.print_exc()
+        print("La descarga de Entel falló; se actualiza con los archivos que haya.")
+
+
+def verificar_equipo() -> int:
+    """CalidadA365.exe --verificar: revisa sin abrir Chrome que este PC tenga lo necesario para la extracción de cada hora."""
+    titulo("Verificación de este PC para Avance equipo")
+    ok = True
+    import descarga_entel
+    import qualtrics
+    try:
+        A = descarga_entel.cargar_proceso()
+        print(f"  ✓ Proceso de adherencias de Entel cargado ({descarga_entel.BASE})")
+        print(f"    .env: {'sí' if A.ARCHIVO_ENV.exists() else 'NO'} · perfil de Chrome: {'sí' if A.PERFIL_CHROME_RPA.exists() else 'NO'}"
+              f" · Chrome: {'sí' if A.CHROME_EXE_PATH.exists() else 'NO'}")
+        ok &= A.ARCHIVO_ENV.exists() and A.CHROME_EXE_PATH.exists()
+    except Exception as e:
+        print(f"  ✗ Proceso de adherencias de Entel: {e}")
+        ok = False
+    try:
+        from selenium.webdriver.common.selenium_manager import SeleniumManager
+        print(f"  ✓ Selenium incluido (administrador de controladores: {SeleniumManager()._get_binary().name})")
+    except Exception as e:
+        print(f"  ✗ Selenium: {e}")
+        ok = False
+    q = qualtrics.leer_config()
+    print(f"  {'✓' if q.get('token') else '·'} Qualtrics {'conectado' if q.get('token') else 'sin conectar (opción Conectar Qualtrics)'}"
+          f"{' · encuestas: ' + str(len(q.get('encuestas') or {})) if q.get('token') else ''}")
+    print(f"  {'✓' if shutil.which('git') else '✗'} Git {'instalado' if shutil.which('git') else 'NO instalado'}")
+    print("\nTodo listo." if ok else "\nHay puntos por resolver (✗).")
+    return 0 if ok else 1
 
 
 def modo_automatico(solo_avance=False) -> int:
@@ -386,6 +409,8 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8")
     # Modo automático: con --auto, o si el ejecutable se llama "...Actualizar..." / "...Auto..."
     # (CalidadA365_Actualizar.exe), para usarlo con doble clic o en el Programador de tareas sin menú.
+    if "--verificar" in sys.argv[1:]:
+        return verificar_equipo()
     nombre = Path(sys.executable).stem.lower() if getattr(sys, "frozen", False) else ""
     # CalidadA365_Avance.exe / --avance: solo Avance equipo (para la tarea de cada hora)
     solo_avance = "--avance" in sys.argv[1:] or "avance" in nombre

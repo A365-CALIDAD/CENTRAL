@@ -7,9 +7,10 @@ set "SALIDA=%TEMP%\calidada365_dist"
 py -m PyInstaller --clean --onefile --console --noconfirm --name CalidadA365 ^
   --icon "%~dp0assets\img\icono.ico" ^
   --distpath "%SALIDA%" --workpath "%TEMP%\calidada365_build" --specpath "%TEMP%\calidada365_build" ^
-  --paths etl --hidden-import central_etl --hidden-import perfiles --hidden-import avisos --hidden-import validar_dashboards --hidden-import avance --hidden-import qualtrics --collect-data tzdata ^
+  --paths etl --hidden-import central_etl --hidden-import perfiles --hidden-import avisos --hidden-import validar_dashboards --hidden-import avance --hidden-import qualtrics --hidden-import descarga_entel --collect-data tzdata ^
   --collect-all openpyxl --collect-submodules pandas --collect-submodules cryptography ^
-  --exclude-module matplotlib --exclude-module tkinter --exclude-module selenium --exclude-module IPython ^
+  --collect-all selenium --hidden-import dotenv --hidden-import win32com.client --hidden-import win32process --hidden-import win32gui ^
+  --exclude-module matplotlib --exclude-module tkinter --exclude-module IPython ^
   etl\menu.py
 if errorlevel 1 (
   echo No se pudo generar el ejecutable.
