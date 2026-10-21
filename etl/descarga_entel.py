@@ -7,8 +7,8 @@ Adherencias/Descargas de su cuenta, de donde lo toma CENTRAL (módulo Avance equ
 las franjas horarias según su hora de envío.
 
 En el .exe no hace falta Python: el proceso de adherencias se carga desde su carpeta (ENTEL/ENTEL_BI_IN/Adherencias,
-con su .env y su perfil de Chrome) y usa Selenium incluido en el .exe. Lo ejecuta CalidadA365_Avance.exe antes de
-cada extracción; para probarlo: CalidadA365.exe › "Probar descarga de Entel (Reporte Pauta de hoy)".
+con su .env y su perfil de Chrome) y usa Selenium incluido en el .exe. Lo ejecuta AvanceEquipo.exe antes de
+cada extracción de la hora.
 """
 from __future__ import annotations
 
