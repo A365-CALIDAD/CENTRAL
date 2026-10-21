@@ -1,9 +1,20 @@
 // CENTRAL · Avance equipo: evaluaciones de cada monitor por franja horaria del día y duración de las llamadas.
 import { S, esc, fmtN, linea, nombreLinea, descargar, aCSV } from './datos.js';
 
-const fmtDur = s => (s == null ? '—' : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`);
+// Tiempo total en h:mm:ss (o m:ss si es menos de una hora)
+const fmtDur = s => {
+  if (s == null) return '—';
+  s = Math.round(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+};
 const fmtDia = d => new Date(`${d}T00:00`).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
-const prom = xs => { const v = xs.filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+// Suma de las duraciones conocidas; '*' si a alguna evaluación le falta la duración (descargas sin TMO)
+const tiempo = evs => {
+  const v = evs.map(f => f[4]).filter(x => x != null);
+  const txt = v.length ? fmtDur(v.reduce((a, b) => a + b, 0)) : '—';
+  return v.length < evs.length ? `<span title="${evs.length - v.length} evaluación(es) aún sin duración">${txt}*</span>` : txt;
+};
 
 // Franjas: [corte_i, corte_i+1); lo anterior al primer corte y lo posterior al último va en franjas abiertas.
 function franjas(cortes) {
@@ -32,7 +43,7 @@ export function avance(cont) {
     </div>
     <div class="tarjeta"><div class="cabecera"><div><h2>Avance por monitor</h2><p class="sub" style="margin:0" id="av-res"></p></div></div>
       <div id="av-tabla"></div>
-      <p class="sub" style="margin-top:8px">Q = evaluaciones enviadas en la franja · TMO = duración promedio de las llamadas evaluadas (min:seg). Hora local de cada base.
+      <p class="sub" style="margin-top:8px">Q = evaluaciones enviadas en la franja · Tiempo = suma de la duración de las llamadas evaluadas (h:mm:ss); * = alguna evaluación aún sin duración. Hora local de cada base.
       Las bases se actualizan cuando llega su archivo (Drive o carpetas): el día en curso se completa a medida que llegan.</p>
       <div id="av-fuentes"></div>
     </div>`;
@@ -49,15 +60,15 @@ export function avance(cont) {
     const filas = Object.values(grupos).sort((a, b) => nombreCompleto(a.l).localeCompare(nombreCompleto(b.l), 'es') || a.monitor.localeCompare(b.monitor, 'es'));
     const celdas = evs => usadas.map(fr => {
       const sel = evs.filter(f => (acumulado ? f[3] < fr.hasta : f[3] >= fr.desde && f[3] < fr.hasta));
-      return `<td class="num">${sel.length ? fmtN(sel.length) : '<span style="color:var(--muted)">—</span>'}</td><td class="num">${sel.length ? fmtDur(prom(sel.map(f => f[4]))) : ''}</td>`;
+      return `<td class="num">${sel.length ? fmtN(sel.length) : '<span style="color:var(--muted)">—</span>'}</td><td class="num">${sel.length ? tiempo(sel) : ''}</td>`;
     }).join('');
-    const total = evs => `<td class="num"><b>${fmtN(evs.length)}</b></td><td class="num"><b>${fmtDur(prom(evs.map(f => f[4])))}</b></td>`;
+    const total = evs => `<td class="num"><b>${fmtN(evs.length)}</b></td><td class="num"><b>${tiempo(evs)}</b></td>`;
     cont.querySelector('#av-res').textContent = `${fmtN(filasDia.length)} evaluaciones · ${filas.length} monitor${filas.length === 1 ? '' : 'es'} · ${fmtDia(dia)}`
       + (dia === diaExt ? ` · extracción de las ${horaExt.slice(0, 5)}` : '');
     cont.querySelector('#av-tabla').innerHTML = !filas.length ? '<div class="vacio">Sin evaluaciones ese día.</div>' : `
       <div class="tabla-wrap"><table class="tabla-eval tabla-avance">
         <thead><tr><th rowspan="2">Monitor</th>${usadas.map(fr => `<th colspan="2" class="franja ${enCurso(fr) ? 'en-curso' : ''}" ${enCurso(fr) ? `title="Extracción de las ${esc(horaExt.slice(0, 5))}: la franja aún no termina"` : ''}>${acumulado ? `Hasta ${fr.hasta === '24:00' ? 'fin del día' : fr.hasta}` : esc(fr.titulo)}${enCurso(fr) ? '<small>en curso</small>' : ''}</th>`).join('')}<th colspan="2" class="franja">Total del día</th></tr>
-          <tr>${[...usadas, 0].map(() => '<th class="num">Q</th><th class="num">TMO</th>').join('')}</tr></thead>
+          <tr>${[...usadas, 0].map(() => '<th class="num">Q</th><th class="num">Tiempo</th>').join('')}</tr></thead>
         <tbody>${filas.map(g => `<tr><td><b>${esc(g.monitor)}</b><small>${esc(nombreCompleto(g.l))}</small></td>${celdas(g.evs)}${total(g.evs)}</tr>`).join('')}</tbody>
         ${filas.length > 1 ? `<tfoot><tr><td><b>Total</b></td>${celdas(filasDia)}${total(filasDia)}</tr></tfoot>` : ''}
       </table></div>`;
