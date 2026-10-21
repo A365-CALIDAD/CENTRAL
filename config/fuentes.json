@@ -787,7 +787,8 @@
             "carpeta": "../CLARO/ECUADOR/CLARO_IN/filtrado",
             "patron": "*.xlsx"
           }
-        ]
+        ],
+        "qualtrics": true
       }
     },
     {
@@ -1003,7 +1004,8 @@
             "carpeta": "../CLARO/ECUADOR/CLARO_OUT/filtrado",
             "patron": "*.xlsx"
           }
-        ]
+        ],
+        "qualtrics": true
       }
     },
     {

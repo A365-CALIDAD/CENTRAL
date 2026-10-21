@@ -35,6 +35,8 @@ CalidadA365_Actualizar.exe
 
 # Bitácora en línea: URL y claves de acceso, y el código generado para Apps Script (solo en este PC)
 config/bitacora.local.json
+# Acceso a Qualtrics (token de API): solo en el PC que hace la extracción
+config/qualtrics.local.json
 bitacora/
 
 # Marca local de sincronización entre PC y registro del modo automático

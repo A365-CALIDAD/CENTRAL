@@ -6,7 +6,8 @@ evaluación (ID Pauta) está en varios archivos, gana la descarga más reciente.
     {"fecha": col, "hora": col (opcional si la fecha trae la hora), "duracion": col,
      "monitor": col (opcional), "monitor_fijo": "nombre" (opcional),
      "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente),
-     "id": col que identifica cada evaluación (opcional; por defecto id_unico; Qualtrics: ResponseId)}
+     "id": col que identifica cada evaluación (opcional; por defecto id_unico; Qualtrics: ResponseId),
+     "qualtrics": true (Claro: además trae las respuestas del día por la API, ver etl/qualtrics.py)}
 o, para las fuentes que llegan por aplicación web (Movistar, BN):
     {"api_json": url, "clave": "filas"|"avance", "posiciones": {"fecha": 0, "hora": 1, "monitor": 2, "duracion": 3},
      "nombre": texto que se muestra como origen}
@@ -83,13 +84,21 @@ def descargas(fuente) -> list:
         carpeta = etl.ruta_fuente({"carpeta": c["carpeta"]})
         if carpeta.is_dir():
             out += [p for p in carpeta.glob(c.get("patron", "*.xlsx")) if not p.name.startswith("~$")]
+    if fuente["avance"].get("qualtrics"):        # respuestas traídas por la API de Qualtrics (las más recientes)
+        import qualtrics
+        csv = qualtrics.DESTINO / f"{fuente['id']}.csv"
+        if csv.exists():
+            out.append(csv)
     return sorted(set(out), key=lambda p: (p.stat().st_mtime, p.name))
 
 
 def leer_descarga(ruta: Path, clave: str) -> pd.DataFrame | None:
     """Las descargas traen títulos arriba: el encabezado es la fila que contiene la columna id (ej. 'ID Pauta')."""
-    hojas = pd.read_excel(ruta, sheet_name=None, header=None)
-    crudo = hojas.get("Matriz", next(iter(hojas.values())))
+    if ruta.suffix.lower() == ".csv":
+        crudo = pd.read_csv(ruta, header=None, dtype=str, encoding="utf-8-sig", keep_default_na=False)
+    else:
+        hojas = pd.read_excel(ruta, sheet_name=None, header=None)
+        crudo = hojas.get("Matriz", next(iter(hojas.values())))
     fila = next((i for i in range(min(15, len(crudo))) if clave in {etl.normalizar(x) for x in crudo.iloc[i]}), None)
     if fila is None:
         return None
@@ -164,6 +173,9 @@ def leer_fuente(fuente, desde: str) -> tuple[list, list]:
     if fuente["avance"].get("api_json"):
         return leer_api(fuente, desde)
     """Base principal + descargas de la cuenta; si una evaluación está en varias, gana la descarga más reciente."""
+    if fuente["avance"].get("qualtrics"):
+        import qualtrics
+        qualtrics.descargar(fuente, desde)
     principal = archivo_fuente(fuente)
     usados, filas = [], {}
     if principal is not None:

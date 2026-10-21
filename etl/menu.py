@@ -26,6 +26,7 @@ from pathlib import Path
 import avisos
 import central_etl
 import perfiles
+import qualtrics
 import validar_dashboards
 
 RAIZ = central_etl.RAIZ
@@ -286,6 +287,11 @@ def bitacora_en_linea():
             print(f"No se pudo: {e}")
 
 
+def conectar_qualtrics():
+    titulo("Conectar Qualtrics (Claro Ecuador)")
+    qualtrics.configurar()
+
+
 def abrir_pagina():
     webbrowser.open(URL)
     print(f"Abriendo {URL}")
@@ -300,6 +306,7 @@ OPCIONES = [
     ("Enviar correo de prueba", enviar_prueba),
     ("Preparar este PC (recuperar datos del respaldo)", recuperar_respaldo),
     ("Bitácora en línea (código y URL)", bitacora_en_linea),
+    ("Conectar Qualtrics (Claro, avance del día)", conectar_qualtrics),
     ("Abrir la plataforma", abrir_pagina),
 ]
 
