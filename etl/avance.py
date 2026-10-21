@@ -6,6 +6,7 @@ evaluación (ID Pauta) está en varios archivos, gana la descarga más reciente.
     {"fecha": col, "hora": col (opcional si la fecha trae la hora), "duracion": col,
      "monitor": col (opcional), "monitor_fijo": "nombre" (opcional),
      "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente),
+     "zona": zona horaria de la base (ej. "America/Santiago"); se pasa a avance_equipo.zona de portal.json (Perú),
      "id": col que identifica cada evaluación (opcional; por defecto id_unico; Qualtrics: ResponseId),
      "qualtrics": true (Claro: además trae las respuestas del día por la API, ver etl/qualtrics.py)}
 o, para las fuentes que llegan por aplicación web (Movistar, BN):
@@ -22,6 +23,7 @@ import json
 import re
 import urllib.request
 from datetime import datetime, time
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import pandas as pd
@@ -30,7 +32,8 @@ import central_etl as etl
 
 SALIDA = etl.DATA / "avance.json"
 DIAS = 35                    # días hacia atrás que se publican
-CORTES = [f"{h:02d}:00" for h in range(7, 22)]     # 07:00-08:00, 08:00-09:00... (se extrae a la media hora)
+CORTES = [f"{h:02d}:00" for h in range(7, 22)]
+ZONA = "America/Lima"       # todas las horas se pasan a la hora de Perú (la del equipo y de la extracción)     # 07:00-08:00, 08:00-09:00... (se extrae a la media hora)
 
 
 def a_segundos(v):
@@ -50,6 +53,23 @@ def a_segundos(v):
         return h * 3600 + mi * 60 + se
     n = etl.a_numero(s)
     return int(round(n)) if n is not None else None
+
+
+def zona_destino() -> str:
+    portal = etl.leer_json(etl.CONFIG / "portal.json")
+    return (portal.get("avance_equipo") or {}).get("zona") or ZONA
+
+
+def a_zona(dia: str, hora: str, origen: str | None, destino: str) -> tuple[str, str]:
+    """Pasa día y hora de la zona de la base (ej. Entel: hora de Chile) a la del equipo (Perú)."""
+    if not origen or origen == destino:
+        return dia, hora
+    try:
+        local = datetime.strptime(f"{dia} {hora}", "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo(origen))
+    except ValueError:
+        return dia, hora
+    convertida = local.astimezone(ZoneInfo(destino))
+    return convertida.strftime("%Y-%m-%d"), convertida.strftime("%H:%M")
 
 
 def a_hora(v):
@@ -124,6 +144,7 @@ def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=F
         elif real is not None and "excluir" in flt:
             df = df[~df[real].map(lambda v, lista=flt["excluir"]: etl.coincide(v, lista))]
     out = {}
+    origen, destino = cfg.get("zona"), zona_destino()
     for k, (_, r) in enumerate(df.iterrows()):
         f = etl.a_fecha(r[cols["fecha"]])
         if f is None:
@@ -139,6 +160,7 @@ def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=F
         dur = a_segundos(r[cols["duracion"]]) if "duracion" in cols else None
         dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None     # más de 4 h = error de digitación
         ident = etl.norm_id(r[cid]) if cid is not None and not etl.vacio(r[cid]) else f"{origen}#{k}"
+        dia, hora = a_zona(dia, hora, origen, destino)
         out[ident] = [fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur]
     return out
 
@@ -154,6 +176,7 @@ def leer_api(fuente, desde: str) -> tuple[list, list]:
         print(f"[avance] {fuente['id']}: la aplicación web todavía no entrega el avance; se conservan los datos anteriores")
         return [], []
     pos = cfg["posiciones"]
+    origen, destino = cfg.get("zona"), zona_destino()
     filas = []
     for x in lista:
         dia, hora = str(x[pos["fecha"]])[:10], a_hora(x[pos["hora"]])
@@ -163,6 +186,7 @@ def leer_api(fuente, desde: str) -> tuple[list, list]:
                                               else " ".join(str(x[pos["monitor"]]).split()).title())
         dur = a_segundos(x[pos["duracion"]]) if "duracion" in pos else None
         dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None
+        dia, hora = a_zona(dia, hora, origen, destino)
         filas.append([fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur])
     return filas, [Path(cfg.get("nombre", "aplicacion_web"))]
 

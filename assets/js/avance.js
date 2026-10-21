@@ -44,7 +44,7 @@ export function avance(cont) {
     <div class="tarjeta"><div class="cabecera"><div><h2>Avance por monitor</h2><p class="sub" style="margin:0" id="av-res"></p></div></div>
       <div id="av-faltan"></div>
       <div id="av-tabla"></div>
-      <p class="sub" style="margin-top:8px">Q = evaluaciones enviadas en la franja · Tiempo = suma de la duración de las llamadas evaluadas (h:mm:ss); * = alguna evaluación aún sin duración. Hora local de cada base.
+      <p class="sub" style="margin-top:8px">Q = evaluaciones enviadas en la franja · Tiempo = suma de la duración de las llamadas evaluadas (h:mm:ss); * = alguna evaluación aún sin duración. Horas en hora de Perú (Entel se convierte desde la hora de Chile y Movistar desde la de México).
       Las bases se actualizan cuando llega su archivo (Drive o carpetas): el día en curso se completa a medida que llegan.</p>
       <div id="av-fuentes"></div>
     </div>`;

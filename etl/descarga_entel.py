@@ -135,45 +135,111 @@ def descargar_pauta(A, driver, nombre: str) -> Path | None:
     raise A.TimeoutException(f"La descarga de '{nombre}' superó {A.TIEMPO_MAXIMO_DESCARGA} segundos.")
 
 
+# Chrome propio del avance: queda abierto entre una hora y la siguiente, así la sesión de Microsoft sigue activa
+# y no pide aprobar en el celular cada vez. Perfil aparte (copia del de adherencias la primera vez) y otro puerto,
+# para no chocar con la automatización diaria de las adherencias.
+PERFIL_AVANCE = central_etl.RAIZ / "etl" / "entrada" / "chrome_avance"
+PUERTO_AVANCE = 9223
+SIN_COPIAR = shutil.ignore_patterns("Cache", "Code Cache", "GPUCache", "DawnCache", "GrShaderCache", "ShaderCache",
+                                    "Service Worker", "Crashpad", "*.log", "Singleton*", "lockfile")
+
+
+def preparar_perfil(A):
+    if (PERFIL_AVANCE / A.CHROME_PROFILE_DIR).exists():
+        return
+    if A.PERFIL_CHROME_RPA.exists():
+        A.mostrar_info("Preparando el Chrome del avance (copia del perfil de adherencias, una sola vez)...")
+        shutil.copytree(A.PERFIL_CHROME_RPA, PERFIL_AVANCE, ignore=SIN_COPIAR, dirs_exist_ok=True,
+                        copy_function=_copiar_si_se_puede)
+    (PERFIL_AVANCE / A.CHROME_PROFILE_DIR).mkdir(parents=True, exist_ok=True)
+
+
+def _copiar_si_se_puede(origen, destino):
+    try:
+        return shutil.copy2(origen, destino)
+    except OSError:          # archivos en uso: se omiten
+        return destino
+
+
+def conectar_chrome(A):
+    """Se conecta al Chrome del avance si ya está abierto; si no, lo abre (queda abierto al terminar)."""
+    preparar_perfil(A)
+    A.PERFIL_CHROME_RPA = A.CHROME_USER_DATA_DIR = PERFIL_AVANCE
+    A.CHROME_REMOTE_DEBUGGING_PORT = PUERTO_AVANCE
+    if A.chrome_ya_esta_abierto():
+        A.mostrar_exito("Chrome del avance ya abierto: se reutiliza su sesión.")
+    else:
+        A.lanzar_chrome_con_cdp()
+    opciones = A.webdriver.ChromeOptions()
+    opciones.add_experimental_option("debuggerAddress", f"127.0.0.1:{PUERTO_AVANCE}")
+    driver = A.webdriver.Chrome(options=opciones)
+    driver.switch_to.window(driver.window_handles[-1])
+    driver.execute_cdp_cmd("Browser.setDownloadBehavior",
+                           {"behavior": "allow", "downloadPath": str(A.CARPETA_DESCARGAS)})
+    return driver
+
+
+def abrir_reporte(A, driver):
+    driver.get(A.URL_PORTAL)
+    time.sleep(2)
+    A.iniciar_sesion_portal(driver)          # si la sesión sigue activa, no hace nada
+    if "/calidad/reporte" not in (driver.current_url or ""):
+        driver.get(A.URL_PORTAL)
+    A.WebDriverWait(driver, 60, ignored_exceptions=(A.WebDriverException,)).until(
+        lambda d: "/calidad/reporte" in (d.current_url or ""))
+    seleccionar_hoy(A, driver)
+
+
+def bajar_y_mover(A, driver, nombre, carpeta) -> bool | None:
+    archivo = descargar_pauta(A, driver, nombre)
+    if archivo is None:
+        return None
+    carpeta.mkdir(parents=True, exist_ok=True)
+    destino = carpeta / archivo.name
+    if archivo.resolve() != destino.resolve():
+        shutil.move(str(archivo), str(destino))
+    A.mostrar_info(f"→ {destino.relative_to(ENTEL)}")
+    return True
+
+
 def main() -> int:
     A = cargar_proceso()
     print("=" * 70)
     print(f"AVANCE EQUIPO · Reporte Pauta de hoy ({date.today():%d/%m/%Y}) de todas las cuentas de Entel")
     print("=" * 70)
-    navegador, errores = None, 0
+    navegador, fallidas = None, []
     try:
         A.validar_configuracion()
-        navegador = A.abrir_portal()
-        A.iniciar_sesion_portal(navegador)
-        navegador.get(A.URL_PORTAL)
-        A.WebDriverWait(navegador, 60, ignored_exceptions=(A.WebDriverException,)).until(
-            lambda d: "/calidad/reporte" in (d.current_url or ""))
-        seleccionar_hoy(A, navegador)
+        navegador = conectar_chrome(A)
+        abrir_reporte(A, navegador)
         for nombre, carpeta in PAUTAS:
             try:
-                archivo = descargar_pauta(A, navegador, nombre)
+                bajar_y_mover(A, navegador, nombre, carpeta)
             except Exception as e:
-                errores += 1
-                A.mostrar_error(f"{nombre}: {e}")
-                continue
-            if archivo is None:
-                continue
-            carpeta.mkdir(parents=True, exist_ok=True)
-            destino = carpeta / archivo.name
-            if archivo.resolve() != destino.resolve():
-                shutil.move(str(archivo), str(destino))
-            A.mostrar_info(f"→ {destino.relative_to(ENTEL)}")
+                A.mostrar_advertencia(f"{nombre}: {str(e).splitlines()[0]}")
+                fallidas.append((nombre, carpeta))
+        if fallidas:        # segundo intento: página recargada y más tiempo (los reportes grandes tardan en generarse)
+            A.mostrar_info(f"Reintentando {len(fallidas)} pauta(s) con más tiempo...")
+            A.TIEMPO_MAXIMO_DESCARGA = max(A.TIEMPO_MAXIMO_DESCARGA, 360)
+            abrir_reporte(A, navegador)
+            pendientes, fallidas = fallidas, []
+            for nombre, carpeta in pendientes:
+                try:
+                    bajar_y_mover(A, navegador, nombre, carpeta)
+                except Exception as e:
+                    A.mostrar_error(f"{nombre}: {str(e).splitlines()[0]}")
+                    fallidas.append((nombre, carpeta))
     except Exception as e:
         A.mostrar_error(f"No se pudo completar la descarga: {e}")
         return 1
     finally:
-        if navegador is not None:
+        if navegador is not None:      # se suelta el control pero Chrome queda abierto con la sesión
             try:
-                navegador.quit()
+                navegador.service.stop()
             except Exception:
                 pass
-    print("\nListo." if not errores else f"\nTerminó con {errores} pauta(s) con error.")
-    return 1 if errores else 0
+    print("\nListo." if not fallidas else f"\nTerminó con {len(fallidas)} pauta(s) con error.")
+    return 1 if fallidas else 0
 
 
 if __name__ == "__main__":

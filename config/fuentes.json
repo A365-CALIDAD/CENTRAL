@@ -74,7 +74,8 @@
             "carpeta": "../ENTEL/ENTEL_BI_IN/Adherencias/Descargas",
             "patron": "Reporte Pauta VOZ - Móvil y Hogar*.xls*"
           }
-        ]
+        ],
+        "zona": "America/Santiago"
       }
     },
     {
@@ -189,7 +190,8 @@
             "carpeta": "../ENTEL/ENTEL_BI_MT/Adherencias/Descargas",
             "patron": "Reporte Pauta Voz - Fibra Técnico*.xls*"
           }
-        ]
+        ],
+        "zona": "America/Santiago"
       }
     },
     {
@@ -308,7 +310,8 @@
             "carpeta": "../ENTEL/ENTEL_BI_CZC/Adherencias/Descargas",
             "patron": "Reporte Pauta Retenciones*.xls*"
           }
-        ]
+        ],
+        "zona": "America/Santiago"
       }
     },
     {
@@ -385,7 +388,8 @@
             "carpeta": "../ENTEL/ENTEL_BI_OUT/Adherencias/Descargas",
             "patron": "Reporte Pauta Outbound - Centros*.xls*"
           }
-        ]
+        ],
+        "zona": "America/Santiago"
       }
     },
     {
@@ -507,7 +511,8 @@
         "fecha": "Fecha Envío",
         "hora": "Hora Envío",
         "duracion": "TMO2",
-        "monitor": "Realizador"
+        "monitor": "Realizador",
+        "zona": "America/Santiago"
       }
     },
     {
@@ -788,7 +793,8 @@
             "patron": "*.xlsx"
           }
         ],
-        "qualtrics": true
+        "qualtrics": true,
+        "zona": "America/Guayaquil"
       }
     },
     {
@@ -1005,7 +1011,8 @@
             "patron": "*.xlsx"
           }
         ],
-        "qualtrics": true
+        "qualtrics": true,
+        "zona": "America/Guayaquil"
       }
     },
     {
@@ -1101,7 +1108,8 @@
           "duracion": 2
         },
         "nombre": "Google Sheet de fraude (Marca temporal, TMO)",
-        "monitor_fijo": "Monitor único"
+        "monitor_fijo": "Monitor único",
+        "zona": "America/Lima"
       }
     },
     {
@@ -1199,7 +1207,8 @@
           "duracion": 2
         },
         "nombre": "Google Forms (Marca temporal)",
-        "monitor_fijo": "Monitor único"
+        "monitor_fijo": "Monitor único",
+        "zona": "America/Mexico_City"
       }
     },
     {

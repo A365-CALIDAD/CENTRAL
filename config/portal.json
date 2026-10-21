@@ -168,7 +168,7 @@
     }
   ],
   "avance_equipo": {
-    "_comentario": "Horas de corte del módulo Avance equipo: cada franja va de un corte al siguiente (hora local de cada base). La extracción se programa a la media hora (8:30, 9:30...), así cada franja se ve cerrada.",
+    "_comentario": "Horas de corte del módulo Avance equipo, en hora de Perú (zona): cada franja va de un corte al siguiente. Las horas de cada base se pasan a esta zona (Entel viene en hora de Chile, Movistar en la de México). La extracción se programa a la media hora (8:30, 9:30...).",
     "cortes": [
       "07:00",
       "08:00",
@@ -185,6 +185,7 @@
       "19:00",
       "20:00",
       "21:00"
-    ]
+    ],
+    "zona": "America/Lima"
   }
 }
