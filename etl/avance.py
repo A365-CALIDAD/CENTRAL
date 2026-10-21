@@ -1,9 +1,11 @@
 """Avance del equipo: evaluaciones de cada monitor por franja horaria del día (cortes) y duración de las llamadas.
 
-Lee la misma base que usa cada fuente (la copia de Drive o el archivo más reciente de su carpeta) según su clave
-"avance" en config/fuentes.json:
+Lee la base que usa cada fuente (la copia de Drive o el archivo más reciente de su carpeta) y, en Entel, además
+las descargas de adherencias de esa cuenta ("Reporte Pauta ..."), que se bajan varias veces al día: si una
+evaluación (ID Pauta) está en varios archivos, gana la descarga más reciente. Clave "avance" en config/fuentes.json:
     {"fecha": col, "hora": col (opcional si la fecha trae la hora), "duracion": col,
-     "monitor": col (opcional), "monitor_fijo": "nombre" (opcional)}
+     "monitor": col (opcional), "monitor_fijo": "nombre" (opcional),
+     "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente)}
 Escribe data/avance.json (solo en este PC; viaja en los paquetes cifrados y en el respaldo):
     {"generado", "cortes", "dias", "fuentes": {linea: {"fuente", "archivo", "ultima"}},
      "filas": [[linea, monitor, "YYYY-MM-DD", "HH:MM", duracion_seg | null], ...]}
@@ -69,25 +71,47 @@ def archivo_fuente(fuente) -> Path | None:
     return max(locales, key=lambda p: (p.stat().st_mtime, p.name)) if locales else None
 
 
-def leer_fuente(fuente, desde: str) -> tuple[list, Path | None]:
+def descargas(fuente) -> list:
+    """Descargas de la plataforma ('Reporte Pauta ...') de esa cuenta: clave 'descargas' del avance o sus complementos."""
+    out = []
+    for c in fuente["avance"].get("descargas") or fuente.get("complementos", []):
+        carpeta = etl.ruta_fuente({"carpeta": c["carpeta"]})
+        if carpeta.is_dir():
+            out += [p for p in carpeta.glob(c.get("patron", "*.xlsx")) if not p.name.startswith("~$")]
+    return sorted(set(out), key=lambda p: (p.stat().st_mtime, p.name))
+
+
+def leer_descarga(ruta: Path, clave: str) -> pd.DataFrame | None:
+    """Las descargas traen títulos arriba: el encabezado es la fila que contiene la columna id (ej. 'ID Pauta')."""
+    hojas = pd.read_excel(ruta, sheet_name=None, header=None)
+    crudo = hojas.get("Matriz", next(iter(hojas.values())))
+    fila = next((i for i in range(min(15, len(crudo))) if clave in {etl.normalizar(x) for x in crudo.iloc[i]}), None)
+    if fila is None:
+        return None
+    df = crudo.iloc[fila + 1:].copy()
+    df.columns = [f"_{j}" if etl.vacio(x) else str(x).strip() for j, x in enumerate(crudo.iloc[fila])]
+    return df.loc[:, ~pd.Index(df.columns).duplicated()]
+
+
+def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=False) -> dict | None:
+    """{id: [linea, monitor, dia, hora, duracion]}. Las descargas de Outbound/E-commerce no traen la duración
+    (sin_duracion_ok): igual cuentan en Q y la duración llega con la base consolidada."""
     cfg = fuente["avance"]
-    ruta = archivo_fuente(fuente)
-    if ruta is None:
-        return [], None
-    df = pd.read_excel(ruta, sheet_name=fuente.get("hoja", 0), header=fuente.get("fila_encabezado", 0))
     cols = etl.resolver_columnas(df, {k: cfg[k] for k in ("fecha", "hora", "duracion", "monitor") if cfg.get(k)})
-    faltan = [k for k in ("fecha", "hora", "duracion", "monitor") if cfg.get(k) and k not in cols]
+    faltan = [k for k in ("fecha", "hora", "duracion", "monitor") if cfg.get(k) and k not in cols
+              and not (k == "duracion" and sin_duracion_ok)]
     if faltan:
-        print(f"[avance] {fuente['id']}: faltan las columnas {', '.join(cfg[k] for k in faltan)}; se omite")
-        return [], ruta
+        print(f"[avance] {fuente['id']} · {origen}: faltan las columnas {', '.join(cfg[k] for k in faltan)}; se omite")
+        return None
+    cid = etl.resolver_columnas(df, {"x": [fuente["id_unico"]]}).get("x") if fuente.get("id_unico") else None
     for flt in fuente.get("filtros", []):      # p. ej. Qualtrics: solo encuestas terminadas
         real = etl.resolver_columnas(df, {"x": [flt.get("columna", "")]}).get("x") if flt.get("columna") else None
         if real is not None and "incluir" in flt:
             df = df[df[real].map(lambda v, lista=flt["incluir"]: etl.coincide(v, lista))]
         elif real is not None and "excluir" in flt:
             df = df[~df[real].map(lambda v, lista=flt["excluir"]: etl.coincide(v, lista))]
-    filas = []
-    for _, r in df.iterrows():
+    out = {}
+    for k, (_, r) in enumerate(df.iterrows()):
         f = etl.a_fecha(r[cols["fecha"]])
         if f is None:
             continue
@@ -99,10 +123,40 @@ def leer_fuente(fuente, desde: str) -> tuple[list, Path | None]:
             continue
         monitor = cfg.get("monitor_fijo") or ("" if "monitor" not in cols or etl.vacio(r[cols["monitor"]])
                                               else " ".join(str(r[cols["monitor"]]).split()).title())
-        dur = a_segundos(r[cols["duracion"]])
+        dur = a_segundos(r[cols["duracion"]]) if "duracion" in cols else None
         dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None     # más de 4 h = error de digitación
-        filas.append([fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur])
-    return filas, ruta
+        ident = etl.norm_id(r[cid]) if cid is not None and not etl.vacio(r[cid]) else f"{origen}#{k}"
+        out[ident] = [fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur]
+    return out
+
+
+def leer_fuente(fuente, desde: str) -> tuple[list, list]:
+    """Base principal + descargas de la cuenta; si una evaluación está en varias, gana la descarga más reciente."""
+    principal = archivo_fuente(fuente)
+    usados, filas = [], {}
+    if principal is not None:
+        df = pd.read_excel(principal, sheet_name=fuente.get("hoja", 0), header=fuente.get("fila_encabezado", 0))
+        parte = extraer(df, fuente, desde, principal.name)
+        if parte is not None:
+            filas.update(parte)
+            usados.append(principal)
+    clave = etl.normalizar(fuente.get("id_unico", ""))
+    for ruta in descargas(fuente) if clave else []:
+        if datetime.fromtimestamp(ruta.stat().st_mtime).strftime("%Y-%m-%d") < desde:
+            continue        # descargas anteriores al periodo publicado
+        try:
+            df = leer_descarga(ruta, clave)
+        except Exception as e:
+            print(f"[avance] {fuente['id']} · {ruta.name}: no se pudo leer ({e})")
+            continue
+        parte = extraer(df, fuente, desde, ruta.name, sin_duracion_ok=True) if df is not None else None
+        if parte:
+            for k, fila in parte.items():
+                if fila[4] is None and k in filas:      # sin duración en la descarga: se conserva la conocida
+                    fila[4] = filas[k][4]
+                filas[k] = fila
+            usados.append(ruta)
+    return list(filas.values()), usados
 
 
 def generar(fuentes: list) -> int:
@@ -119,14 +173,15 @@ def generar(fuentes: list) -> int:
     info = dict(previo.get("fuentes", {}))
     for fuente in con_avance:
         try:
-            nuevas, ruta = leer_fuente(fuente, desde)
+            nuevas, usados = leer_fuente(fuente, desde)
         except Exception as e:      # el avance nunca debe detener la actualización
             print(f"[avance] {fuente['id']}: no se pudo leer ({e}); se conservan sus datos anteriores")
             continue
-        if ruta is None:
+        if not usados:
             continue                # base no disponible en este PC: se conserva lo anterior
         filas = [f for f in filas if f[0] != fuente["linea_id"]] + nuevas
-        info[fuente["linea_id"]] = {"fuente": fuente["id"], "archivo": ruta.name,
+        reciente = max(usados, key=lambda p: p.stat().st_mtime)
+        info[fuente["linea_id"]] = {"fuente": fuente["id"], "archivo": reciente.name, "archivos": len(usados),
                                     "ultima": max((f"{x[2]} {x[3]}" for x in nuevas), default=None)}
     portal = etl.leer_json(etl.CONFIG / "portal.json")
     cortes = (portal.get("avance_equipo") or {}).get("cortes") or CORTES
