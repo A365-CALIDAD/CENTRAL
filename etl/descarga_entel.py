@@ -16,6 +16,7 @@ import importlib.util
 import os
 import re
 import shutil
+import unicodedata
 import sys
 import time
 from datetime import date
@@ -88,19 +89,56 @@ def seleccionar_hoy(A, driver):
     A.mostrar_exito(f"Pautas filtradas para hoy ({hoy}).")
 
 
+def _norm(texto) -> str:
+    texto = unicodedata.normalize("NFD", str(texto or "")).encode("ascii", "ignore").decode().lower()
+    return " ".join(texto.split())
+
+
+def pautas_en_pantalla(A, driver, espera=60) -> dict:
+    """{nombre normalizado: botón de descarga} de la lista filtrada. Espera a que la lista termine de cargar."""
+    fin = time.time() + espera
+    botones = []
+    while time.time() < fin:
+        A.esperar_fin_carga(driver, 30)
+        botones = driver.find_elements(A.By.XPATH, "//button[@data-nombre_evaluacion]")
+        if botones:
+            break
+        time.sleep(2)
+    out = {}
+    for b in botones:
+        try:
+            out.setdefault(_norm(b.get_attribute("data-nombre_evaluacion")), b)
+        except A.StaleElementReferenceException:
+            continue
+    return out
+
+
+def confirmar_descarga(A, driver, espera=20) -> bool:
+    """Modal "Seleccione las categorías a descargar": clic en su botón Descargar VISIBLE (hay otros ocultos)."""
+    fin = time.time() + espera
+    while time.time() < fin:
+        for b in driver.find_elements(A.By.XPATH, "//button[normalize-space()='Descargar'] | //a[normalize-space()='Descargar']"):
+            try:
+                if b.is_displayed() and b.is_enabled():
+                    try:
+                        b.click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", b)
+                    return True
+            except A.StaleElementReferenceException:
+                continue
+        time.sleep(0.5)
+    return False
+
+
 def descargar_pauta(A, driver, nombre: str) -> Path | None:
     """Descarga la pauta 'nombre' de la lista filtrada; None si hoy no tiene evaluaciones (no aparece en la lista)."""
-    A.esperar_fin_carga(driver, 60)
-    try:
-        boton = A.WebDriverWait(driver, 15).until(A.EC.presence_of_element_located(
-            (A.By.XPATH, f"//button[@data-nombre_evaluacion='{nombre}']")))
-    except A.TimeoutException:
-        try:
-            fila = driver.find_element(A.By.XPATH, f"//tr[td[normalize-space(.)='{nombre}']]")
-            boton = fila.find_element(A.By.XPATH, ".//button[contains(@class, 'btn-download-excel')] | .//button")
-        except Exception:
-            A.mostrar_advertencia(f"'{nombre}' no aparece hoy (sin evaluaciones todavía).")
-            return None
+    lista = pautas_en_pantalla(A, driver)
+    clave = _norm(nombre)
+    boton = lista.get(clave) or next((b for n, b in lista.items() if clave in n or n in clave), None)
+    if boton is None:
+        A.mostrar_advertencia(f"'{nombre}' no aparece hoy (sin evaluaciones todavía).")
+        return None
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton)
     time.sleep(0.5)
     antes = {p: p.stat().st_mtime for p in A.CARPETA_DESCARGAS.glob("*.xlsx")}
@@ -108,16 +146,8 @@ def descargar_pauta(A, driver, nombre: str) -> Path | None:
         boton.click()
     except Exception:
         driver.execute_script("arguments[0].click();", boton)
-    try:          # modal "Seleccione las categorías a descargar"
-        confirmar = A.WebDriverWait(driver, 15).until(A.EC.element_to_be_clickable(
-            (A.By.XPATH, "//div[contains(@class, 'modal')]//button[normalize-space()='Descargar']"
-                         " | //button[normalize-space()='Descargar']")))
-        try:
-            confirmar.click()
-        except Exception:
-            driver.execute_script("arguments[0].click();", confirmar)
-    except A.TimeoutException:
-        pass
+    if not confirmar_descarga(A, driver):
+        A.mostrar_info("No apareció la ventana de categorías; se espera la descarga directa.")
     inicio = time.perf_counter()
     while time.perf_counter() - inicio < A.TIEMPO_MAXIMO_DESCARGA:
         temporales = list(A.CARPETA_DESCARGAS.glob("*.crdownload")) + list(A.CARPETA_DESCARGAS.glob("*.tmp"))
@@ -212,6 +242,8 @@ def main() -> int:
         A.validar_configuracion()
         navegador = conectar_chrome(A)
         abrir_reporte(A, navegador)
+        hoy = sorted(pautas_en_pantalla(A, navegador))
+        A.mostrar_info(f"Pautas con evaluaciones hoy en el portal ({len(hoy)}): {' | '.join(hoy) or 'ninguna'}")
         for nombre, carpeta in PAUTAS:
             try:
                 bajar_y_mover(A, navegador, nombre, carpeta)
