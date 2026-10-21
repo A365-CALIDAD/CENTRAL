@@ -17,7 +17,7 @@ if errorlevel 1 goto error
 py -m PyInstaller --clean --onefile --console --noconfirm --name AvanceEquipo ^
   --icon "%~dp0assets\img\icono.ico" ^
   --distpath "%SALIDA%" --workpath "%TEMP%\calidada365_build" --specpath "%TEMP%\calidada365_build" ^
-  %COMUN% --hidden-import menu --hidden-import descarga_entel ^
+  %COMUN% --hidden-import menu --hidden-import descarga_entel --hidden-import descarga_claro ^
   --collect-all selenium --hidden-import dotenv --hidden-import win32com.client --hidden-import win32process --hidden-import win32gui ^
   etl\avance_equipo.py
 if errorlevel 1 goto error

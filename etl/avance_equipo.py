@@ -22,6 +22,7 @@ from datetime import datetime
 
 import avance
 import central_etl
+import descarga_claro
 import descarga_entel
 import menu            # solo sus funciones de sincronizar y publicar; su menú no se muestra
 import perfiles
@@ -49,7 +50,16 @@ def extraer(con_entel=True) -> bool:
         return False
     fuentes = central_etl.leer_json(central_etl.CONFIG / "fuentes.json")["fuentes"]
     menu.titulo("1/4 · Claro Ecuador: Qualtrics")
-    avance.descargar_qualtrics(fuentes)
+    if qualtrics.leer_config().get("token"):          # con token de API: directo por la API
+        avance.descargar_qualtrics(fuentes)
+    else:                                              # si no: el proceso de descarga que ya usa Claro
+        try:
+            if descarga_claro.main() != 0:
+                print("La descarga de Qualtrics terminó con problemas; se sigue con los archivos que haya.")
+        except Exception:
+            traceback.print_exc()
+            print("La descarga de Qualtrics falló; se sigue con los archivos que haya.")
+        avance.QUALTRICS_LISTO = True
     if con_entel:
         descargar_entel()
     else:
@@ -82,6 +92,10 @@ def verificar() -> int:
     except Exception as e:
         print(f"  ✗ Selenium: {e}")
         ok = False
+    for titulo, carpeta in descarga_claro.CUENTAS:
+        hay = (carpeta / "descarga_qualtrics.py").exists() and (carpeta / ".env").exists()
+        print(f"  {'✓' if hay else '✗'} {titulo}: proceso de Qualtrics {'y .env encontrados' if hay else 'NO encontrado'} ({carpeta})")
+        ok &= hay
     q = qualtrics.leer_config()
     print(f"  {'✓' if q.get('token') else '·'} Qualtrics: "
           f"{'conectado, ' + str(len(q.get('encuestas') or {})) + ' encuesta(s)' if q.get('token') else 'sin conectar (AvanceEquipo.exe --qualtrics)'}")
