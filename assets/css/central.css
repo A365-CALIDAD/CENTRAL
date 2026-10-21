@@ -348,3 +348,8 @@ dialog .aviso { margin: 0; }
 .historial { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 50vh; overflow: auto; }
 .historial li { border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; font-size: 13px; }
 .historial small { color: var(--muted); }
+
+/* avance del equipo: franjas horarias con Q y TMO */
+.tabla-avance th.franja { text-align: center; border-left: 1px solid var(--grid); white-space: nowrap; }
+.tabla-avance tbody td:nth-child(2n), .tabla-avance tfoot td:nth-child(2n), .tabla-avance thead tr:nth-child(2) th:nth-child(2n+1) { border-left: 1px solid var(--grid); }
+.tabla-avance td.num { white-space: nowrap; }

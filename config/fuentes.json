@@ -59,7 +59,13 @@
       "linea_id": "entel-in",
       "conteo": "evaluaciones",
       "id_unico": "ID Pauta",
-      "id_mantener": "last"
+      "id_mantener": "last",
+      "avance": {
+        "fecha": "Fecha Envío",
+        "hora": "Hora Envío",
+        "duracion": "TMO del caso",
+        "monitor": "Realizador"
+      }
     },
     {
       "id": "entel_in_epa",
@@ -158,7 +164,13 @@
         }
       ],
       "id_unico": "ID Pauta",
-      "id_mantener": "first"
+      "id_mantener": "first",
+      "avance": {
+        "fecha": "Fecha Envío",
+        "hora": "Hora Envío",
+        "duracion": "TMO del caso",
+        "monitor": "Realizador"
+      }
     },
     {
       "id": "entel_mt_epa",
@@ -261,7 +273,13 @@
         }
       ],
       "id_unico": "ID Pauta",
-      "id_mantener": "first"
+      "id_mantener": "first",
+      "avance": {
+        "fecha": "Fecha Envío",
+        "hora": "Hora Envío",
+        "duracion": "TMO del caso (segundos)",
+        "monitor": "Realizador"
+      }
     },
     {
       "id": "entel_out_monitoreo",
@@ -322,6 +340,12 @@
         "carpeta_id": "1ZsvJWiIBxUYgxjdTvkPY6TMQCn4llrrt",
         "patron": "Reporte monitoreos interno outbound*.xls*",
         "_carpeta": "Drive ENTEL/OUT"
+      },
+      "avance": {
+        "fecha": "Fecha Envío",
+        "hora": "Hora Envío",
+        "duracion": "TMO2",
+        "monitor": "Realizador"
       }
     },
     {
@@ -438,6 +462,12 @@
         "carpeta_id": "1Zq32EDMQt8P9q8twkPVVTQXu6_08H3BX",
         "patron": "Reporte monitoreos Ecommerce*.xls*",
         "_carpeta": "Drive ENTEL/E-COMMERCE"
+      },
+      "avance": {
+        "fecha": "Fecha Envío",
+        "hora": "Hora Envío",
+        "duracion": "TMO2",
+        "monitor": "Realizador"
       }
     },
     {
@@ -706,6 +736,11 @@
         "carpeta_id": "12Lv03h9USoBt0R4k_am5MUWDIdDUwGPj",
         "patron": "Monitoreo Inbound*.xls*",
         "_carpeta": "Drive ECUADOR/INBOUND"
+      },
+      "avance": {
+        "fecha": "RecordedDate",
+        "duracion": "Duración de llamada",
+        "monitor": "A365"
       }
     },
     {
@@ -910,6 +945,11 @@
         "carpeta_id": "1gJGcmqvIag1Oxzyh5EN1CMQbTdBnm0Qr",
         "patron": "Monitoreo Outbound*.xls*",
         "_carpeta": "Drive ECUADOR/OUTBOUND"
+      },
+      "avance": {
+        "fecha": "RecordedDate",
+        "duracion": "Duración de llamada",
+        "monitor": "A365"
       }
     },
     {
@@ -1202,6 +1242,7 @@
     "id_deduplicar": "false = no quitar repetidos dentro de la base (Outbound y E-commerce no lo hacen); los complementos siempre se unen sin repetir",
     "filtros_extra": "{columna, numerico: true} · {alguno_no_vacio: [columnas]} · {min_palabras: 2, columnas: [...], quitar: regex} (asesores de prueba)",
     "drive": "Descarga desde Google Drive público antes de procesar: {carpeta_id, patron} toma el archivo con la fecha más reciente en el nombre; {hoja_id, nombre} exporta una hoja de Google. Si Drive falla se usa la última copia (etl/entrada/drive/) o la carpeta local. {api_json, columnas, nombre} lee los datos ya preparados por una aplicación web de Apps Script (columnas en \"\" no se guardan).",
-    "multiplicar": "Factor aplicado a cada valor antes de promediar (ej. 100 si la base trae 0-1)"
+    "multiplicar": "Factor aplicado a cada valor antes de promediar (ej. 100 si la base trae 0-1)",
+    "avance": "Módulo Avance equipo: {fecha, hora (opcional si la fecha trae la hora), duracion (duración de la llamada: segundos o hh:mm:ss), monitor o monitor_fijo (opcional)}"
   }
 }

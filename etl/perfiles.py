@@ -48,7 +48,7 @@ PERFILES = CONFIG / "perfiles.json"
 CLAVES = CONFIG / "perfiles.local.json"
 DIR_SEGURO = DATA / "seguro"
 ITERACIONES = 600_000           # costo de derivar la clave: frena los intentos de adivinar contraseñas
-RESPALDAR = ["historico", "cargas", "seguimiento.json"]
+RESPALDAR = ["historico", "cargas", "seguimiento.json", "avance.json"]
 BITACORA = CONFIG / "bitacora.local.json"          # URL de la aplicación web y claves de acceso (no se publica)
 # Contraseñas y claves de la bitácora viajan entre PC dentro del respaldo cifrado (clave del administrador).
 # La marca guarda la huella de cada valor en la última sincronización: lo cambiado aquí desde entonces gana.
@@ -125,10 +125,12 @@ def claves(lista=None, avisar=True) -> dict:
     return guardadas
 
 
-def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento, bitacora=None) -> dict:
+def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento, bitacora=None, avance=None) -> dict:
     admin = bool(p.get("admin"))
     lineas = None if admin else set(p.get("lineas", []))
     return {
+        "avance": ({**avance, "filas": avance.get("filas", []) if admin else [f for f in avance.get("filas", []) if f[0] in lineas]}
+                   if avance else None),
         "bitacora": ({"url": bitacora["url"], "token": bitacora["tokens"][p["id"]]}
                      if bitacora and bitacora.get("url") and bitacora.get("tokens", {}).get(p["id"]) else None),
         "perfil": {"id": p["id"], "nombre": p["nombre"], "admin": admin, "lineas": "*" if admin else sorted(lineas)},
@@ -150,11 +152,12 @@ def cifrar_perfiles(silencioso=False) -> int:
     resumen = _leer(DATA / "cargas" / "resumen.json")
     validacion = _leer(DATA / "cargas" / "validacion.json")
     seguimiento = (_leer(DATA / "seguimiento.json", {}) or {}).get("acciones", [])
+    avance = _leer(DATA / "avance.json")
     DIR_SEGURO.mkdir(parents=True, exist_ok=True)
     bitacora = config_bitacora(lista) if BITACORA.exists() else None
     vigentes = set()
     for p in lista:
-        datos = json.dumps(_paquete(p, cons, resumen, validacion, seguimiento, bitacora), ensure_ascii=False, separators=(",", ":"))
+        datos = json.dumps(_paquete(p, cons, resumen, validacion, seguimiento, bitacora, avance), ensure_ascii=False, separators=(",", ":"))
         _escribir(DIR_SEGURO / f"{p['id']}.json", cifrar(datos.encode("utf-8"), cl[p["id"]]), compacto=True)
         vigentes.add(f"{p['id']}.json")
     admin = next((p for p in lista if p.get("admin")), None)

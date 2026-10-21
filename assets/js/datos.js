@@ -88,6 +88,7 @@ function aplicarPaquete(paquete) {
   S.metasEjemplo = !!cons.metas_son_ejemplo;
   S.resumen = resumen;
   S.bitacora = paquete.bitacora || null;
+  S.avance = paquete.avance || null;          // evaluaciones por monitor y franja horaria
   S.seguimiento = seg.acciones || [];        // se reemplaza por la bitácora en línea al abrir Seguimiento
 }
 

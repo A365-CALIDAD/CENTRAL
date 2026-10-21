@@ -1097,6 +1097,8 @@ def procesar(args):
     if nuevas_cargas:
         pd.concat([registro, pd.DataFrame(nuevas_cargas, columns=COLS_REGISTRO)], ignore_index=True) \
             .to_csv(REGISTRO, index=False, encoding="utf-8")
+    import avance                       # evaluaciones por monitor y franja horaria (módulo Avance equipo)
+    avance.generar(fuentes)
     n = publicar(catalogo, fuentes)
     print(f"\nPublicado: {n} mediciones vigentes · {total_err} errores registrados en data/cargas/errores/")
     return 0

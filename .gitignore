@@ -19,6 +19,7 @@ config/perfiles.local.json
 # Datos en claro: solo en este PC. Lo publicado son los paquetes cifrados de data/seguro/
 data/consolidado.json
 data/seguimiento.json
+data/avance.json
 data/historico/
 data/cargas/
 data/chatbot/

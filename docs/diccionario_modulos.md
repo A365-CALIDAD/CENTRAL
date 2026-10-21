@@ -38,7 +38,7 @@ Orden del menú (igual en computador y en el menú "Más" del celular):
 | **Inicio** | Vista general (incluye la tabla de KPI por cuenta) |
 | **Clientes** | **Entel Chile:** Resumen de la empresa · Inbound · Mesa Técnica · C2C · Outbound · E-commerce · Empresas<br>**Claro Ecuador:** Resumen de la empresa · Inbound · Outbound · NPS (abre su dashboard)<br>**Claro México:** Próximamente |
 | **Análisis** | Histórico y evolución · Tabla consolidada |
-| **Gestión** | Seguimiento de cuentas |
+| **Gestión** | Seguimiento de cuentas · Avance equipo |
 | **Herramientas** | Dashboards · Calidad de datos |
 
 Barra inferior del celular: General · Dashboards · Seguimiento · Más (abre el menú completo).
@@ -130,6 +130,14 @@ _Planes de acción sobre lo que está bajo meta._
 - **Acciones:**
   - *+ Registrar* / *+ Nueva* / *Editar*: queda como borrador en el navegador.
   - *Exportar seguimiento.json*: para publicarlo, ese archivo se sube a `data/seguimiento.json`.
+
+#### 2.4.2 Avance equipo
+- **Ruta:** `#/avance` · Menú: *Gestión › Avance equipo* (aparece cuando hay datos)
+- **Para qué sirve:** ver cuántas evaluaciones hizo cada monitor en cada franja del día y cuánto duraron las llamadas evaluadas.
+- **Tabla:** una fila por monitor (con su cuenta); por cada franja entre cortes (07:00–07:30, 07:30–08:30, …) muestra **Q** (evaluaciones enviadas) y **TMO** (duración promedio de las llamadas evaluadas, min:seg), más el total del día.
+- **Filtros:** Día, Cuenta y Conteo (*Por franja* o *Acumulado al corte*). *Exportar CSV* descarga las evaluaciones del día.
+- **Origen:** hora de envío y duración de la llamada de cada base: Entel (*Realizador*, *Fecha/Hora Envío*, *TMO del caso* / *TMO2*) y Claro (*Analista de Calidad A365*, *RecordedDate*, *Duración de llamada*). Configurable con la clave `avance` de cada fuente; los cortes, en `avance_equipo.cortes` de `config/portal.json`.
+- **Actualización:** con cada actualización de CENTRAL; el día en curso se completa a medida que llegan las bases.
 
 ### 2.5 Herramientas
 

@@ -3,6 +3,7 @@ import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, u
 import { destruirGraficos } from './componentes.js';
 import * as V from './vistas.js';
 import * as G from './general.js';
+import * as AV from './avance.js';
 
 const RUTAS = {
   general: { titulo: 'Vista general', vista: G.general },
@@ -11,6 +12,7 @@ const RUTAS = {
   servicio: { titulo: null, vista: G.servicio },
   empresa: { titulo: null, vista: V.empresa },
   seguimiento: { titulo: 'Seguimiento de cuentas', vista: V.seguimiento },
+  avance: { titulo: 'Avance equipo', vista: AV.avance },
   indicadores: { titulo: 'Tabla consolidada', vista: V.indicadores },
   historico: { titulo: 'Histórico y evolución', vista: V.historico },
   calidad: { titulo: 'Calidad de datos', vista: V.calidad },
@@ -40,6 +42,7 @@ function menu() {
     ${enlace('#/indicadores', 'Tabla consolidada')}
     <div class="nav-grupo">Gestión</div>
     ${enlace('#/seguimiento', esAdmin() ? 'Seguimiento de cuentas' : 'Mis acciones')}
+    ${S.avance?.filas?.length ? enlace('#/avance', 'Avance equipo') : ''}
     <div class="nav-grupo">Herramientas</div>
     ${enlace('#/ver', 'Dashboards')}
     ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
