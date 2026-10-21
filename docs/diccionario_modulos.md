@@ -137,6 +137,7 @@ _Planes de acción sobre lo que está bajo meta._
 - **Tabla:** una fila por monitor (con su cuenta); por cada franja entre cortes (07:00–08:00, 08:00–09:00, …; la franja que sigue abierta al momento de la extracción se marca *en curso*) muestra **Q** (evaluaciones enviadas) y **Tiempo** (suma de la duración de las llamadas evaluadas, h:mm:ss), más el total del día.
 - **Filtros:** Día, Cuenta y Conteo (*Por franja* o *Acumulado al corte*). *Exportar CSV* descarga las evaluaciones del día.
 - **Origen:** hora de envío y duración de la llamada de cada base: Entel (base de adherencias más las descargas *Reporte Pauta* de cada cuenta, que se bajan varias veces al día; *Realizador*, *Fecha/Hora Envío*, *TMO del caso* / *TMO2*) y Claro (exportaciones de Qualtrics de la carpeta *filtrado*, sin repetir *ResponseId*: *Analista de Calidad A365*, *RecordedDate*, *Duración de llamada*); en Outbound de Entel solo las descargas *Centros 2.0*. Configurable con la clave `avance` de cada fuente; los cortes, en `avance_equipo.cortes` de `config/portal.json`.
+- **Movistar y BN:** desde sus aplicaciones web (`?avance=1` del dashboard de Movistar: Marca temporal y Evaluador; bloque `avance` de BN: Marca temporal y TMO, sin evaluador).
 - **Actualización:** con cada actualización de CENTRAL; el día en curso se completa a medida que llegan las bases.
 
 ### 2.5 Herramientas

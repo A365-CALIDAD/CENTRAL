@@ -1089,7 +1089,17 @@
         ],
         "_carpeta": "Google Sheet de fraude (1sTETmJs2gI6UK3oBbPSxHTHaVIPfvXSWIg-IukKSV_E) vía la aplicación web del dashboard"
       },
-      "_carpeta": "Respaldo local sin uso: la base se descarga en etl/entrada/drive/bn_fraude_monitoreo. Apunta a etl/entrada (existe en todos los PC) para que los .exe anteriores al 15/10 17:33 no se detengan."
+      "_carpeta": "Respaldo local sin uso: la base se descarga en etl/entrada/drive/bn_fraude_monitoreo. Apunta a etl/entrada (existe en todos los PC) para que los .exe anteriores al 15/10 17:33 no se detengan.",
+      "avance": {
+        "api_json": "https://script.google.com/macros/s/AKfycbyp7m4vpYdZbTVWgvNxqQimABzq9GVcsC1_ONItQUDQKDoGeglifx4w7PpebZFh6O2d/exec",
+        "clave": "avance",
+        "posiciones": {
+          "fecha": 0,
+          "hora": 1,
+          "duracion": 2
+        },
+        "nombre": "Google Sheet de fraude (Marca temporal, TMO)"
+      }
     },
     {
       "id": "mov_mx_out_monitoreo",
@@ -1176,6 +1186,17 @@
           "PEC Global"
         ],
         "_carpeta": "Google Forms de Movistar MX vía la aplicación web del propio dashboard (MOVISTAR/MEXICO/MOV_OUT/dashboard_calidad/Code.gs, parámetro ?central=1: solo cálculos, sin datos personales)"
+      },
+      "avance": {
+        "api_json": "https://script.google.com/macros/s/AKfycbzYx8XOcOV5BX621s_skXBqwd5JtW1bwE_aZHQzKy-pm9xQwGHya1PHtay4uiHPExx-/exec?avance=1",
+        "clave": "filas",
+        "posiciones": {
+          "fecha": 0,
+          "hora": 1,
+          "monitor": 2,
+          "duracion": 3
+        },
+        "nombre": "Google Forms (Marca temporal, Evaluador)"
       }
     },
     {

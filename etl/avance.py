@@ -7,6 +7,9 @@ evaluación (ID Pauta) está en varios archivos, gana la descarga más reciente.
      "monitor": col (opcional), "monitor_fijo": "nombre" (opcional),
      "descargas": [{"carpeta", "patron"}] (opcional; por defecto, los complementos de la fuente),
      "id": col que identifica cada evaluación (opcional; por defecto id_unico; Qualtrics: ResponseId)}
+o, para las fuentes que llegan por aplicación web (Movistar, BN):
+    {"api_json": url, "clave": "filas"|"avance", "posiciones": {"fecha": 0, "hora": 1, "monitor": 2, "duracion": 3},
+     "nombre": texto que se muestra como origen}
 Escribe data/avance.json (solo en este PC; viaja en los paquetes cifrados y en el respaldo):
     {"generado", "cortes", "dias", "fuentes": {linea: {"fuente", "archivo", "ultima"}},
      "filas": [[linea, monitor, "YYYY-MM-DD", "HH:MM", duracion_seg | null], ...]}
@@ -16,6 +19,7 @@ from __future__ import annotations
 
 import json
 import re
+import urllib.request
 from datetime import datetime, time
 from pathlib import Path
 
@@ -132,7 +136,33 @@ def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=F
     return out
 
 
+def leer_api(fuente, desde: str) -> tuple[list, list]:
+    """Aplicación web de Apps Script (Movistar, BN): {ok, <clave>: [[...], ...]} con las posiciones de 'posiciones'."""
+    cfg = fuente["avance"]
+    pedido = urllib.request.Request(cfg["api_json"], headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(pedido, timeout=180) as r:
+        datos = json.loads(r.read().decode("utf-8"))
+    lista = datos.get(cfg.get("clave", "filas")) if datos.get("ok") else None
+    if lista is None:
+        print(f"[avance] {fuente['id']}: la aplicación web todavía no entrega el avance; se conservan los datos anteriores")
+        return [], []
+    pos = cfg["posiciones"]
+    filas = []
+    for x in lista:
+        dia, hora = str(x[pos["fecha"]])[:10], a_hora(x[pos["hora"]])
+        if not hora or dia < desde:
+            continue
+        monitor = cfg.get("monitor_fijo") or ("" if "monitor" not in pos or etl.vacio(x[pos["monitor"]])
+                                              else " ".join(str(x[pos["monitor"]]).split()).title())
+        dur = a_segundos(x[pos["duracion"]]) if "duracion" in pos else None
+        dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None
+        filas.append([fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur])
+    return filas, [Path(cfg.get("nombre", "aplicacion_web"))]
+
+
 def leer_fuente(fuente, desde: str) -> tuple[list, list]:
+    if fuente["avance"].get("api_json"):
+        return leer_api(fuente, desde)
     """Base principal + descargas de la cuenta; si una evaluación está en varias, gana la descarga más reciente."""
     principal = archivo_fuente(fuente)
     usados, filas = [], {}
@@ -182,7 +212,7 @@ def generar(fuentes: list) -> int:
         if not usados:
             continue                # base no disponible en este PC: se conserva lo anterior
         filas = [f for f in filas if f[0] != fuente["linea_id"]] + nuevas
-        reciente = max(usados, key=lambda p: p.stat().st_mtime)
+        reciente = max(usados, key=lambda p: p.stat().st_mtime if p.exists() else 0)
         info[fuente["linea_id"]] = {"fuente": fuente["id"], "archivo": reciente.name, "archivos": len(usados),
                                     "ultima": max((f"{x[2]} {x[3]}" for x in nuevas), default=None)}
     portal = etl.leer_json(etl.CONFIG / "portal.json")
