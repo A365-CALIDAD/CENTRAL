@@ -121,8 +121,15 @@ def leer_descarga(ruta: Path, clave: str) -> pd.DataFrame | None:
     if fila is None:
         return None
     df = crudo.iloc[fila + 1:].copy()
-    df.columns = [f"_{j}" if etl.vacio(x) else str(x).strip() for j, x in enumerate(crudo.iloc[fila])]
-    return df.loc[:, ~pd.Index(df.columns).duplicated()]
+    # Nombres repetidos se numeran como en la base consolidada de Excel: el segundo "TMO" (duración de la llamada;
+    # el primero viene vacío) queda como "TMO2".
+    nombres, vistos = [], {}
+    for j, x in enumerate(crudo.iloc[fila]):
+        n = f"_{j}" if etl.vacio(x) else str(x).strip()
+        vistos[n] = vistos.get(n, 0) + 1
+        nombres.append(n if vistos[n] == 1 else f"{n}{vistos[n]}")
+    df.columns = nombres
+    return df
 
 
 def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=False) -> dict | None:
