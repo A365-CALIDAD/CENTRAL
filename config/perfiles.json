@@ -58,7 +58,7 @@
     {
       "id": "claro-ec-consulta",
       "nombre": "Claro Ecuador · Cliente",
-      "descripcion": "Para el cliente: Vista general, Resumen de la empresa, detalle y dashboards de Claro Ecuador (Inbound, Outbound y NPS; Outbound sin el botón Presentación). Sin Histórico, Tabla consolidada, Presentación, Avance equipo, Seguimiento ni repositorios. Usuario: claroecuador (enlace: ?perfil=claroecuador)",
+      "descripcion": "Para el cliente: Vista general, Resumen de la empresa, detalle y dashboards de Claro Ecuador (Inbound, Outbound y NPS; Outbound sin el botón Presentación). Sin Histórico, Tabla consolidada, Presentación, Avance equipo, Seguimiento ni repositorios. Usuario: CL-EC-Jorge (enlace: ?perfil=CL-EC-Jorge)",
       "lineas": [
         "claro-ec-in",
         "claro-ec-out",
@@ -72,7 +72,7 @@
         "servicio",
         "ver"
       ],
-      "usuario": "claroecuador"
+      "usuario": "CL-EC-Jorge"
     }
   ]
 }
