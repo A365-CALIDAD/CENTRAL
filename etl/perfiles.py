@@ -128,12 +128,16 @@ def claves(lista=None, avisar=True) -> dict:
 def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento, bitacora=None, avance=None) -> dict:
     admin = bool(p.get("admin"))
     lineas = None if admin else set(p.get("lineas", []))
+    solo = bool(p.get("solo_indicadores")) and not admin      # solo indicadores y dashboards: sin avance ni acciones
+    if solo:
+        avance, bitacora, seguimiento = None, None, []
     return {
         "avance": ({**avance, "filas": avance.get("filas", []) if admin else [f for f in avance.get("filas", []) if f[0] in lineas]}
                    if avance else None),
         "bitacora": ({"url": bitacora["url"], "token": bitacora["tokens"][p["id"]]}
                      if bitacora and bitacora.get("url") and bitacora.get("tokens", {}).get(p["id"]) else None),
-        "perfil": {"id": p["id"], "nombre": p["nombre"], "admin": admin, "lineas": "*" if admin else sorted(lineas)},
+        "perfil": {"id": p["id"], "nombre": p["nombre"], "admin": admin, "lineas": "*" if admin else sorted(lineas),
+                   "solo_indicadores": solo},
         "consolidado": {**cons, "registros": cons.get("registros", []) if admin
                         else [r for r in cons.get("registros", []) if r.get("l") in lineas]},
         "resumen": resumen if admin else None,

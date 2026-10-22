@@ -355,3 +355,5 @@ dialog .aviso { margin: 0; }
 .tabla-avance td.num { white-space: nowrap; }
 .tabla-avance th.en-curso { color: var(--muted); font-style: italic; }
 .tabla-avance th.en-curso small { display: block; font-size: 10px; font-weight: 500; }
+
+.nav-movil a[hidden] { display: none; }

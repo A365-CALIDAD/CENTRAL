@@ -1,5 +1,5 @@
 // CENTRAL · arranque, navegación por hash y tema.
-import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, unidades, lineas, esc } from './datos.js';
+import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, soloIndicadores, unidades, lineas, esc } from './datos.js';
 import { destruirGraficos } from './componentes.js';
 import * as V from './vistas.js';
 import * as G from './general.js';
@@ -40,18 +40,20 @@ function menu() {
     <div class="nav-grupo">Análisis</div>
     ${enlace('#/historico', 'Histórico y evolución')}
     ${enlace('#/indicadores', 'Tabla consolidada')}
-    <div class="nav-grupo">Gestión</div>
+    ${soloIndicadores() ? '' : `<div class="nav-grupo">Gestión</div>
     ${enlace('#/seguimiento', esAdmin() ? 'Seguimiento de cuentas' : 'Mis acciones')}
-    ${S.avance?.filas?.length ? enlace('#/avance', 'Avance equipo') : ''}
+    ${S.avance?.filas?.length ? enlace('#/avance', 'Avance equipo') : ''}`}
     <div class="nav-grupo">Herramientas</div>
     ${enlace('#/ver', 'Dashboards')}
     ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
 }
 
 function navegar() {
+  document.querySelector('#nav-movil a[href="#/seguimiento"]')?.toggleAttribute('hidden', soloIndicadores());
   const [ruta = 'general', ...params] = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   // Calidad de datos es solo para el administrador
-  const def = (ruta === 'calidad' && !esAdmin()) ? RUTAS.general : (RUTAS[ruta] || RUTAS.general);
+  const bloqueada = (ruta === 'calidad' && !esAdmin()) || (soloIndicadores() && (ruta === 'seguimiento' || ruta === 'avance'));
+  const def = bloqueada ? RUTAS.general : (RUTAS[ruta] || RUTAS.general);
   const cont = document.getElementById('vista');
   destruirGraficos();
   // Enlace activo: coincidencia exacta de la ruta (o prefijo para el visor de dashboards); la cuenta activa

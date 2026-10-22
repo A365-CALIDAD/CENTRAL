@@ -3,6 +3,7 @@ import {
   S, esc, fmt, fmtN, fmtPct, fmtPeriodo, brecha, filtrar, ultimas, racha, comparar, periodos, opciones,
   unidades, unidad, nombreEmpresa, nombrePais, nombreIndicador, descargar, aCSV, nombreLinea, esConteo, mesPorDefecto,
   esAdmin, bitacoraEnLinea, cargarBitacora, crearAccion, actualizarAccion, eliminarAccion, historialAccion,
+  soloIndicadores, urlPerfil,
 } from './datos.js';
 import {
   badge, kpi, tabla, barraFiltros, filtrosGlobales, graficoLineas, graficoBarrasApiladas, leyenda, css, serie, ETIQUETA_ESTADO, destruirGraficos,
@@ -50,14 +51,15 @@ export function bloqueKPIs(regs) {
 
 export function tarjetasDashboards(lista) {
   if (!lista.length) return '<div class="vacio">No hay dashboards configurados.</div>';
-  return `<div class="grid g-dash">${lista.map(({ d, u }) => `
+  return `<div class="grid g-dash">${lista.map(({ d: base, u }) => ({ d: { ...base, url: urlPerfil(base.url),
+    repo: soloIndicadores() ? '' : base.repo }, u })).map(({ d, u }) => `
     <div class="tarjeta dash">
       <div class="top"><h3>${esc(d.nombre)}</h3>${d.url ? '' : '<span class="pendiente">URL pendiente</span>'}</div>
       <p>${esc(d.descripcion || u.nombre)}</p>
       <div class="acc">
         <a class="btn primario chico ${d.url ? '' : 'deshabilitado'}" ${d.url ? `href="#/ver/${esc(d.id)}"` : 'aria-disabled="true"'}>Ver aquí</a>
         ${d.url ? `<a class="btn chico" href="${esc(d.url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}
-        ${d.repo ? `<a class="btn chico" href="${esc(d.repo)}" target="_blank" rel="noopener">Repositorio</a>` : '<span class="pendiente">Repo pendiente</span>'}
+        ${d.repo ? `<a class="btn chico" href="${esc(d.repo)}" target="_blank" rel="noopener">Repositorio</a>` : soloIndicadores() ? '' : '<span class="pendiente">Repo pendiente</span>'}
       </div>
     </div>`).join('')}</div>`;
 }

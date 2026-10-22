@@ -71,6 +71,8 @@ export function cerrarSesion() {
 }
 
 export const esAdmin = () => !!S.perfil?.admin;
+// Perfiles de consulta: solo indicadores y dashboards (sin Seguimiento ni Avance equipo)
+export const soloIndicadores = () => !!S.perfil?.solo_indicadores;
 const lineaPermitida = l => esAdmin() || (S.perfil?.lineas || []).includes(l);
 
 function aplicarPaquete(paquete) {
@@ -115,9 +117,11 @@ export function unidades() {
 // Servicios = dashboards de cada empresa/país (Inbound, Outbound...). Su id es el linea_id de los datos.
 export function lineas() {
   return unidades().flatMap(u => u.pais.dashboards.map((d, k) => ({
-    ...d, l: d.id, e: u.e, p: u.p, unidad: u, orden: k, servicio: d.servicio || d.nombre,
+    ...d, l: d.id, e: u.e, p: u.p, unidad: u, orden: k, servicio: d.servicio || d.nombre, url: urlPerfil(d.url),
   })));
 }
+// Perfiles de cliente: los dashboards se abren con ?cliente (ocultan lo interno, p. ej. el botón Presentación)
+export const urlPerfil = url => (url && soloIndicadores() ? `${url}${url.includes('?') ? '&' : '?'}cliente=1` : url);
 export const linea = l => lineas().find(x => x.l === l);
 export const nombreLinea = l => linea(l)?.servicio ?? (l || '—');
 export const esConteo = i => !!S.indicadores[i]?.conteo;

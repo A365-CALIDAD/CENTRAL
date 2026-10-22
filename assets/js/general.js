@@ -1,7 +1,7 @@
 // CENTRAL · Vista general (todos los servicios en una pantalla) y visor de dashboards embebidos.
 import {
   S, esc, fmt, fmtN, fmtPeriodo, periodos, unidades, lineas, linea, esConteo, ponderado,
-  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto, empresasVisibles,
+  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto, empresasVisibles, soloIndicadores,
 } from './datos.js';
 import { kpi, tabla, graficoLineas, leyenda, serie, css, destruirGraficos, ETIQUETA_ESTADO } from './componentes.js';
 
@@ -359,7 +359,7 @@ export function visor(cont, [id]) {
       <div class="visor-barra"><b>${esc(actual.unidad.nombre)} · ${esc(actual.servicio)}</b>
         <span style="flex:1"></span>
         <a class="btn chico" href="${esc(actual.url)}" target="_blank" rel="noopener">Abrir en pestaña nueva ↗</a>
-        ${actual.repo ? `<a class="btn chico" href="${esc(actual.repo)}" target="_blank" rel="noopener">Repositorio</a>` : ''}</div>
+        ${actual.repo && !soloIndicadores() ? `<a class="btn chico" href="${esc(actual.repo)}" target="_blank" rel="noopener">Repositorio</a>` : ''}</div>
       <p class="sub solo-movil">En el celular el dashboard se ve mejor en una pestaña nueva.</p>
       <div class="visor-wrap"><iframe class="visor" src="${esc(actual.url)}" title="Dashboard ${esc(actual.servicio)}" referrerpolicy="no-referrer"></iframe></div>
       <p class="sub">Si el dashboard no se muestra, ábrelo en una pestaña nueva (algunos sitios no permiten mostrarse dentro de otra página o requieren iniciar sesión).</p>`
