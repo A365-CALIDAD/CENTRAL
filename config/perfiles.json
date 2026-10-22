@@ -9,11 +9,12 @@
     },
     {
       "id": "claro-ec",
-      "nombre": "Claro Ecuador · Inbound, Outbound y NPS",
+      "nombre": "Claro Ecuador · Inbound, Outbound, NPS y Presentación",
       "lineas": [
         "claro-ec-in",
         "claro-ec-out",
-        "claro-ec-nps"
+        "claro-ec-nps",
+        "claro-ec-pres"
       ]
     },
     {

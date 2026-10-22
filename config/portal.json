@@ -92,8 +92,8 @@
               "servicio": "Inbound",
               "nombre": "Inbound",
               "descripcion": "",
-              "url": "https://a365-calidad-claro-ec.github.io/Reporte-IN/",
-              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-IN",
+              "url": "https://a365-calidad.github.io/Reporte-CLARO-IN/",
+              "repo": "https://github.com/A365-CALIDAD/Reporte-CLARO-IN",
               "estado": "activo"
             },
             {
@@ -101,8 +101,8 @@
               "servicio": "Outbound",
               "nombre": "Outbound",
               "descripcion": "",
-              "url": "https://a365-calidad-claro-ec.github.io/Reporte-OUT/",
-              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-OUT",
+              "url": "https://a365-calidad.github.io/Reporte-CLARO-OUT/",
+              "repo": "https://github.com/A365-CALIDAD/Reporte-CLARO-OUT",
               "estado": "activo"
             },
             {
@@ -110,8 +110,17 @@
               "servicio": "NPS",
               "nombre": "NPS",
               "descripcion": "",
-              "url": "https://a365-calidad-claro-ec.github.io/Reporte-NPS/NPS%20CLARO%20ECUADOR.html",
-              "repo": "https://github.com/A365-CALIDAD-CLARO-EC/Reporte-NPS",
+              "url": "https://a365-calidad.github.io/Reporte-CLARO-NPS/NPS%20CLARO%20ECUADOR.html",
+              "repo": "https://github.com/A365-CALIDAD/Reporte-CLARO-NPS",
+              "estado": "activo"
+            },
+            {
+              "id": "claro-ec-pres",
+              "servicio": "Presentación",
+              "nombre": "Presentación",
+              "descripcion": "Presentación de resultados de Claro Ecuador (NPS)",
+              "url": "https://a365-calidad.github.io/Reporte-CLARO-NPS/PRESENTACI%C3%93N%20CLARO.html",
+              "repo": "https://github.com/A365-CALIDAD/Reporte-CLARO-NPS",
               "estado": "activo"
             }
           ]
