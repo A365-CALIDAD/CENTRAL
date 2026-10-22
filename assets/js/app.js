@@ -106,32 +106,37 @@ function pantallaIngreso(error = '') {
   document.body.classList.add('sin-sesion');
   let el = document.getElementById('ingreso');
   if (!el) { el = document.createElement('div'); el.id = 'ingreso'; document.body.appendChild(el); }
+  // Se escribe el usuario (no hay lista de perfiles). ?perfil=<usuario o id> lo deja escrito (enlace del cliente).
+  const usuarioDe = p => p.usuario || p.id;
+  const buscar = txt => S.perfiles.find(p => [p.usuario, p.id].filter(Boolean)
+    .some(u => u.toLowerCase() === String(txt || '').trim().toLowerCase()));
   let ultimo = '';
   try { ultimo = localStorage.getItem('central.ultimo-perfil') || ''; } catch { /* sin almacenamiento */ }
-  // Enlace propio de un usuario (ej. el cliente): ?perfil=<id> muestra solo ese perfil, sin la lista de los internos
-  const fijo = S.perfiles.find(p => p.id === new URLSearchParams(location.search).get('perfil'));
-  const lista = fijo ? [fijo] : S.perfiles;
-  if (fijo) ultimo = fijo.id;
+  const fijo = buscar(new URLSearchParams(location.search).get('perfil'));
+  const inicial = fijo ? usuarioDe(fijo) : (buscar(ultimo) ? usuarioDe(buscar(ultimo)) : '');
   el.innerHTML = `<form class="ingreso-card" id="form-ingreso" autocomplete="on">
       <img src="assets/img/logo-a365.png" alt="A365" width="320" height="196">
       <h1>Calidad A365</h1>
-      <p class="sub">Selecciona tu perfil e ingresa la contraseña</p>
-      <div class="campo"><label for="i-perfil">Perfil</label>
-        <select id="i-perfil" name="username" ${fijo ? 'disabled' : ''}>${lista.map(p => `<option value="${esc(p.id)}" ${p.id === ultimo ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
+      <p class="sub">Ingresa tu usuario y contraseña</p>
+      <div class="campo"><label for="i-perfil">Usuario</label>
+        <input id="i-perfil" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false"
+          value="${esc(inicial)}" required></div>
       <div class="campo"><label for="i-clave">Contraseña</label>
         <input id="i-clave" name="password" type="password" autocomplete="current-password" required></div>
       ${error ? `<div class="aviso error" role="alert">${esc(error)}</div>` : ''}
       <button class="btn primario" type="submit" id="i-entrar">Ingresar</button>
     </form>`;
   const form = el.querySelector('#form-ingreso');
-  el.querySelector('#i-clave').focus();
+  el.querySelector(inicial ? '#i-clave' : '#i-perfil').focus();
   form.addEventListener('submit', async ev => {
     ev.preventDefault();
-    const perfil = el.querySelector('#i-perfil').value, clave = el.querySelector('#i-clave').value;
+    const encontrado = buscar(el.querySelector('#i-perfil').value), clave = el.querySelector('#i-clave').value;
+    const perfil = encontrado?.id;
     const btn = el.querySelector('#i-entrar');
     btn.disabled = true; btn.textContent = 'Verificando…';
-    let ok = false, msg = 'Contraseña incorrecta.';
-    try { ok = await iniciarSesion(perfil, clave); } catch (e) { msg = e.message; }
+    // Mismo mensaje si el usuario no existe o la contraseña no corresponde (no se revela qué usuarios hay)
+    let ok = false, msg = 'Usuario o contraseña incorrectos.';
+    if (perfil) { try { ok = await iniciarSesion(perfil, clave); } catch { ok = false; } }
     if (!ok) { pantallaIngreso(msg); return; }
     try { localStorage.setItem('central.ultimo-perfil', perfil); } catch { /* sin almacenamiento */ }
     el.remove();

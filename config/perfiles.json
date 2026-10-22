@@ -1,5 +1,5 @@
 {
-  "_comentario": "Perfiles de acceso por persona. Cada uno ve solo las cuentas de 'lineas' (ids de config/portal.json); 'admin' ve todo. Las contraseñas están en config/perfiles.local.json (no se publica).",
+  "_comentario": "Perfiles de acceso por persona. Cada uno ve solo las cuentas de 'lineas' (ids de config/portal.json); 'admin' ve todo. Las contraseñas están en config/perfiles.local.json (no se publica). Cada perfil entra escribiendo su 'usuario' (o su id si no tiene).",
   "perfiles": [
     {
       "id": "admin",
@@ -58,7 +58,7 @@
     {
       "id": "claro-ec-consulta",
       "nombre": "Claro Ecuador · Cliente",
-      "descripcion": "Para el cliente: Vista general, Resumen de la empresa y detalle de Claro Ecuador (Inbound, Outbound y NPS). Sin Histórico, Tabla consolidada, Dashboards, Presentación, Avance equipo ni Seguimiento. Entra con ?perfil=claro-ec-consulta",
+      "descripcion": "Para el cliente: Vista general, Resumen de la empresa y detalle de Claro Ecuador (Inbound, Outbound y NPS). Sin Histórico, Tabla consolidada, Dashboards, Presentación, Avance equipo ni Seguimiento. Usuario: claroecuador (enlace: ?perfil=claroecuador)",
       "lineas": [
         "claro-ec-in",
         "claro-ec-out",
@@ -70,7 +70,8 @@
         "kpis",
         "empresa",
         "servicio"
-      ]
+      ],
+      "usuario": "claroecuador"
     }
   ]
 }
