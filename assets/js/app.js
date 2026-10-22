@@ -1,5 +1,5 @@
 // CENTRAL · arranque, navegación por hash y tema.
-import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, soloIndicadores, unidades, lineas, esc } from './datos.js';
+import { S, cargarBase, iniciarSesion, restaurarSesion, cerrarSesion, esAdmin, soloIndicadores, puedeVer, RUTAS_TODAS, unidades, lineas, esc } from './datos.js';
 import { destruirGraficos } from './componentes.js';
 import * as V from './vistas.js';
 import * as G from './general.js';
@@ -28,7 +28,7 @@ function menu() {
     : `<details class="nav-emp" data-emp="${u.e}/${u.p}">
         <summary><span class="item"><span class="punto" style="background:${esc(u.color)}"></span>${esc(u.nombre)}</span></summary>
         ${enlace(`#/empresa/${u.e}/${u.p}`, 'Resumen de la empresa', '', '', 'sub')}
-        ${lineas().filter(x => x.e === u.e && x.p === u.p).map(x => tieneDatos(x.l)
+        ${lineas().filter(x => x.e === u.e && x.p === u.p && (tieneDatos(x.l) || puedeVer('ver'))).map(x => tieneDatos(x.l)
           ? enlace(`#/servicio/${x.id}`, esc(x.servicio), '', '', 'sub')
           : enlace(`#/ver/${x.id}`, esc(x.servicio), '<span class="chip-prox">Dashboard</span>', '', 'sub')).join('')}
       </details>`;
@@ -37,22 +37,25 @@ function menu() {
     ${enlace('#/general', 'Vista general')}
     <div class="nav-grupo">Clientes</div>
     ${unidades().map(empresa).join('')}
-    <div class="nav-grupo">Análisis</div>
-    ${enlace('#/historico', 'Histórico y evolución')}
-    ${enlace('#/indicadores', 'Tabla consolidada')}
+    ${puedeVer('historico') || puedeVer('indicadores') ? `<div class="nav-grupo">Análisis</div>
+    ${puedeVer('historico') ? enlace('#/historico', 'Histórico y evolución') : ''}
+    ${puedeVer('indicadores') ? enlace('#/indicadores', 'Tabla consolidada') : ''}` : ''}
     ${soloIndicadores() ? '' : `<div class="nav-grupo">Gestión</div>
     ${enlace('#/seguimiento', esAdmin() ? 'Seguimiento de cuentas' : 'Mis acciones')}
     ${S.avance?.filas?.length ? enlace('#/avance', 'Avance equipo') : ''}`}
-    <div class="nav-grupo">Herramientas</div>
-    ${enlace('#/ver', 'Dashboards')}
-    ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}`;
+    ${puedeVer('ver') || esAdmin() ? `<div class="nav-grupo">Herramientas</div>
+    ${puedeVer('ver') ? enlace('#/ver', 'Dashboards') : ''}
+    ${esAdmin() ? enlace('#/calidad', 'Calidad de datos') : ''}` : ''}`;
+  // Enlaces a secciones no permitidas (botones "Ver dashboard", "Ver evolución"...): se ocultan con CSS
+  document.body.dataset.oculta = RUTAS_TODAS.filter(r => !puedeVer(r)).join(' ');
 }
 
 function navegar() {
   document.querySelector('#nav-movil a[href="#/seguimiento"]')?.toggleAttribute('hidden', soloIndicadores());
   const [ruta = 'general', ...params] = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   // Calidad de datos es solo para el administrador
-  const bloqueada = (ruta === 'calidad' && !esAdmin()) || (soloIndicadores() && (ruta === 'seguimiento' || ruta === 'avance'));
+  const bloqueada = (ruta === 'calidad' && !esAdmin()) || (soloIndicadores() && (ruta === 'seguimiento' || ruta === 'avance'))
+    || !puedeVer(ruta);
   const def = bloqueada ? RUTAS.general : (RUTAS[ruta] || RUTAS.general);
   const cont = document.getElementById('vista');
   destruirGraficos();
@@ -105,12 +108,16 @@ function pantallaIngreso(error = '') {
   if (!el) { el = document.createElement('div'); el.id = 'ingreso'; document.body.appendChild(el); }
   let ultimo = '';
   try { ultimo = localStorage.getItem('central.ultimo-perfil') || ''; } catch { /* sin almacenamiento */ }
+  // Enlace propio de un usuario (ej. el cliente): ?perfil=<id> muestra solo ese perfil, sin la lista de los internos
+  const fijo = S.perfiles.find(p => p.id === new URLSearchParams(location.search).get('perfil'));
+  const lista = fijo ? [fijo] : S.perfiles;
+  if (fijo) ultimo = fijo.id;
   el.innerHTML = `<form class="ingreso-card" id="form-ingreso" autocomplete="on">
       <img src="assets/img/logo-a365.png" alt="A365" width="320" height="196">
       <h1>Calidad A365</h1>
       <p class="sub">Selecciona tu perfil e ingresa la contraseña</p>
       <div class="campo"><label for="i-perfil">Perfil</label>
-        <select id="i-perfil" name="username">${S.perfiles.map(p => `<option value="${esc(p.id)}" ${p.id === ultimo ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
+        <select id="i-perfil" name="username" ${fijo ? 'disabled' : ''}>${lista.map(p => `<option value="${esc(p.id)}" ${p.id === ultimo ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select></div>
       <div class="campo"><label for="i-clave">Contraseña</label>
         <input id="i-clave" name="password" type="password" autocomplete="current-password" required></div>
       ${error ? `<div class="aviso error" role="alert">${esc(error)}</div>` : ''}

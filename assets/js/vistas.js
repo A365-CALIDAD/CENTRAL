@@ -84,7 +84,7 @@ export function empresa(cont, [e, p]) {
   const pers = periodos(regs);
   let per = mesPorDefecto(pers);
   cont.innerHTML = `${avisos()}
-    <div class="tarjeta" style="margin-bottom:16px">
+    <div class="tarjeta bloque-dashboards" style="margin-bottom:16px">
       <div class="cabecera"><div><h2>Dashboards de ${esc(u.nombre)}</h2><p class="sub" style="margin:0">Enlaces definidos en config/portal.json</p></div></div>
       ${tarjetasDashboards(u.pais.dashboards.map(d => ({ d, u })))}
     </div>

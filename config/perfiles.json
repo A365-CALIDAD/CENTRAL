@@ -58,13 +58,19 @@
     {
       "id": "claro-ec-consulta",
       "nombre": "Claro Ecuador · Cliente",
-      "descripcion": "Para el cliente: solo indicadores y dashboards de Claro Ecuador (Inbound, Outbound y NPS); sin Presentación, Avance equipo ni Seguimiento",
+      "descripcion": "Para el cliente: Vista general, Resumen de la empresa y detalle de Claro Ecuador (Inbound, Outbound y NPS). Sin Histórico, Tabla consolidada, Dashboards, Presentación, Avance equipo ni Seguimiento. Entra con ?perfil=claro-ec-consulta",
       "lineas": [
         "claro-ec-in",
         "claro-ec-out",
         "claro-ec-nps"
       ],
-      "solo_indicadores": true
+      "solo_indicadores": true,
+      "secciones": [
+        "general",
+        "kpis",
+        "empresa",
+        "servicio"
+      ]
     }
   ]
 }

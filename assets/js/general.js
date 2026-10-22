@@ -1,7 +1,7 @@
 // CENTRAL · Vista general (todos los servicios en una pantalla) y visor de dashboards embebidos.
 import {
   S, esc, fmt, fmtN, fmtPeriodo, periodos, unidades, lineas, linea, esConteo, ponderado,
-  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto, empresasVisibles, soloIndicadores,
+  nombreIndicador, descargar, aCSV, mayorMejor, mesPorDefecto, empresasVisibles, soloIndicadores, puedeVer,
 } from './datos.js';
 import { kpi, tabla, graficoLineas, leyenda, serie, css, destruirGraficos, ETIQUETA_ESTADO } from './componentes.js';
 
@@ -60,7 +60,8 @@ export function general(cont) {
     mesEnCurso = per === hoy;
     const iPer = pers.indexOf(per);
     const perAnt = iPer > 0 ? pers[iPer - 1] : null;
-    const srv = lineas().filter(x => !e || x.e === e);
+    // Sin acceso a Dashboards (ej. el cliente) no se muestran las cuentas que en CENTRAL no tienen indicadores
+    const srv = lineas().filter(x => (!e || x.e === e) && (puedeVer('ver') || S.totales.some(z => z.l === x.l)));
     const unis = unidades().filter(u => !e || u.e === e);
     const delPer = S.registros.filter(r => r.per === per && (!e || r.e === e));
     const delAnt = S.registros.filter(r => r.per === perAnt && (!e || r.e === e));

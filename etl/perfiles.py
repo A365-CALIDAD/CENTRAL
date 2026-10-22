@@ -137,7 +137,7 @@ def _paquete(p: dict, cons: dict, resumen, validacion, seguimiento, bitacora=Non
         "bitacora": ({"url": bitacora["url"], "token": bitacora["tokens"][p["id"]]}
                      if bitacora and bitacora.get("url") and bitacora.get("tokens", {}).get(p["id"]) else None),
         "perfil": {"id": p["id"], "nombre": p["nombre"], "admin": admin, "lineas": "*" if admin else sorted(lineas),
-                   "solo_indicadores": solo},
+                   "solo_indicadores": solo, "secciones": p.get("secciones") if not admin else None},
         "consolidado": {**cons, "registros": cons.get("registros", []) if admin
                         else [r for r in cons.get("registros", []) if r.get("l") in lineas]},
         "resumen": resumen if admin else None,

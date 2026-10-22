@@ -73,6 +73,9 @@ export function cerrarSesion() {
 export const esAdmin = () => !!S.perfil?.admin;
 // Perfiles de consulta: solo indicadores y dashboards (sin Seguimiento ni Avance equipo)
 export const soloIndicadores = () => !!S.perfil?.solo_indicadores;
+// Secciones que puede abrir el perfil (perfiles.json › secciones); sin la clave, todas
+export const RUTAS_TODAS = ['general', 'kpis', 'empresa', 'servicio', 'historico', 'indicadores', 'seguimiento', 'avance', 'ver', 'calidad'];
+export const puedeVer = ruta => !S.perfil?.secciones || S.perfil.secciones.includes(ruta);
 const lineaPermitida = l => esAdmin() || (S.perfil?.lineas || []).includes(l);
 
 function aplicarPaquete(paquete) {

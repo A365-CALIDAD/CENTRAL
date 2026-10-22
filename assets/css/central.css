@@ -357,3 +357,9 @@ dialog .aviso { margin: 0; }
 .tabla-avance th.en-curso small { display: block; font-size: 10px; font-weight: 500; }
 
 .nav-movil a[hidden] { display: none; }
+
+/* Secciones no permitidas para el perfil (perfiles.json › secciones): sus enlaces no se muestran */
+body[data-oculta~="ver"] a[href^="#/ver"], body[data-oculta~="ver"] .bloque-dashboards,
+body[data-oculta~="ver"] a[target="_blank"][href*="github.io"],
+body[data-oculta~="historico"] a[href^="#/historico"], body[data-oculta~="indicadores"] a[href^="#/indicadores"],
+body[data-oculta~="kpis"] a[href^="#/kpis"], body[data-oculta~="seguimiento"] a[href^="#/seguimiento"] { display: none !important; }
