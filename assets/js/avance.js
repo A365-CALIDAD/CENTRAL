@@ -31,13 +31,19 @@ export function avance(cont) {
   }
   const dias = [...new Set(A.filas.map(f => f[2]))].sort().reverse();
   const lineasCon = [...new Set(A.filas.map(f => f[0]))].sort((a, b) => nombreCompleto(a).localeCompare(nombreCompleto(b), 'es'));
-  let dia = dias[0], lin = '', acumulado = false;
+  // Empresa = unidad del portal (Entel Chile, Claro Ecuador...). Cada perfil solo trae sus cuentas, así que la lista
+  // de empresas ya es solo la que le corresponde.
+  const empresaDe = l => linea(l)?.unidad?.nombre || 'Otras';
+  const empresas = [...new Set(lineasCon.map(empresaDe))].sort((a, b) => a.localeCompare(b, 'es'));
+  let dia = dias[0], lin = '', emp = '', acumulado = false;
+  const enFiltro = l => (!emp || empresaDe(l) === emp) && (!lin || l === lin);
 
   cont.innerHTML = `
     <div class="tarjeta filtros">
       <div class="campo"><label for="av-dia">Día</label><select id="av-dia">${dias.map(d => `<option value="${d}">${esc(fmtDia(d))}</option>`).join('')}</select></div>
-      <div class="campo"><label for="av-lin">Cuenta</label><select id="av-lin"><option value="">Todas</option>
-        ${lineasCon.map(l => `<option value="${esc(l)}">${esc(nombreCompleto(l))}</option>`).join('')}</select></div>
+      ${empresas.length > 1 ? `<div class="campo"><label for="av-emp">Empresa</label><select id="av-emp"><option value="">Todas</option>
+        ${empresas.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('')}</select></div>` : ''}
+      <div class="campo"><label for="av-lin">Cuenta</label><select id="av-lin"></select></div>
       <div class="campo"><label for="av-modo">Conteo</label><select id="av-modo"><option value="">Por franja</option><option value="1">Acumulado al corte</option></select></div>
       <div class="acciones"><button class="btn" id="av-csv">Exportar CSV</button></div>
     </div>
@@ -54,7 +60,7 @@ export function avance(cont) {
     // Franjas que seguían abiertas al momento de la extracción (solo el día de la extracción): conteo parcial
     const [diaExt, horaExt] = (A.generado || '').split('T');
     const enCurso = fr => dia === diaExt && fr.desde <= (horaExt || '').slice(0, 5) && fr.hasta > (horaExt || '').slice(0, 5);
-    const filasDia = A.filas.filter(f => f[2] === dia && (!lin || f[0] === lin));
+    const filasDia = A.filas.filter(f => f[2] === dia && enFiltro(f[0]));
     const usadas = F.filter(fr => fr.id !== 'antes' && fr.id !== 'despues' || filasDia.some(f => f[3] >= fr.desde && f[3] < fr.hasta));
     const grupos = {};
     for (const f of filasDia) (grupos[`${f[0]}|${f[1]}`] ||= { l: f[0], monitor: f[1], evs: [] }).evs.push(f);
@@ -75,22 +81,32 @@ export function avance(cont) {
       </table></div>`;
     // Cuentas sin evaluaciones ese día: casi siempre porque su base todavía no llega hasta esa fecha
     const conDatos = new Set(filasDia.map(f => f[0]));
-    const faltan = lineasCon.filter(l => (!lin || l === lin) && !conDatos.has(l)).map(l => {
+    const faltan = lineasCon.filter(l => enFiltro(l) && !conDatos.has(l)).map(l => {
       const ult = (A.fuentes?.[l]?.ultima || '').slice(0, 10);
       return `${esc(nombreCompleto(l))}${ult && ult < dia ? ` (base hasta el ${esc(ult.slice(8, 10) + '/' + ult.slice(5, 7))})` : ''}`;
     });
     cont.querySelector('#av-faltan').innerHTML = faltan.length
       ? `<div class="aviso" style="margin-bottom:10px">Sin evaluaciones este día: ${faltan.join(' · ')}. Se completan cuando llegan sus bases.</div>` : '';
-    const fuentes = Object.entries(A.fuentes || {}).filter(([l]) => !lin || l === lin);
+    const fuentes = Object.entries(A.fuentes || {}).filter(([l]) => lineasCon.includes(l) && enFiltro(l));
     cont.querySelector('#av-fuentes').innerHTML = fuentes.length ? `<details class="sub" style="margin-top:8px"><summary>Bases usadas</summary><ul>
       ${fuentes.map(([l, x]) => `<li>${esc(nombreCompleto(l))}: ${esc(x.archivo)}${x.ultima ? ` · última evaluación ${esc(x.ultima)}` : ''}</li>`).join('')}</ul></details>` : '';
   };
 
   cont.querySelector('#av-dia').addEventListener('change', e => { dia = e.target.value; pintar(); });
+  // Las cuentas del filtro dependen de la empresa elegida
+  const opcionesCuenta = () => {
+    const sel = cont.querySelector('#av-lin');
+    const lista = lineasCon.filter(l => !emp || empresaDe(l) === emp);
+    if (lin && !lista.includes(lin)) lin = '';
+    sel.innerHTML = `<option value="">Todas</option>${lista.map(l =>
+      `<option value="${esc(l)}" ${l === lin ? 'selected' : ''}>${esc(emp ? linea(l)?.servicio || nombreCompleto(l) : nombreCompleto(l))}</option>`).join('')}`;
+  };
+  opcionesCuenta();
+  cont.querySelector('#av-emp')?.addEventListener('change', e => { emp = e.target.value; opcionesCuenta(); pintar(); });
   cont.querySelector('#av-lin').addEventListener('change', e => { lin = e.target.value; pintar(); });
   cont.querySelector('#av-modo').addEventListener('change', e => { acumulado = !!e.target.value; pintar(); });
   cont.querySelector('#av-csv').addEventListener('click', () => {
-    const filas = A.filas.filter(f => f[2] === dia && (!lin || f[0] === lin))
+    const filas = A.filas.filter(f => f[2] === dia && enFiltro(f[0]))
       .map(f => ({ cuenta: nombreCompleto(f[0]), monitor: f[1], fecha: f[2], hora: f[3], duracion_seg: f[4] }));
     descargar(`avance_equipo_${dia}.csv`, aCSV(filas, ['cuenta', 'monitor', 'fecha', 'hora', 'duracion_seg'].map(id => ({ id, titulo: id }))), 'text/csv;charset=utf-8');
   });
