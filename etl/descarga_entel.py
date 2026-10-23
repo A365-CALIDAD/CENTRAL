@@ -46,7 +46,16 @@ def cargar_proceso():
     os.environ["A365_CARPETA_PASO"] = str(BASE.parent)
     spec = importlib.util.spec_from_file_location("adherencias_entel", BASE)
     modulo = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(modulo)
+    # Versiones anteriores del proceso no leen A365_CARPETA_PASO y, dentro de un .exe, buscan su .env junto al
+    # ejecutable (C:\A365\CENTRAL). Se oculta sys.frozen mientras se carga: así usan la carpeta del script.
+    congelado = getattr(sys, "frozen", None)
+    if congelado is not None:
+        del sys.frozen
+    try:
+        spec.loader.exec_module(modulo)
+    finally:
+        if congelado is not None:
+            sys.frozen = congelado
     return modulo
 
 
