@@ -363,3 +363,12 @@ body[data-oculta~="ver"] a[href^="#/ver"], body[data-oculta~="ver"] .bloque-dash
 body[data-oculta~="ver"] a[target="_blank"][href*="github.io"],
 body[data-oculta~="historico"] a[href^="#/historico"], body[data-oculta~="indicadores"] a[href^="#/indicadores"],
 body[data-oculta~="kpis"] a[href^="#/kpis"], body[data-oculta~="seguimiento"] a[href^="#/seguimiento"] { display: none !important; }
+
+/* avance del equipo: cada cuadro se abre con el detalle de sus llamadas */
+.tabla-avance .celda-det { all: unset; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+.tabla-avance .celda-det:hover, .tabla-avance .celda-det:focus-visible { background: var(--surface-2); text-decoration: underline; outline: none; }
+dialog.dlg-avance { width: min(720px, calc(100vw - 32px)); max-height: 80vh; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); }
+dialog.dlg-avance::backdrop { background: rgba(0, 0, 0, .45); }
+dialog.dlg-avance .dlg-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+dialog.dlg-avance h3 { margin: 0 0 2px; font-size: 16px; }
+dialog.dlg-avance .tabla-wrap { max-height: 60vh; overflow: auto; }

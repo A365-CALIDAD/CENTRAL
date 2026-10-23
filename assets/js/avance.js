@@ -35,7 +35,7 @@ export function avance(cont) {
   // de empresas ya es solo la que le corresponde.
   const empresaDe = l => linea(l)?.unidad?.nombre || 'Otras';
   const empresas = [...new Set(lineasCon.map(empresaDe))].sort((a, b) => a.localeCompare(b, 'es'));
-  let dia = dias[0], lin = '', emp = '', acumulado = false;
+  let dia = dias[0], lin = '', emp = '', acumulado = false, detalles = [];
   const enFiltro = l => (!emp || empresaDe(l) === emp) && (!lin || l === lin);
 
   cont.innerHTML = `
@@ -65,19 +65,28 @@ export function avance(cont) {
     const grupos = {};
     for (const f of filasDia) (grupos[`${f[0]}|${f[1]}`] ||= { l: f[0], monitor: f[1], evs: [] }).evs.push(f);
     const filas = Object.values(grupos).sort((a, b) => nombreCompleto(a.l).localeCompare(nombreCompleto(b.l), 'es') || a.monitor.localeCompare(b.monitor, 'es'));
-    const celdas = evs => usadas.map(fr => {
+    // Cada cuadro con evaluaciones se puede abrir: lista de las llamadas revisadas con su duración
+    detalles = [];
+    const abrible = (sel, titulo, html) => {
+      detalles.push({ titulo, evs: sel });
+      return `<button type="button" class="celda-det" data-det="${detalles.length - 1}" title="Ver las ${sel.length} llamadas revisadas">${html}</button>`;
+    };
+    const celdas = (evs, quien) => usadas.map(fr => {
       const sel = evs.filter(f => (acumulado ? f[3] < fr.hasta : f[3] >= fr.desde && f[3] < fr.hasta));
-      return `<td class="num">${sel.length ? fmtN(sel.length) : '<span style="color:var(--muted)">—</span>'}</td><td class="num">${sel.length ? tiempo(sel) : ''}</td>`;
+      const titulo = `${quien} · ${acumulado ? `hasta las ${fr.hasta}` : fr.titulo}`;
+      return `<td class="num">${sel.length ? abrible(sel, titulo, fmtN(sel.length)) : '<span style="color:var(--muted)">—</span>'}</td>`
+        + `<td class="num">${sel.length ? abrible(sel, titulo, tiempo(sel)) : ''}</td>`;
     }).join('');
-    const total = evs => `<td class="num"><b>${fmtN(evs.length)}</b></td><td class="num"><b>${tiempo(evs)}</b></td>`;
+    const total = (evs, quien) => `<td class="num"><b>${abrible(evs, `${quien} · total del día`, fmtN(evs.length))}</b></td>`
+      + `<td class="num"><b>${abrible(evs, `${quien} · total del día`, tiempo(evs))}</b></td>`;
     cont.querySelector('#av-res').textContent = `${fmtN(filasDia.length)} evaluaciones · ${filas.length} monitor${filas.length === 1 ? '' : 'es'} · ${fmtDia(dia)}`
       + (dia === diaExt ? ` · extracción de las ${horaExt.slice(0, 5)}` : '');
     cont.querySelector('#av-tabla').innerHTML = !filas.length ? '<div class="vacio">Sin evaluaciones ese día.</div>' : `
       <div class="tabla-wrap"><table class="tabla-eval tabla-avance">
         <thead><tr><th rowspan="2">Monitor</th>${usadas.map(fr => `<th colspan="2" class="franja ${enCurso(fr) ? 'en-curso' : ''}" ${enCurso(fr) ? `title="Extracción de las ${esc(horaExt.slice(0, 5))}: la franja aún no termina"` : ''}>${acumulado ? `Hasta ${fr.hasta === '24:00' ? 'fin del día' : fr.hasta}` : esc(fr.titulo)}${enCurso(fr) ? '<small>en curso</small>' : ''}</th>`).join('')}<th colspan="2" class="franja">Total del día</th></tr>
           <tr>${[...usadas, 0].map(() => '<th class="num">Q</th><th class="num">Tiempo</th>').join('')}</tr></thead>
-        <tbody>${filas.map(g => `<tr><td><b>${esc(g.monitor)}</b><small>${esc(nombreCompleto(g.l))}</small></td>${celdas(g.evs)}${total(g.evs)}</tr>`).join('')}</tbody>
-        ${filas.length > 1 ? `<tfoot><tr><td><b>Total</b></td>${celdas(filasDia)}${total(filasDia)}</tr></tfoot>` : ''}
+        <tbody>${filas.map(g => `<tr><td><b>${esc(g.monitor)}</b><small>${esc(nombreCompleto(g.l))}</small></td>${celdas(g.evs, g.monitor)}${total(g.evs, g.monitor)}</tr>`).join('')}</tbody>
+        ${filas.length > 1 ? `<tfoot><tr><td><b>Total</b></td>${celdas(filasDia, 'Todos')}${total(filasDia, 'Todos')}</tr></tfoot>` : ''}
       </table></div>`;
     // Cuentas sin evaluaciones ese día: casi siempre porque su base todavía no llega hasta esa fecha
     const conDatos = new Set(filasDia.map(f => f[0]));
@@ -93,6 +102,10 @@ export function avance(cont) {
   };
 
   cont.querySelector('#av-dia').addEventListener('change', e => { dia = e.target.value; pintar(); });
+  cont.querySelector('#av-tabla').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-det]');
+    if (b) verDetalle(detalles[+b.dataset.det]);
+  });
   // Las cuentas del filtro dependen de la empresa elegida
   const opcionesCuenta = () => {
     const sel = cont.querySelector('#av-lin');
@@ -107,10 +120,38 @@ export function avance(cont) {
   cont.querySelector('#av-modo').addEventListener('change', e => { acumulado = !!e.target.value; pintar(); });
   cont.querySelector('#av-csv').addEventListener('click', () => {
     const filas = A.filas.filter(f => f[2] === dia && enFiltro(f[0]))
-      .map(f => ({ cuenta: nombreCompleto(f[0]), monitor: f[1], fecha: f[2], hora: f[3], duracion_seg: f[4] }));
-    descargar(`avance_equipo_${dia}.csv`, aCSV(filas, ['cuenta', 'monitor', 'fecha', 'hora', 'duracion_seg'].map(id => ({ id, titulo: id }))), 'text/csv;charset=utf-8');
+      .map(f => ({ cuenta: nombreCompleto(f[0]), monitor: f[1], fecha: f[2], hora: f[3], duracion_seg: f[4], id: f[5] || '' }));
+    descargar(`avance_equipo_${dia}.csv`, aCSV(filas, ['cuenta', 'monitor', 'fecha', 'hora', 'duracion_seg', 'id'].map(id => ({ id, titulo: id }))), 'text/csv;charset=utf-8');
   });
   pintar();
+}
+
+// Ventana con las llamadas revisadas de un cuadro: hora de envío, duración, cuenta e identificador.
+function verDetalle(det) {
+  if (!det) return;
+  let dlg = document.getElementById('dlg-avance');
+  if (!dlg) {
+    dlg = document.createElement('dialog');
+    dlg.id = 'dlg-avance';
+    dlg.className = 'dlg-avance';
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-cerrar]')) dlg.close(); });
+  }
+  const evs = [...det.evs].sort((a, b) => a[3].localeCompare(b[3]));
+  const conDur = evs.filter(f => f[4] != null);
+  const totalSeg = conDur.reduce((a, f) => a + f[4], 0);
+  const variasCuentas = new Set(evs.map(f => f[0])).size > 1;
+  const variosMonitores = new Set(evs.map(f => f[1])).size > 1;
+  dlg.innerHTML = `
+    <div class="dlg-cab"><div><h3>${esc(det.titulo)}</h3>
+      <p class="sub" style="margin:0">${fmtN(evs.length)} llamada${evs.length === 1 ? '' : 's'} revisada${evs.length === 1 ? '' : 's'} · tiempo total ${fmtDur(totalSeg)}${conDur.length ? ` · promedio ${fmtDur(totalSeg / conDur.length)}` : ''}</p></div>
+      <button type="button" class="btn chico" data-cerrar aria-label="Cerrar">✕</button></div>
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>#</th><th>Hora de envío</th><th class="num">Duración</th>${variosMonitores ? '<th>Monitor</th>' : ''}${variasCuentas ? '<th>Cuenta</th>' : ''}<th>ID</th></tr></thead>
+      <tbody>${evs.map((f, i) => `<tr><td>${i + 1}</td><td>${esc(f[3])}</td><td class="num">${f[4] != null ? fmtDur(f[4]) : '<span style="color:var(--muted)" title="Esta base aún no trae la duración">—</span>'}</td>
+        ${variosMonitores ? `<td>${esc(f[1])}</td>` : ''}${variasCuentas ? `<td>${esc(nombreCompleto(f[0]))}</td>` : ''}<td>${esc(f[5] || '—')}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  dlg.showModal();
 }
 
 function nombreCompleto(l) {

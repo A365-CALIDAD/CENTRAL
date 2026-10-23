@@ -14,7 +14,7 @@ o, para las fuentes que llegan por aplicación web (Movistar, BN):
      "nombre": texto que se muestra como origen}
 Escribe data/avance.json (solo en este PC; viaja en los paquetes cifrados y en el respaldo):
     {"generado", "cortes", "dias", "fuentes": {linea: {"fuente", "archivo", "ultima"}},
-     "filas": [[linea, monitor, "YYYY-MM-DD", "HH:MM", duracion_seg | null], ...]}
+     "filas": [[linea, monitor, "YYYY-MM-DD", "HH:MM", duracion_seg | null, id_evaluacion | ""], ...]}
 Las fuentes cuya base no está en este PC conservan las filas que ya había (p. ej. las que publicó el otro PC).
 """
 from __future__ import annotations
@@ -168,7 +168,9 @@ def extraer(df: pd.DataFrame, fuente, desde: str, origen: str, sin_duracion_ok=F
         dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None     # más de 4 h = error de digitación
         ident = etl.norm_id(r[cid]) if cid is not None and not etl.vacio(r[cid]) else f"{origen}#{k}"
         dia, hora = a_zona(dia, hora, origen, destino)
-        out[ident] = [fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur]
+        # 6.º dato: identificador de la evaluación (ID Pauta, ResponseId) para ubicarla en su plataforma
+        id_original = " ".join(str(r[cid]).split()).removesuffix(".0") if cid is not None and not etl.vacio(r[cid]) else ""
+        out[ident] = [fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur, id_original]
     return out
 
 
@@ -194,7 +196,7 @@ def leer_api(fuente, desde: str) -> tuple[list, list]:
         dur = a_segundos(x[pos["duracion"]]) if "duracion" in pos else None
         dur = dur if dur is not None and 0 < dur <= 4 * 3600 else None
         dia, hora = a_zona(dia, hora, origen, destino)
-        filas.append([fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur])
+        filas.append([fuente["linea_id"], monitor or "Sin identificar", dia, hora, dur, ""])
     return filas, [Path(cfg.get("nombre", "aplicacion_web"))]
 
 
